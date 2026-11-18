@@ -1,0 +1,26 @@
+language_code: en
+display_name: English
+display_name_vi: Tiếng Anh
+
+levels:
+  - code: A1
+    display_name: Beginner
+    display_name_vi: Sơ cấp
+  - code: A2
+    display_name: Elementary
+    display_name_vi: Sơ trung cấp
+  - code: B1
+    display_name: Intermediate
+    display_name_vi: Trung cấp
+
+placement:
+  score_scale: percent
+  assignment_rule: highest_level_threshold_not_exceeded
+  thresholds:
+    A1: 0
+    A2: 40
+    B1: 70
+  status: provisional
+  note: >
+    Ngưỡng là cấu hình khởi đầu cần được duyệt và kiểm tra trên pilot;
+    không phải kết quả nghiên cứu hay chuẩn CEFR đã được xác nhận.

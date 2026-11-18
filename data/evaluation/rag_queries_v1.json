@@ -1,0 +1,242 @@
+[
+  {
+    "query_id": "rag-q-001",
+    "query": "Khi dùng động từ be, làm sao chọn am, is hay are theo chủ ngữ?",
+    "document_id": "gram-en-a1-be-001",
+    "language": "vi",
+    "query_type": "terminology",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-002",
+    "query": "How do I make a negative sentence in the present simple with he or she?",
+    "document_id": "gram-en-a1-present-simple-002",
+    "language": "en",
+    "query_type": "terminology",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-003",
+    "query": "Tôi muốn giới thiệu một quả táo mà người nghe chưa biết đến. Từ nào đứng trước apple?",
+    "document_id": "gram-en-a1-articles-003",
+    "language": "vi",
+    "query_type": "semantic",
+    "split": "test"
+  },
+  {
+    "query_id": "rag-q-004",
+    "query": "I have one box and then buy two more. How should I write the plural form?",
+    "document_id": "gram-en-a1-plurals-004",
+    "language": "en",
+    "query_type": "semantic",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-005",
+    "query": "Theo quy tắc there is/there are, dùng dạng nào trước một danh từ số nhiều?",
+    "document_id": "gram-en-a1-there-be-005",
+    "language": "vi",
+    "query_type": "terminology",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-006",
+    "query": "What verb form follows did in a past simple question?",
+    "document_id": "gram-en-a2-past-simple-006",
+    "language": "en",
+    "query_type": "terminology",
+    "split": "test"
+  },
+  {
+    "query_id": "rag-q-007",
+    "query": "Nam đang nấu ăn ngay lúc này. Cấu trúc nào diễn tả hành động đang xảy ra?",
+    "document_id": "gram-en-a2-present-continuous-007",
+    "language": "vi",
+    "query_type": "semantic",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-008",
+    "query": "I want to ask about the amount of sugar in a recipe. Which question word fits sugar?",
+    "document_id": "gram-en-a2-count-noncount-008",
+    "language": "en",
+    "query_type": "semantic",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-009",
+    "query": "Quy tắc so sánh hơn thường biến tính từ ngắn thành dạng nào?",
+    "document_id": "gram-en-a2-comparatives-009",
+    "language": "vi",
+    "query_type": "terminology",
+    "split": "test"
+  },
+  {
+    "query_id": "rag-q-010",
+    "query": "When is be going to used to make a prediction?",
+    "document_id": "gram-en-a2-going-to-010",
+    "language": "en",
+    "query_type": "terminology",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-011",
+    "query": "Tôi muốn nói rằng đến bây giờ mình chưa từng đi máy bay, không nêu thời điểm cụ thể. Nên dùng thì nào?",
+    "document_id": "gram-en-a2-present-perfect-011",
+    "language": "vi",
+    "query_type": "semantic",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-012",
+    "query": "I want to say that an action started in the past and continues now. How can for and since help?",
+    "document_id": "gram-en-b1-present-perfect-past-012",
+    "language": "en",
+    "query_type": "semantic",
+    "split": "test"
+  },
+  {
+    "query_id": "rag-q-013",
+    "query": "Động từ have to thay đổi thế nào theo chủ ngữ và ở thì quá khứ?",
+    "document_id": "gram-en-b1-modals-013",
+    "language": "vi",
+    "query_type": "terminology",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-014",
+    "query": "Which modal verb is commonly used to give advice or a recommendation?",
+    "document_id": "gram-en-b1-modals-013",
+    "language": "en",
+    "query_type": "terminology",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-015",
+    "query": "Nếu trời mưa vào ngày mai, chúng tôi sẽ ở nhà. Cấu trúc điều kiện nào phù hợp?",
+    "document_id": "gram-en-b1-first-conditional-014",
+    "language": "vi",
+    "query_type": "semantic",
+    "split": "test"
+  },
+  {
+    "query_id": "rag-q-016",
+    "query": "I need a clause to identify which person called me. Which type of relative clause should I use?",
+    "document_id": "gram-en-b1-relative-clauses-015",
+    "language": "en",
+    "query_type": "semantic",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-017",
+    "query": "Ở thì hiện tại đơn, khi chủ ngữ là he, she hoặc it thì động từ thêm đuôi gì?",
+    "document_id": "gram-en-a1-present-simple-002",
+    "language": "vi",
+    "query_type": "terminology",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-018",
+    "query": "In a yes/no question with the verb be, where does be go, and do I need do or does?",
+    "document_id": "gram-en-a1-be-001",
+    "language": "en",
+    "query_type": "terminology",
+    "split": "test"
+  },
+  {
+    "query_id": "rag-q-019",
+    "query": "Tôi đã nhắc đến một con chó ở câu trước, giờ nói tiếp về chính con chó đó. Nên dùng mạo từ nào?",
+    "document_id": "gram-en-a1-articles-003",
+    "language": "vi",
+    "query_type": "semantic",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-020",
+    "query": "I decided before speaking that I plan to visit my aunt. Which future form can express this?",
+    "document_id": "gram-en-a2-going-to-010",
+    "language": "en",
+    "query_type": "semantic",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-021",
+    "query": "Trong mệnh đề quan hệ xác định, dùng who hay which để nói về người?",
+    "document_id": "gram-en-b1-relative-clauses-015",
+    "language": "vi",
+    "query_type": "terminology",
+    "split": "test"
+  },
+  {
+    "query_id": "rag-q-022",
+    "query": "How do I form a question with there is or there are?",
+    "document_id": "gram-en-a1-there-be-005",
+    "language": "en",
+    "query_type": "terminology",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-023",
+    "query": "Tôi muốn kể rằng mùa hè năm ngoái tôi đi Huế. Động từ go phải đổi thành dạng nào?",
+    "document_id": "gram-en-a2-past-simple-006",
+    "language": "vi",
+    "query_type": "semantic",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-024",
+    "query": "A sign says parking is prohibited. Which modal expresses that this is not allowed?",
+    "document_id": "gram-en-b1-modals-013",
+    "language": "en",
+    "query_type": "semantic",
+    "split": "test"
+  },
+  {
+    "query_id": "rag-q-025",
+    "query": "Các động từ trạng thái như know hay believe có thường được chia ở thì hiện tại tiếp diễn không?",
+    "document_id": "gram-en-a2-present-continuous-007",
+    "language": "vi",
+    "query_type": "terminology",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-026",
+    "query": "How do regular nouns ending in a consonant plus y form the plural?",
+    "document_id": "gram-en-a1-plurals-004",
+    "language": "en",
+    "query_type": "terminology",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-027",
+    "query": "Tôi muốn kể một việc đã hoàn tất vào tuần trước. Nên dùng present perfect hay past simple?",
+    "document_id": "gram-en-b1-present-perfect-past-012",
+    "language": "vi",
+    "query_type": "semantic",
+    "split": "test"
+  },
+  {
+    "query_id": "rag-q-028",
+    "query": "I wrote 'If I will have time, I will call you.' Is will correct after if here?",
+    "document_id": "gram-en-b1-first-conditional-014",
+    "language": "en",
+    "query_type": "semantic",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-029",
+    "query": "Nước không đếm được, vậy muốn nói số lượng như 'hai chai nước' thì diễn đạt thế nào?",
+    "document_id": "gram-en-a2-count-noncount-008",
+    "language": "vi",
+    "query_type": "semantic",
+    "split": "dev"
+  },
+  {
+    "query_id": "rag-q-030",
+    "query": "How do I form a comparative with a long adjective?",
+    "document_id": "gram-en-a2-comparatives-009",
+    "language": "en",
+    "query_type": "terminology",
+    "split": "test"
+  }
+]

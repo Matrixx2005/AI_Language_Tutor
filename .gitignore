@@ -1,0 +1,31 @@
+# Môi trường và bí mật
+.venv/
+.env
+*.env.local
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Dữ liệu lớn, model, cache
+models/
+*.safetensors
+*.bin
+*.gguf
+.cache/
+data/raw/large/
+qdrant_storage/
+pgdata/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

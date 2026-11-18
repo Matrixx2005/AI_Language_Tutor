@@ -1,0 +1,76 @@
+{
+  "version": "rag-queries-v1",
+  "locked_at": "2026-11-18",
+  "assignment_method": "Explicit query IDs; no random reshuffle.",
+  "ratio": {
+    "dev": 2,
+    "test": 1
+  },
+  "expected_counts": {
+    "dev": 20,
+    "test": 10
+  },
+  "stratification": {
+    "all_queries": {
+      "language": {
+        "vi": 15,
+        "en": 15
+      },
+      "query_type": {
+        "terminology": 15,
+        "semantic": 15
+      }
+    },
+    "test_queries": {
+      "language": {
+        "vi": 5,
+        "en": 5
+      },
+      "query_type": {
+        "terminology": 5,
+        "semantic": 5
+      }
+    }
+  },
+  "dev_query_ids": [
+    "rag-q-001",
+    "rag-q-002",
+    "rag-q-004",
+    "rag-q-005",
+    "rag-q-007",
+    "rag-q-008",
+    "rag-q-010",
+    "rag-q-011",
+    "rag-q-013",
+    "rag-q-014",
+    "rag-q-016",
+    "rag-q-017",
+    "rag-q-019",
+    "rag-q-020",
+    "rag-q-022",
+    "rag-q-023",
+    "rag-q-025",
+    "rag-q-026",
+    "rag-q-028",
+    "rag-q-029"
+  ],
+  "test_query_ids": [
+    "rag-q-003",
+    "rag-q-006",
+    "rag-q-009",
+    "rag-q-012",
+    "rag-q-015",
+    "rag-q-018",
+    "rag-q-021",
+    "rag-q-024",
+    "rag-q-027",
+    "rag-q-030"
+  ],
+  "test_policy": "Use dev for iteration. Do not tune against test queries; reserve them for a single final evaluation report.",
+  "revisions": [
+    {
+      "date": "2026-11-18",
+      "change": "Rewrote 10 near-duplicate query texts (rag-q-010, 013, 017, 018, 019, 022, 023, 025, 028, 029) before any experiment was run. Query IDs, split labels, languages and query types unchanged."
+    }
+  ]
+}
