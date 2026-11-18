@@ -75,3 +75,10 @@ Dry-run đã truy vấn index và lấy metadata gói; không cài các gói tr�
 | `.venv\Scripts\pytest.exe -q` | `9 passed in 0.02s` (sau khi thêm test vị trí đáp án) |
 | `.venv\Scripts\python.exe scripts/validate_dataset.py` | `Validation passed: 15 records, 0 errors.` |
 | `.venv\Scripts\python.exe scripts/validate_evaluation.py` | `Evaluation validation passed: 30 placement questions, 30 RAG queries, 20 dev / 10 test.` |
+
+## Tuần 2 — Buổi 1 (2026-11-18)
+
+- Cài vào `.venv` sau khi người dùng cho phép: `pip install -r backend/requirements-dev.txt` (lần đầu lỗi mạng `ConnectionResetError 10054`, chạy lại với `--retries 10` thành công). Kiểm tra import: fastapi 0.164.0, SQLAlchemy 2.1.9, psycopg 3.3.9 (impl `binary`), băm `argon2id` qua pwdlib hoạt động.
+- `uvicorn app.main:app --app-dir backend`: `GET /health` → `200 {"status":"ok"}`.
+- `pytest`: 13 passed, 1 cảnh báo (Starlette khuyến nghị `httpx2` thay `httpx` cho TestClient).
+- Docker/Docker Compose: vẫn chưa có. `docker-compose.yml` mới kiểm tra cú pháp YAML, **chưa chạy được**. Người dùng chọn phương án A (Docker Desktop + WSL2).
