@@ -1,4 +1,8 @@
 from fastapi import APIRouter
 
-# API nghiệp vụ có phiên bản; auth và profile được thêm ở Buổi 3.
+from app.api.routes import auth, profile
+
+# API nghiệp vụ có phiên bản.
 api_router = APIRouter(prefix="/api/v1")
+api_router.include_router(auth.router)
+api_router.include_router(profile.router)

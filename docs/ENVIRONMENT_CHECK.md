@@ -101,3 +101,10 @@ Dry-run đã truy vấn index và lấy metadata gói; không cài các gói tr�
   - DB test: upgrade → downgrade base (còn `alembic_version`) → upgrade lại, đều sạch; `alembic -x db=test check` → không lệch.
 - Thêm `backend/tests/conftest.py` (fixture DB test, rollback mỗi test) và `test_db_schema.py` (6 test ràng buộc thật trong PostgreSQL: default ERD, trùng email, email chưa chuẩn hóa, RESTRICT khi xóa user, FK bắt buộc).
 - `pytest`: **25 passed**, 1 cảnh báo httpx. Sau khi chạy: DB test 0 dòng; DB chính `users` 0 dòng.
+
+## Tuần 2 — Buổi 3 (2026-11-20)
+
+- Người dùng cho phép thêm `JWT_SECRET` (sinh ngẫu nhiên, 86 ký tự) và `ACCESS_TOKEN_EXPIRE_MINUTES=60` vào `.env`; `.env.example` có biến trống kèm hướng dẫn. Không cài thêm gói.
+- `pytest`: **69 passed**, 1 cảnh báo httpx. DB test và DB chính đều 0 user sau khi chạy.
+- Kiểm tra độ chặt của test bằng cách cố ý làm hỏng code: bỏ kiểm tra loại token → test đỏ; bỏ băm giả/đổi thông báo lỗi đăng nhập → test đỏ; trả lại `input` trong lỗi 422 → ban đầu test **không** bắt được, đã bổ sung trường hợp lỗi nằm ở chính ô mật khẩu, sau đó test đỏ đúng.
+- Server thật (uvicorn): 401 `not_authenticated` / `invalid_token` / `invalid_credentials`, 422 đúng định dạng; log server không chứa mật khẩu đã gửi.

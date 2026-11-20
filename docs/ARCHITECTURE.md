@@ -61,3 +61,18 @@ Hai retriever có thể bật/tắt độc lập để chạy ablation. Cấu h�
 ## Ranh giới Tuần 1
 
 Không có API nghiệp vụ, migration, tích hợp Gemini, tải model/dataset hoặc dịch vụ chạy thật trong phạm vi tài liệu kiến trúc này.
+
+## Xác thực (Tuần 2, Buổi 3)
+
+- Mật khẩu: Argon2id qua pwdlib (m=64 MiB, t=3, p=4; đo ~43 ms/lần trên máy dev). Tự băm lại khi tham số được nâng. Độ dài 8–128, không bắt buộc ký tự đặc biệt (NIST SP 800-63B), không trùng email.
+- JWT access token HS256 (thuật toán cố định, chỉ chấp nhận HS256 khi giải mã), `sub` = user_id, có `iss`, `iat`, `exp`, `type=access`. Secret và thời hạn (mặc định 60 phút) đọc từ `.env`; app không khởi động nếu thiếu secret hoặc secret < 32 ký tự.
+- Lỗi API thống nhất `{"error": {"code", "message", "details"?}}`; lỗi 422 không trả lại giá trị người dùng gửi (tránh lộ mật khẩu).
+
+### Hạn chế đã chấp nhận (quyết định 2026-11-20)
+
+| Hạn chế | Lý do chấp nhận | Xem lại |
+| --- | --- | --- |
+| Chưa có refresh token; hết 60 phút phải đăng nhập lại | Giữ phạm vi Tuần 2 | Khi có chat dài (Tuần 3+) |
+| Đăng xuất chỉ xóa token phía client; token cũ còn hiệu lực đến khi hết hạn | JWT stateless, không có bảng thu hồi | Cùng lúc với refresh token |
+| Đăng ký trùng email trả 409 → có thể dò email đã đăng ký | Trải nghiệm người dùng rõ ràng; chống dò triệt để cần email xác nhận | Tuần 8 |
+| Chưa giới hạn số lần đăng nhập sai (brute force) | Cần thêm gói/hạ tầng | Tuần 8 khi triển khai |

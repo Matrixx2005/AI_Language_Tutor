@@ -4,11 +4,12 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import URL
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
+MIN_JWT_SECRET_LENGTH = 32
 
 
 class Settings(BaseSettings):
@@ -33,6 +34,22 @@ class Settings(BaseSettings):
     postgres_test_db: str = "ai_language_tutor_test"
 
     default_language_code: str = "en"
+
+    # JWT: secret chỉ đọc từ .env; thuật toán cố định trong app.core.security.
+    jwt_secret: SecretStr | None = None
+    access_token_expire_minutes: int = Field(default=60, ge=1, le=24 * 60)
+
+    @field_validator("jwt_secret")
+    @classmethod
+    def _secret_long_enough(cls, value: SecretStr | None) -> SecretStr | None:
+        if value is not None and len(value.get_secret_value()) < MIN_JWT_SECRET_LENGTH:
+            raise ValueError(f"JWT_SECRET phải dài ít nhất {MIN_JWT_SECRET_LENGTH} ký tự")
+        return value
+
+    def require_jwt_secret(self) -> str:
+        if self.jwt_secret is None:
+            raise RuntimeError("JWT_SECRET chưa được đặt trong .env")
+        return self.jwt_secret.get_secret_value()
 
     def database_url(self, *, test: bool = False) -> URL:
         """URL SQLAlchemy; mật khẩu được escape đúng, không ghép chuỗi thủ công."""
