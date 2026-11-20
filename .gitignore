@@ -15,7 +15,8 @@ node_modules/
 frontend/dist/
 
 # Dữ liệu lớn, model, cache
-models/
+# Chỉ thư mục model AI ở gốc dự án (dấu / đầu dòng); không chặn code backend/app/models/.
+/models/
 *.safetensors
 *.bin
 *.gguf

@@ -3,7 +3,7 @@
 <!-- check_env:AUTO_START -->
 ## Kết quả tự động (scripts/check_env.py)
 
-Chạy lúc: 2026-11-18 21:09
+Chạy lúc: 2026-11-20 21:06
 
 | Mục | Kết quả |
 | --- | --- |
@@ -12,14 +12,14 @@ Chạy lúc: 2026-11-18 21:09
 | Đang trong venv | có |
 | Yêu cầu Python >= 3.13 | ĐẠT |
 | Hệ điều hành | Windows 11 (AMD64) |
-| RAM | 31.6 GB tổng, 15.0 GB trống |
-| Ổ đĩa dự án trống | 295.7 GB |
+| RAM | 31.6 GB tổng, 13.7 GB trống |
+| Ổ đĩa dự án trống | 295.5 GB |
 | git | git version 2.54.0.windows.1 |
 | node | v24.15.0 |
 | npm | 11.12.1 |
-| docker | KHÔNG TÌM THẤY |
-| docker compose | KHÔNG TÌM THẤY |
-| Các bản Python (py -0p) | -V:3.13 *        C:\Users\Admin\AppData\Local\Programs\Python\Python313\python.exe |
+| docker | Docker version 29.9.3, build 5457199 |
+| docker compose | Docker Compose version v5.7.0 |
+| Các bản Python (py -0p) | *               F:\AI_Language_Tutor\.venv\Scripts\python.exe |
 | Python trong .venv | Python 3.13.11 |
 <!-- check_env:AUTO_END -->
 
@@ -82,3 +82,22 @@ Dry-run đã truy vấn index và lấy metadata gói; không cài các gói tr�
 - `uvicorn app.main:app --app-dir backend`: `GET /health` → `200 {"status":"ok"}`.
 - `pytest`: 13 passed, 1 cảnh báo (Starlette khuyến nghị `httpx2` thay `httpx` cho TestClient).
 - Docker/Docker Compose: vẫn chưa có. `docker-compose.yml` mới kiểm tra cú pháp YAML, **chưa chạy được**. Người dùng chọn phương án A (Docker Desktop + WSL2).
+
+## Tuần 2 — Docker và PostgreSQL (2026-11-20)
+
+- Người dùng cài Docker Desktop: `docker run hello-world` thành công; Docker 29.9.3, Docker Compose v5.7.0.
+- `docker compose up -d --wait` → container `postgres` healthy, cổng `127.0.0.1:5432`. PostgreSQL 18.7; có DB `ai_language_tutor` và `ai_language_tutor_test` (script init tạo); dữ liệu nằm ở `/var/lib/postgresql/18` trong volume.
+- Lỗi phát hiện và đã sửa: kết nối tới `localhost` mất 8,02s (treo nếu không có timeout) do Windows thử IPv6 `::1` trước, trong khi Docker chỉ bind `127.0.0.1` (0,04s). Đổi `POSTGRES_HOST` mặc định thành `127.0.0.1` và thêm `connect_timeout=10`.
+- Sau sửa: backend kết nối DB chính 0,16–0,19s, DB test OK; khi tắt DB, lỗi `OperationalError` sau 10,1s thay vì treo. `pytest`: 13 passed.
+
+## Tuần 2 — Buổi 2 (2026-11-20)
+
+- Models `users`, `learner_profiles` và migration `58871d077b8e` (Alembic autogenerate). SQL xem trước bằng `alembic upgrade head --sql` (không chạm DB).
+- Lưu ý: `alembic revision --autogenerate` (Alembic 1.20.1) tạo bảng rỗng `alembic_version` trong DB khi so sánh schema. Đã xóa bảng rỗng này để DB trở lại trống (0 bảng) trước khi người dùng duyệt migration.
+- Lỗi phát hiện và đã sửa: `.gitignore` dòng `models/` chặn cả `backend/app/models/`; đổi thành `/models/` (chỉ thư mục model AI ở gốc).
+- `pytest` sau khi viết models: 19 passed (6 test models không cần DB).
+- Người dùng cho phép chạy migration và giữ default `A1` theo ERD (phương án a).
+  - DB chính: `alembic upgrade head` → `58871d077b8e (head)`; `alembic check` → `No new upgrade operations detected.`
+  - DB test: upgrade → downgrade base (còn `alembic_version`) → upgrade lại, đều sạch; `alembic -x db=test check` → không lệch.
+- Thêm `backend/tests/conftest.py` (fixture DB test, rollback mỗi test) và `test_db_schema.py` (6 test ràng buộc thật trong PostgreSQL: default ERD, trùng email, email chưa chuẩn hóa, RESTRICT khi xóa user, FK bắt buộc).
+- `pytest`: **25 passed**, 1 cảnh báo httpx. Sau khi chạy: DB test 0 dòng; DB chính `users` 0 dòng.
