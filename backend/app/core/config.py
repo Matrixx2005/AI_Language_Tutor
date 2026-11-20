@@ -22,7 +22,10 @@ class Settings(BaseSettings):
     environment: str = "development"
 
     # PostgreSQL: cùng các biến này được docker-compose.yml dùng để tạo DB.
-    postgres_host: str = "localhost"
+    # Dùng 127.0.0.1, không dùng "localhost": Windows thử IPv6 ::1 trước, mà Docker chỉ
+    # bind 127.0.0.1 → mỗi kết nối chậm/treo (đo được 8s so với 0,04s).
+    postgres_host: str = "127.0.0.1"
+    postgres_connect_timeout: int = 10  # giây; DB chưa chạy thì báo lỗi thay vì treo
     postgres_port: int = 5432
     postgres_user: str = "tutor"
     postgres_password: SecretStr | None = None
