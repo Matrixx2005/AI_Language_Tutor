@@ -108,3 +108,54 @@ Dry-run đã truy vấn index và lấy metadata gói; không cài các gói tr�
 - `pytest`: **69 passed**, 1 cảnh báo httpx. DB test và DB chính đều 0 user sau khi chạy.
 - Kiểm tra độ chặt của test bằng cách cố ý làm hỏng code: bỏ kiểm tra loại token → test đỏ; bỏ băm giả/đổi thông báo lỗi đăng nhập → test đỏ; trả lại `input` trong lỗi 422 → ban đầu test **không** bắt được, đã bổ sung trường hợp lỗi nằm ở chính ô mật khẩu, sau đó test đỏ đúng.
 - Server thật (uvicorn): 401 `not_authenticated` / `invalid_token` / `invalid_credentials`, 422 đúng định dạng; log server không chứa mật khẩu đã gửi.
+
+## Tuần 2 — Buổi 4 (2026-11-20)
+
+- `frontend/`: Vite 7.3.8, React 19.3.1, TypeScript 5.9.3, Tailwind CSS 4.3.5, React Router 7.18.6. `npm run build` → **pass** (`tsc -b` và `vite build`; 1.702 modules được transform). Build tạo `frontend/dist/` (đã được Git ignore).
+- Test CORS mới (`backend/tests/test_cors.py`): origin dev `http://localhost:5173` được phản hồi `Access-Control-Allow-Origin`; origin lạ không có header này; khi `ENVIRONMENT=production`, CORS không được bật. Toàn bộ `pytest backend/tests` → **72 passed**, 2 cảnh báo (Starlette/httpx deprecation và pytest cache không ghi được do quyền thư mục).
+- Chạy backend dev server tại `127.0.0.1:8000` với `POSTGRES_DB` trỏ tới DB test; Vite dev server tại `127.0.0.1:5173`. HTTP GET trang Vite trả 200 và header CORS đúng. Luồng HTTP qua hai server: đăng ký 201 → đăng nhập 200 → xem hồ sơ 200 → sửa hồ sơ 200 → đọc lại dữ liệu đã sửa 200. Token hết hạn trả `401 token_expired`; token sai trả `401 invalid_token`. Tài khoản thử nghiệm được tạo trong DB test rồi xóa sau khi kiểm tra.
+- **Giới hạn kiểm chứng:** chưa thao tác được luồng trên giao diện trình duyệt. Công cụ điều khiển Chrome timeout khi xin quyền truy cập hai lần. Vì thế đăng xuất qua nút giao diện và điều hướng thực tế về trang đăng nhập chưa được kiểm tra runtime; mã hiện xóa token phía client trong `sessionStorage` rồi điều hướng `/login`.
+- **Quyết định lưu token:** dùng `sessionStorage` để token còn sau khi reload nhưng tự mất khi đóng phiên/tab trình duyệt. Đánh đổi: JavaScript trang vẫn đọc được token, nên XSS có thể đánh cắp token; đây là lựa chọn phù hợp cho nền hiện tại nhưng không thay thế biện pháp chống XSS.
+- **Kiểm chứng trên trình duyệt — do người dùng tự thực hiện (2026-11-21):** người dùng báo đã tự thử giao diện trên trình duyệt: đăng ký, đăng nhập, sửa hồ sơ, tải lại trang, đăng xuất — kết quả ổn. Claude không quan sát trực tiếp phiên này; đây là kết quả do người dùng tự kiểm chứng và tự báo cáo. Bổ sung cho giới hạn kiểm chứng ghi ở trên.
+
+## Tuần 2 — Buổi 5 (2026-11-21): kiểm thử toàn tuyến
+
+Do Claude chạy, kết quả thật:
+
+| Kiểm tra | Lệnh | Kết quả |
+| --- | --- | --- |
+| Test backend | `pytest` | `78 passed, 1 warning` (cảnh báo Starlette/httpx) |
+| Test khi DB tắt | `docker compose stop` rồi `pytest -rs` | `34 passed, 44 skipped` trong ~6s, không treo; bật lại → 78 passed |
+| Build frontend | `npm run build` | `tsc -b` + `vite build` pass, 1.702 modules, exit 0 |
+| Gói frontend khớp lockfile | `npm ls --depth=0` | exit 0; vite 7.3.8, react 19.3.1, react-router-dom 7.18.6, typescript 5.9.3, tailwindcss 4.3.5 |
+| Migration từ DB trống | `alembic -x db=test downgrade base` → `upgrade head` → `check` | sạch; `No new upgrade operations detected.` |
+| DB chính | `alembic current`, `alembic check` | `58871d077b8e (head)`, không lệch |
+| Secret trong repo | dò giá trị thật `POSTGRES_PASSWORD`, `JWT_SECRET` trong thư mục làm việc, **toàn bộ 8 commit**, `frontend/dist`; dò mẫu key | không có |
+| `.env` và Git | `git ls-files`, `git check-ignore` | `.env`, `frontend/.env`, `frontend/.env.local` bị ignore; chỉ `*.env.example` được theo dõi |
+
+- `.env.example`: bổ sung `ENVIRONMENT` (điều khiển CORS) và `POSTGRES_CONNECT_TIMEOUT` (tùy chọn); `QDRANT_URL` đổi sang `127.0.0.1`. Không có giá trị thật.
+- Bỏ một test CORS trùng trong `test_api_docs_and_logging.py` (đã có đầy đủ hơn ở `test_cors.py`, gồm cả trường hợp production).
+- **Chưa kiểm chứng:** `npm ci` trên bản clone sạch (chưa chạy để không cài lại `node_modules` khi chưa được phép).
+
+### Buổi 5 — hoàn tất tồn đọng trước commit (2026-11-21)
+
+- **Ô trình độ:** thêm `GET /api/v1/languages/{code}` (đọc `languages/<code>.yaml`, không cần token, không lộ ngưỡng placement); trang hồ sơ đổi ô nhập tự do thành danh sách chọn lấy từ API này.
+- **CORS:** thêm `CORS_ORIGINS` (danh sách origin, chặn `*`); để trống thì giữ hành vi cũ (development → Vite, khác → tắt).
+- **Vite:** phát hiện trên Windows Vite mặc định chỉ nghe `::1` → `http://127.0.0.1:5173` không mở được (`URLError`), `localhost` thì được. Ghim `host 127.0.0.1`, `port 5173`, `strictPort`. Sau sửa: cả `localhost:5173` và `127.0.0.1:5173` → 200; khi cổng bận → `Error: Port 5173 is already in use`, exit 1, không chạy ở cổng khác.
+- **Thử README trên bản sao sạch** (chép đúng các file sẽ commit — không có `.env`, `.venv`, `node_modules` — sang thư mục tạm; PostgreSQL riêng ở cổng 5433, project `fresh-clone`, không đụng DB đang dùng):
+
+| Bước README | Kết quả |
+| --- | --- |
+| 1. venv Python 3.13 + `pip install -r backend/requirements-dev.txt` | Python 3.13.11, pip exit 0 |
+| 2. `.env` từ `.env.example` + sinh secret (đổi `POSTGRES_PORT=5433` theo mục Xử lý sự cố) | OK |
+| 3. `docker compose up -d --wait` | `fresh-clone-postgres-1` healthy, `127.0.0.1:5433` |
+| 4. `alembic upgrade head` + `-x db=test upgrade head` | `58871d077b8e (head)` |
+| 5. Backend uvicorn | register 201 → login 200 → profile 200 (en/A1) → languages 200 (A1/A2/B1) → PATCH A2 200 → PATCH C2 422 `invalid_level_code`; CORS cho `localhost:5173` |
+| 6. `npm ci` + `npm run build` + `npm run dev` | 88 gói, exit 0; build pass; trang Vite 200 |
+| 7. `pytest` + 2 validator | 85 passed; 15 records 0 errors; 30/30, 20 dev / 10 test |
+
+  Sau kiểm tra: `docker compose down -v` chỉ trên project `fresh-clone` (đã xác nhận tên trước khi chạy), xóa thư mục tạm; volume `ai_language_tutor_pgdata` và DB đang dùng còn nguyên (healthy, 1 user).
+- **Chưa kiểm chứng:** giao diện danh sách chọn trình độ trên trình duyệt (Claude chỉ kiểm chứng qua build TypeScript và API). Bản sao chạy trên chính máy này (pip/npm dùng cache), chưa thử trên máy khác.
+- `pytest` cuối cùng trên repo: **85 passed**, 1 cảnh báo httpx; `npm run build` pass.
+- Địa chỉ gốc `/` của backend chuyển hướng 307 sang `/docs` (người dùng hai lần mở `/` và gặp 404). `pytest`: **86 passed**.
+- **Kiểm chứng trên trình duyệt — do người dùng tự thực hiện (2026-11-21):** sau khi khởi động lại backend và Vite theo hướng dẫn, người dùng báo "đã test ok hết": `GET /api/v1/languages/en` trả danh sách trình độ; trang hồ sơ hiện ô trình độ dạng danh sách chọn (A1/A2/B1 kèm tên tiếng Việt); chọn và lưu trình độ, tải lại trang, mở bằng `127.0.0.1:5173`, đăng xuất đều ổn. Claude không quan sát trực tiếp phiên này; đây là kết quả do người dùng tự kiểm chứng và tự báo cáo.

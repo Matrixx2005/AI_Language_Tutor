@@ -16,6 +16,20 @@ export interface ProfileUpdate {
   current_level_code?: string
 }
 
+export interface LevelOption {
+  code: string
+  display_name: string
+  display_name_vi: string
+}
+
+/** Cấu hình ngôn ngữ từ languages/<code>.yaml (qua GET /languages/{code}). */
+export interface Language {
+  language_code: string
+  display_name: string
+  display_name_vi: string
+  levels: LevelOption[]
+}
+
 export interface ApiError {
   code: string
   message: string

@@ -1,4 +1,4 @@
-import type { ApiError, Profile, ProfileUpdate } from '../types'
+import type { ApiError, Language, Profile, ProfileUpdate } from '../types'
 
 const TOKEN_KEY = 'alt_access_token'
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1').replace(/\/$/, '')
@@ -81,6 +81,11 @@ class ApiClient {
 
   updateMyProfile(data: ProfileUpdate) {
     return this.request<Profile>('/profile/me', { method: 'PATCH', body: JSON.stringify(data) })
+  }
+
+  /** Danh sách trình độ hợp lệ; không hardcode A1/A2/B1 ở frontend. */
+  getLanguage(languageCode: string) {
+    return this.request<Language>(`/languages/${encodeURIComponent(languageCode)}`)
   }
 }
 

@@ -45,7 +45,7 @@ Baseline: LLM-only, Dense RAG. Đề xuất: Hybrid. Ablation: bật/tắt spars
 | Tuần | Nội dung | Nghiệm thu | Trạng thái |
 | --- | --- | --- | --- |
 | 1 | Thiết kế, repo, môi trường, dataset v1, bộ đánh giá nháp | Repo chạy được; schema DB có `language_code`; ≥ 15 bài ngữ pháp đủ metadata; 30 truy vấn đánh giá nháp | Hoàn thành (2026-11-18): đạt 6/6 tiêu chí nghiệm thu; ERD đã duyệt; 15 bài chốt CC BY 4.0; bộ đánh giá đã rà soát (`docs/EVALUATION_REVIEW.md`); 9 test pass, validator 0 lỗi. Git khởi tạo cuối Tuần 1; Docker chuyển sang điều kiện của Tuần 2. |
-| 2 | Auth, REST API, PostgreSQL, giao diện nền | Đăng ký/đăng nhập từ UI; có test API | Chưa bắt đầu |
+| 2 | Auth, REST API, PostgreSQL, giao diện nền | Đăng ký/đăng nhập từ UI; có test API | Hoàn thành (nghiệm thu 2026-11-21): đạt 5/5 tiêu chí. PostgreSQL 18 (Docker), migration đầu tiên, JWT + Argon2id, frontend React; 86 test pass, build pass; README đã thử trên bản sạch; luồng giao diện do người dùng tự kiểm chứng. Hoãn sang Tuần 3: test frontend (vitest), httpx → httpx2. Chi tiết: `docs/ENVIRONMENT_CHECK.md` |
 | 3 | Gemini, chat API, placement test | Chat LLM-only lưu lịch sử; placement ra A1–B1 | Chưa bắt đầu |
 | 4 | RAG | 3 chế độ truy xuất; trích dẫn đúng tài liệu đã truy xuất; test retrieval | Chưa bắt đầu |
 | 5 | Bài tập, phân tích lỗi | Sinh → validate → làm → chấm → giải thích → lưu lỗi | Chưa bắt đầu |

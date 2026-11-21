@@ -3,21 +3,25 @@ import { ArrowUpRight, Check, Target, UserRound } from 'lucide-react'
 import { ApiRequestError, api } from '../api/client'
 import { FormMessage } from '../components/FormMessage'
 import { Loading } from '../components/Loading'
-import type { Profile } from '../types'
+import type { LevelOption, Profile } from '../types'
 
 export function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [name, setName] = useState('')
   const [goal, setGoal] = useState('')
   const [level, setLevel] = useState('')
+  const [levels, setLevels] = useState<LevelOption[]>([])
+  const [levelsError, setLevelsError] = useState(false)
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
 
   useEffect(() => {
-    api.getMyProfile().then((data) => {
+    api.getMyProfile().then(async (data) => {
       setProfile(data); setName(data.display_name || ''); setGoal(data.learning_goal || ''); setLevel(data.current_level_code)
+      // Trình độ hợp lệ lấy từ cấu hình ngôn ngữ của chính hồ sơ (languages/<code>.yaml).
+      try { setLevels((await api.getLanguage(data.language_code)).levels) } catch { setLevelsError(true) }
     }).catch((caught: unknown) => {
       if (!(caught instanceof ApiRequestError && caught.status === 401)) setError(caught instanceof Error ? caught.message : 'Không tải được hồ sơ.')
     }).finally(() => setLoading(false))
@@ -47,7 +51,14 @@ export function ProfilePage() {
         {notice && <div role="status" className="mt-5 flex items-center gap-2 rounded-xl bg-[#edf7f0] px-4 py-3 text-sm text-[#28765c]"><Check size={17} />{notice}</div>}
         <form onSubmit={submit} className="mt-7 space-y-5">
           <label className="field-label">Tên hiển thị<input className="field-input" autoComplete="name" maxLength={100} value={name} onChange={(e) => setName(e.target.value)} placeholder="Tên bạn muốn mọi người gọi" /></label>
-          <label className="field-label">Trình độ hiện tại<input className="field-input" maxLength={16} required value={level} onChange={(e) => setLevel(e.target.value)} placeholder="Mã trình độ hiện tại" /><span className="mt-1.5 block text-xs font-normal text-[#87958f]">Mã trình độ được đối chiếu với cấu hình ngôn ngữ ở máy chủ.</span></label>
+          <label className="field-label">Trình độ hiện tại
+            <select className="field-input" required value={level} onChange={(e) => setLevel(e.target.value)} disabled={levelsError || levels.length === 0}>
+              {/* Giữ trình độ đang lưu làm lựa chọn ngay cả khi chưa tải được danh sách. */}
+              {!levels.some((option) => option.code === level) && level && <option value={level}>{level}</option>}
+              {levels.map((option) => <option key={option.code} value={option.code}>{option.code} — {option.display_name_vi}</option>)}
+            </select>
+            <span className="mt-1.5 block text-xs font-normal text-[#87958f]">{levelsError ? 'Chưa tải được danh sách trình độ; trình độ hiện tại được giữ nguyên.' : 'Chọn trình độ bạn đang học.'}</span>
+          </label>
           <label className="field-label">Mục tiêu học tập<textarea className="field-input min-h-28 resize-y" maxLength={1000} value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="Bạn muốn đạt được điều gì khi học?" /></label>
           <button disabled={busy || !profile} className="primary-button">{busy ? 'Đang lưu…' : 'Lưu thay đổi'}</button>
         </form>
