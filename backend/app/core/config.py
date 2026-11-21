@@ -10,6 +10,7 @@ from sqlalchemy.engine import URL
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 MIN_JWT_SECRET_LENGTH = 32
+DEV_CORS_ORIGINS = ("http://localhost:5173", "http://127.0.0.1:5173")  # Vite dev server
 
 
 class Settings(BaseSettings):
@@ -34,6 +35,23 @@ class Settings(BaseSettings):
     postgres_test_db: str = "ai_language_tutor_test"
 
     default_language_code: str = "en"
+
+    # CORS: danh sách origin cách nhau bằng dấu phẩy. Để trống → development dùng
+    # DEV_CORS_ORIGINS (Vite), môi trường khác tắt CORS.
+    cors_origins: str = ""
+
+    @field_validator("cors_origins")
+    @classmethod
+    def _no_wildcard_origin(cls, value: str) -> str:
+        if "*" in value:
+            raise ValueError("CORS_ORIGINS không được chứa '*'; liệt kê từng origin cụ thể")
+        return value
+
+    def effective_cors_origins(self) -> list[str]:
+        configured = [origin.strip().rstrip("/") for origin in self.cors_origins.split(",") if origin.strip()]
+        if configured:
+            return configured
+        return list(DEV_CORS_ORIGINS) if self.environment == "development" else []
 
     # JWT: secret chỉ đọc từ .env; thuật toán cố định trong app.core.security.
     jwt_secret: SecretStr | None = None

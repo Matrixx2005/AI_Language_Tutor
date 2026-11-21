@@ -18,14 +18,27 @@ class UnknownLanguageError(ValueError):
 
 
 @dataclass(frozen=True)
+class LevelConfig:
+    code: str
+    display_name: str
+    display_name_vi: str
+
+
+@dataclass(frozen=True)
 class LanguageConfig:
     language_code: str
-    level_codes: tuple[str, ...]
+    display_name: str
+    display_name_vi: str
+    levels: tuple[LevelConfig, ...]
+
+    @property
+    def level_codes(self) -> tuple[str, ...]:
+        return tuple(level.code for level in self.levels)
 
     @property
     def default_level_code(self) -> str:
         """Trình độ thấp nhất (mục đầu tiên trong YAML) cho người học mới."""
-        return self.level_codes[0]
+        return self.levels[0].code
 
     def is_valid_level(self, level_code: str) -> bool:
         return level_code in self.level_codes
@@ -40,7 +53,24 @@ def get_language_config(language_code: str) -> LanguageConfig:
         raise UnknownLanguageError(f"Chưa có cấu hình ngôn ngữ: {language_code!r}")
 
     data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    levels = tuple(level["code"] for level in data.get("levels", []))
+    try:
+        levels = tuple(
+            LevelConfig(
+                code=level["code"],
+                display_name=level.get("display_name", level["code"]),
+                display_name_vi=level.get("display_name_vi", level.get("display_name", level["code"])),
+            )
+            for level in data.get("levels", [])
+        )
+    except (KeyError, TypeError) as exc:
+        raise UnknownLanguageError(f"File {path.name}: mỗi level cần có 'code'") from exc
     if data.get("language_code") != language_code or not levels:
         raise UnknownLanguageError(f"File {path.name} thiếu language_code hoặc levels")
-    return LanguageConfig(language_code=language_code, level_codes=levels)
+
+    display_name = data.get("display_name", language_code)
+    return LanguageConfig(
+        language_code=language_code,
+        display_name=display_name,
+        display_name_vi=data.get("display_name_vi", display_name),
+        levels=levels,
+    )

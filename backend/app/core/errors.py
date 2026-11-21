@@ -6,12 +6,15 @@ có thể chứa mật khẩu).
 """
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+logger = logging.getLogger("app.errors")
 
 
 class AppError(Exception):
@@ -36,13 +39,19 @@ def error_body(code: str, message: str, details: list[dict[str, Any]] | None = N
     return {"error": error}
 
 
-async def _app_error_handler(_: Request, exc: AppError) -> JSONResponse:
+def _log_rejected(request: Request, status_code: int, reason: str) -> None:
+    # Chỉ ghi phương thức, đường dẫn, tên ô và mã lỗi. KHÔNG ghi giá trị người dùng gửi.
+    logger.info("%s %s %s -> %s", status_code, request.method, request.url.path, reason)
+
+
+async def _app_error_handler(request: Request, exc: AppError) -> JSONResponse:
+    _log_rejected(request, exc.status_code, exc.code)
     return JSONResponse(
         error_body(exc.code, exc.message), status_code=exc.status_code, headers=exc.headers
     )
 
 
-async def _validation_error_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
+async def _validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     details = [
         {
             # Bỏ tiền tố "body" để frontend gắn lỗi vào đúng ô nhập.
@@ -53,6 +62,11 @@ async def _validation_error_handler(_: Request, exc: RequestValidationError) -> 
         }
         for error in exc.errors()
     ]
+    _log_rejected(
+        request,
+        422,
+        ", ".join(f"{detail['field'] or '(body)'}: {detail['type']}" for detail in details),
+    )
     return JSONResponse(
         error_body("validation_error", "Dữ liệu gửi lên không hợp lệ.", details), status_code=422
     )

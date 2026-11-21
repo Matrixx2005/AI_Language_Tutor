@@ -12,6 +12,13 @@ def test_health_returns_ok_without_database():
     assert response.json() == {"status": "ok"}
 
 
+def test_root_redirects_to_api_docs():
+    response = TestClient(create_app()).get("/", follow_redirects=False)
+
+    assert response.status_code == 307
+    assert response.headers["location"] == "/docs"
+
+
 def test_database_url_escapes_special_characters_in_password():
     settings = Settings(
         _env_file=None,
