@@ -14,6 +14,15 @@ def test_tutor_prompt_renders_level_and_key_rules():
     assert "Never reveal" in prompt  # không lộ system prompt
 
 
+def test_tutor_prompt_has_strict_example_limit_and_sound_only_a_an_summary():
+    prompt = render_prompt("en", "tutor", level_code="A1", level_name="Sơ cấp")
+
+    assert "at most three examples" in prompt
+    assert "Never give more than three examples in one answer" in prompt and "this limit is strict" in prompt
+    assert 'only in terms of sounds ("a vowel sound" / "a consonant sound")' in prompt
+    assert 'Do not list letters such as "a, e, i, o, u" as the rule' in prompt
+
+
 def test_missing_variable_is_an_error():
     with pytest.raises(ValueError, match="level_name"):
         render_prompt("en", "tutor", level_code="A1")

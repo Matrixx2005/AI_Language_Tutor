@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -47,6 +48,33 @@ class Settings(BaseSettings):
     # Chat (quyết định Tuần 3, mục 4): gửi N lượt gần nhất; giới hạn độ dài mỗi tin người dùng.
     chat_history_turns: int = Field(default=10, ge=0, le=50)
     chat_max_message_chars: int = Field(default=2000, ge=1, le=10_000)
+
+    # Giới hạn tần suất (Tuần 3, Buổi 4). 0 = tắt giới hạn đó. Bộ đếm phút/IP nằm trong bộ nhớ
+    # (chỉ đúng khi chạy MỘT tiến trình); giới hạn NGÀY đếm từ DB.
+    chat_user_per_minute: int = Field(default=6, ge=0, le=1000)
+    chat_user_per_day: int = Field(default=40, ge=0, le=100_000)
+    chat_max_concurrent_per_user: int = Field(default=1, ge=1, le=10)
+    # Ngưỡng TOÀN HỆ THỐNG (cả app dùng chung một key): gói free gemini-3.5-flash-lite 15 RPM →
+    # mặc định 10 để chừa dư địa cho thử lại/model dự phòng. RPD chưa biết → mặc định tắt.
+    llm_global_per_minute: int = Field(default=10, ge=0, le=100_000)
+    llm_global_per_day: int = Field(default=0, ge=0, le=10_000_000)
+    auth_login_fails_per_email: int = Field(default=5, ge=0, le=1000)
+    auth_login_fails_per_ip: int = Field(default=20, ge=0, le=100_000)
+    auth_login_window_seconds: int = Field(default=900, ge=60, le=86_400)
+    auth_register_per_ip_per_hour: int = Field(default=10, ge=0, le=100_000)
+    user_timezone: str = "Asia/Ho_Chi_Minh"  # ranh giới "ngày" cho giới hạn theo ngày
+    # Số proxy tin cậy đứng trước app. 0 = KHÔNG tin X-Forwarded-For (dễ giả mạo), chỉ dùng IP kết nối.
+    # Chỉ đặt > 0 khi triển khai sau reverse proxy mà mình kiểm soát (Tuần 8).
+    trusted_proxy_count: int = Field(default=0, ge=0, le=5)
+
+    @field_validator("user_timezone")
+    @classmethod
+    def _valid_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except (ZoneInfoNotFoundError, ValueError) as exc:
+            raise ValueError(f"USER_TIMEZONE không hợp lệ: {value!r}") from exc
+        return value
 
     def llm_fallback_model_id_list(self) -> list[str]:
         return [model.strip() for model in self.llm_fallback_model_ids.split(",") if model.strip()]

@@ -51,7 +51,7 @@ Mở `.env`, điền hai giá trị trên. `.env` đã nằm trong `.gitignore` 
 | `JWT_SECRET` | **có** | Chuỗi ngẫu nhiên ≥ 32 ký tự (lệnh ở trên). Thiếu hoặc ngắn hơn → backend không khởi động |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | không (mặc định `60`) | Thời hạn token đăng nhập, 1–1440 phút |
 | `DEFAULT_LANGUAGE_CODE` | không (mặc định `en`) | Ngôn ngữ học của tài khoản mới; phải có `languages/<code>.yaml` |
-| `LLM_PROVIDER` | không (mặc định `fake`) | `fake` = trả lời giả, không mạng, không tốn hạn mức; `gemini` = gọi Gemini thật (xem mục "Bật LLM thật") |
+| `LLM_PROVIDER` | không (mặc định `fake`) | `fake` = trả lời giả, không mạng, không tốn hạn mức (lượt `fake` không tính vào giới hạn ngày/toàn hệ thống, lưu `model_id` dạng `fake:...`); `gemini` = gọi Gemini thật (xem mục "Bật LLM thật"). Đổi sang `gemini` thì tạo cuộc trò chuyện mới |
 | `LLM_MODEL_ID` | khi `LLM_PROVIDER=gemini` | Model chính. Đã kiểm chứng: `gemini-3.5-flash-lite`. Không dùng alias `*-latest` |
 | `LLM_FALLBACK_MODEL_IDS` | không | Model dự phòng khi model chính hết hạn mức/quá tải, cách nhau bằng dấu phẩy (ví dụ `gemini-3.8-flash`) |
 | `LLM_TIMEOUT_SECONDS` | không (mặc định `30`) | Thời gian chờ mỗi lần gọi, 1–120 giây |
@@ -59,6 +59,18 @@ Mở `.env`, điền hai giá trị trên. `.env` đã nằm trong `.gitignore` 
 | `LLM_MAX_OUTPUT_TOKENS` | không (mặc định `1024`) | Giới hạn token trả lời (gồm cả token "suy nghĩ" của Gemini) |
 | `GEMINI_THINKING_LEVEL` | không (mặc định `low`) | `minimal` / `low` / `medium` / `high`, để trống = mặc định của model |
 | `GEMINI_API_KEY` | khi `LLM_PROVIDER=gemini` | Tạo tại Google AI Studio. **Chỉ đặt trong `.env`**, không bao giờ trong `.env.example` hay mã nguồn |
+| `CHAT_HISTORY_TURNS` | không (mặc định `10`) | Số lượt gần nhất gửi cho LLM (1 lượt = câu hỏi + trả lời; lượt lỗi không gửi), 0–50 |
+| `CHAT_MAX_MESSAGE_CHARS` | không (mặc định `2000`) | Độ dài tối đa mỗi tin người dùng, 1–10000 ký tự; dài hơn → `422 message_too_long` |
+| `CHAT_USER_PER_MINUTE` | không (mặc định `6`) | Tin chat mỗi phút mỗi người; vượt → `429 chat_rate_limited`. `0` = tắt |
+| `CHAT_USER_PER_DAY` | không (mặc định `40`) | Tin chat mỗi ngày (theo `USER_TIMEZONE`) mỗi người; vượt → `429 chat_daily_limit_reached`. Lượt hỏng do hệ thống không tính |
+| `CHAT_MAX_CONCURRENT_PER_USER` | không (mặc định `1`) | Số tin chờ trả lời cùng lúc mỗi người; vượt → `409 chat_busy` |
+| `LLM_GLOBAL_PER_MINUTE` | không (mặc định `10`) | Lượt gọi LLM mỗi phút **toàn hệ thống** (một key chung); vượt → `429 service_busy` |
+| `LLM_GLOBAL_PER_DAY` | không (mặc định `0` = tắt) | Lượt gọi LLM mỗi ngày toàn hệ thống. Đặt thấp hơn RPD thật trong AI Studio |
+| `AUTH_LOGIN_FAILS_PER_EMAIL`, `AUTH_LOGIN_FAILS_PER_IP` | không (`5`, `20`) | Số lần đăng nhập sai trong cửa sổ; vượt → `429 auth_rate_limited` |
+| `AUTH_LOGIN_WINDOW_SECONDS` | không (`900`) | Cửa sổ đếm đăng nhập sai, 60–86400 giây |
+| `AUTH_REGISTER_PER_IP_PER_HOUR` | không (`10`) | Số lần đăng ký mỗi giờ mỗi IP |
+| `USER_TIMEZONE` | không (`Asia/Ho_Chi_Minh`) | Ranh giới "ngày" cho giới hạn theo ngày |
+| `TRUSTED_PROXY_COUNT` | không (`0`) | Số proxy tin cậy; `0` = không đọc `X-Forwarded-For`. Chỉ đổi khi triển khai sau proxy (Tuần 8) |
 | `EMBEDDING_MODEL`, `QDRANT_URL` | chưa dùng | Dành cho Tuần 4 |
 
 Frontend (tùy chọn): `frontend/.env.example` có `VITE_API_BASE_URL` (mặc định `http://127.0.0.1:8000/api/v1`). Chỉ cần tạo `frontend/.env.local` khi đổi địa chỉ backend. Biến `VITE_*` bị nhúng vào trang web công khai — không đặt secret ở đó.

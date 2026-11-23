@@ -8,6 +8,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.core.errors import AppError
+from app.core.limits import AppLimits, get_limits
 from app.core.security import InvalidTokenError, TokenExpiredError, decode_access_token
 from app.db.session import get_db
 from app.llm import get_llm_service
@@ -57,3 +58,4 @@ def get_llm() -> LLMService:
 
 
 LLM = Annotated[LLMService, Depends(get_llm)]
+Limits = Annotated[AppLimits, Depends(get_limits)]

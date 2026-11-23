@@ -59,6 +59,11 @@ class LLMService:
     def __repr__(self) -> str:
         return f"LLMService(provider={self.provider!r}, models={self.models}, max_retries={self.max_retries})"
 
+    @property
+    def consumes_quota(self) -> bool:
+        """Lời gọi có tốn hạn mức nhà cung cấp thật không (FakeLLM mặc định: không)."""
+        return getattr(self.provider, "consumes_quota", True)
+
     # ------------------------------------------------------------------ public
 
     def generate(self, request: LLMRequest) -> LLMResult:

@@ -75,4 +75,23 @@ Không có API nghiệp vụ, migration, tích hợp Gemini, tải model/dataset
 | Chưa có refresh token; hết 60 phút phải đăng nhập lại | Giữ phạm vi Tuần 2 | Khi có chat dài (Tuần 3+) |
 | Đăng xuất chỉ xóa token phía client; token cũ còn hiệu lực đến khi hết hạn | JWT stateless, không có bảng thu hồi | Cùng lúc với refresh token |
 | Đăng ký trùng email trả 409 → có thể dò email đã đăng ký | Trải nghiệm người dùng rõ ràng; chống dò triệt để cần email xác nhận | Tuần 8 |
-| Chưa giới hạn số lần đăng nhập sai (brute force) | Cần thêm gói/hạ tầng | Tuần 8 khi triển khai |
+| ~~Chưa giới hạn số lần đăng nhập sai (brute force)~~ | **Đã xử lý ở Tuần 3, Buổi 4** (theo email và IP, trong bộ nhớ) — xem mục bên dưới | Tuần 8: chuyển sang Redis nếu chạy nhiều tiến trình |
+
+## Giới hạn tần suất và chống lạm dụng (Tuần 3, Buổi 4)
+
+- **Thuật toán:** cửa sổ trượt dạng nhật ký (`app/core/rate_limit.py`): đúng nghĩa "N lần trong X giây", Retry-After chính xác, bộ nhớ chặn trên (≤ `limit` mốc mỗi khóa, ≤ 10.000 khóa; dọn khóa hết hạn rồi bỏ khóa cũ nhất). An toàn đa luồng bằng `threading.Lock`. Ngưỡng cấu hình qua `.env` (`0` = tắt).
+- **Đăng nhập/đăng ký:** đếm đăng nhập SAI theo email đã chuẩn hóa và theo IP (cửa sổ `AUTH_LOGIN_WINDOW_SECONDS`), đăng nhập đúng xóa bộ đếm email; đăng ký giới hạn theo IP mỗi giờ. Bị chặn → `429 auth_rate_limited` + `Retry-After`, thông điệp như nhau dù email có tồn tại hay không.
+- **Chat:** thứ tự kiểm tra: chủ sở hữu phiên (404) → độ dài (422) → đồng thời (`409 chat_busy`) → phút (`429 chat_rate_limited`) và ngày theo `USER_TIMEZONE` (`429 chat_daily_limit_reached`, Retry-After đến nửa đêm) → toàn hệ thống (`429 service_busy`: tạm khóa sau 429 thật từ nhà cung cấp ≤ 60 giây, ngưỡng ngày, ngưỡng phút) → lưu tin → gọi LLM. Bị từ chối vì giới hạn: không lưu tin, không gọi LLM. Khóa "đang xử lý" nhả trong `finally`.
+- **Giới hạn ngày** đếm từ `chat_messages` (bền qua khởi động lại, không thêm bảng): tin người dùng hôm nay trừ lượt hỏng do hệ thống/nhà cung cấp và trừ lượt giả lập; lượt bị chặn vì nội dung vẫn tính.
+- **Chế độ `LLM_PROVIDER=fake`:** nhà cung cấp khai báo `consumes_quota=False` → câu trả lời lưu `model_id` dạng `fake:<model>` (lỗi: `fake:`), không tính vào giới hạn ngày (mỗi người và toàn hệ thống), bỏ qua ngưỡng phút toàn hệ thống và tạm khóa sau 429. Vẫn áp dụng giới hạn phút mỗi người và khóa đồng thời (chống spam). Lý do: giới hạn ngày phản ánh đúng mức dùng hạn mức Google thật; làm giao diện với `fake` không làm hết lượt của người dùng.
+- **IP client:** mặc định chỉ dùng IP kết nối, KHÔNG tin `X-Forwarded-For` (giả mạo được). `TRUSTED_PROXY_COUNT=n` (Tuần 8) lấy phần tử thứ n từ cuối chuỗi. Log chỉ ghi IP rút gọn (`a.b.c.x`) hoặc 8 ký tự đầu user_id, loại giới hạn và thời gian chờ — không email, không nội dung, không mật khẩu.
+- **Đầu vào chat:** bỏ ký tự điều khiển/NUL (giữ xuống dòng, tab), chuẩn hóa xuống dòng, tối đa 100 dòng. Không lọc từ khóa kiểu "ignore instructions": chống prompt injection dựa vào cấu trúc — nội dung người dùng chỉ nằm trong danh sách tin nhắn vai `user`, không bao giờ ghép vào system prompt.
+
+### Giới hạn đã biết
+
+| Giới hạn | Ảnh hưởng | Xử lý |
+| --- | --- | --- |
+| Bộ đếm phút/IP/đồng thời/tạm khóa nằm trong bộ nhớ của **một tiến trình** | Chạy nhiều worker (`uvicorn --workers`, gunicorn) hoặc nhiều máy → mỗi tiến trình đếm riêng, ngưỡng thực tế nhân lên; khởi động lại thì mất bộ đếm phút/IP | Tuần 8: Redis nếu triển khai nhiều tiến trình. Giới hạn NGÀY đếm từ DB nên không bị ảnh hưởng |
+| Kiểm tra giới hạn ngày và ghi tin không nguyên tử | Nếu `CHAT_MAX_CONCURRENT_PER_USER > 1`, vài request song song có thể vượt ngưỡng ngày một chút | Mặc định `1` nên không xảy ra |
+| Khi bộ đếm vượt 10.000 khóa, khóa ít dùng nhất bị bỏ | Kẻ tấn công dùng rất nhiều IP có thể đẩy bộ đếm của IP khác ra ngoài | Chấp nhận cho môi trường đồ án; reverse proxy/WAF ở Tuần 8 |
+| FakeLLM chỉ kiểm chứng **cấu trúc** prompt (nội dung người dùng không vào system prompt) | Không chứng minh được model thật có tuân thủ prompt khi bị tấn công (in system prompt, đổi vai) | Đánh giá an toàn với model thật ở Tuần 7 |

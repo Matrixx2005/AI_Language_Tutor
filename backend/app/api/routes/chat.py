@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, status
 
-from app.api.deps import LLM, CurrentUser, DbSession
+from app.api.deps import LLM, CurrentUser, DbSession, Limits
 from app.schemas.chat import ChatMessageCreate, ChatMessageRead, ChatSessionRead, ChatTurnRead
 from app.services import chat as chat_service
 
@@ -41,10 +41,11 @@ def send_message(
     user: CurrentUser,
     db: DbSession,
     llm: LLM,
+    limits: Limits,
 ) -> ChatTurnRead:
     """Gửi tin và nhận trả lời (không streaming). Khi AI lỗi: tin của bạn vẫn được lưu, API trả mã lỗi
     ổn định (`llm_timeout`, `llm_rate_limited`, ...) và lịch sử có một dòng trả lời `status='error'`."""
-    user_row, assistant_row = chat_service.send_message(db, llm, user, session_id, data.content)
+    user_row, assistant_row = chat_service.send_message(db, llm, user, session_id, data.content, limits)
     return ChatTurnRead(
         user_message=ChatMessageRead.model_validate(user_row),
         assistant_message=ChatMessageRead.model_validate(assistant_row),

@@ -270,3 +270,67 @@ Người dùng cho phép: migrate DB chính, duyệt cột `truncated`, chat th�
 - `docs/DATABASE_DESIGN.md`: ghi các bổ sung đã duyệt cho `chat_sessions` (`title`) và `chat_messages` (`status`, `error_code`, `model_id`, `input_tokens`, `output_tokens`, `latency_ms`, `truncated`).
 - **Chat thật 1 lần qua toàn bộ API** (đăng ký → đăng nhập → tạo phiên → gửi tin → đọc lại), trên DB test trong một transaction rồi rollback (DB test sau đó 0 user, 0 tin nhắn); ép `LLM_MAX_RETRIES=0`, không model dự phòng. Câu hỏi: "Khi nào dùng 'a' và khi nào dùng 'an'? Cho ví dụ với 'hour' và 'university'." Kết quả: HTTP 200, model thực tế `gemini-3.5-flash-lite`, **3072 ms**, token vào/ra **393/295**, `truncated=False`; lịch sử đọc lại `[user ok, assistant ok]`. Key không xuất hiện trong output.
 - Nhận xét nội dung (Claude đánh giá): giải thích bằng tiếng Việt, ví dụ tiếng Anh có dịch — đúng yêu cầu. Quy tắc a/an **đúng theo âm** (*an hour*: h câm; *a university*: âm /ju:/) — đã khắc phục lỗi của hai lần gọi trước. Chưa chuẩn: câu tóm tắt vẫn liệt kê "u, e, o, a, i" như chữ cái; đưa 4 ví dụ trong khi prompt yêu cầu tối đa 3.
+
+## Tuần 3 — hoàn thiện Buổi 2–3 (2026-11-23)
+
+### Claude đã chạy
+
+- **Không giữ kết nối DB khi chờ LLM** (`services/chat.py::send_message`): đọc trước `session_id`, `language_code`, lịch sử, trình độ, system prompt vào biến cục bộ; commit tin người dùng rồi gọi LLM **không** `refresh` (trước đây `db.refresh(user_row)` mở transaction mới và giữ kết nối suốt thời gian chờ LLM); chỉ `refresh` sau khi đã có trả lời. Test: `session.in_transaction()` lúc FakeLLM chạy = `False`; với `Session` thật (không savepoint), `engine.pool.checkedout()` lúc FakeLLM chạy = `0`.
+- **Lỗi ngoài dự kiến:** lỗi không phải `LLMError` → lưu dòng trợ lý `status='error'`, `error_code='internal_error'`, log `chat internal_error session=... exc_type=...` (không nội dung), ném lại; thêm bộ xử lý lỗi chung trả `500 {"error": {"code": "internal_error", ...}}` (log chỉ tên lớp lỗi). Lưu ý: provider ném `RuntimeError` được `LLMService` chuẩn hóa thành `llm_invalid_response` (502) từ Buổi 1 — có test riêng; nhánh `internal_error` được kiểm bằng lớp LLM bị lỗi lập trình.
+- **list_messages:** lấy `limit` tin mới nhất rồi đảo lại thứ tự tăng dần (test với `limit=3` trên phiên 8 tin).
+- `.env.example` + README: `CHAT_HISTORY_TURNS=10`, `CHAT_MAX_MESSAGE_CHARS=2000` kèm chú thích.
+- `prompts/en/tutor.md`: thêm quy tắc "Never give more than three examples ... this limit is strict" và "summarize the a/an rule only in terms of sounds ... Do not list letters". `test_prompts.py` kiểm tra hai câu này. **Không gọi API thật để thử.**
+- `docs/PROMPT_WEEK3.md` (Buổi 6): thêm mục hiển thị `truncated` và thông báo nội dung chat gửi tới Google (gói miễn phí có người đọc).
+- Test mới `test_chat_robustness.py` (6). Làm hỏng code có chủ đích (khôi phục, `cmp` xác nhận): `refresh` tin người dùng trước khi gọi LLM → 2 failed (cả `in_transaction` lẫn `pool.checkedout`); bỏ nhánh bắt lỗi ngoài dự kiến → 1 failed; `list_messages` lấy tin cũ nhất → 1 failed; bỏ bộ xử lý lỗi 500 chung → 1 failed.
+- `pytest` không mạng, không key (`GEMINI_API_KEY=""`, `LLM_PROVIDER=fake`, proxy cổng chết): **222 passed, 1 skipped**; chạy bình thường: 222 passed, 1 skipped, không cảnh báo. `alembic check`: DB test và DB chính đều không lệch (không đổi schema). DB test sau khi chạy: 0 user, 0 tin nhắn.
+- Quét secret (thư mục làm việc + 12 commit): `GEMINI_API_KEY`, `POSTGRES_PASSWORD`, `JWT_SECRET` không có; `.env.example` không có giá trị key.
+
+### Chưa kiểm chứng
+
+- Hiệu quả thật của hai quy tắc prompt mới (giới hạn 3 ví dụ, tóm tắt a/an chỉ theo âm) với Gemini — chưa gọi API.
+- Hành vi giữ kết nối dưới tải đồng thời nhiều request (mới kiểm chứng một request).
+
+## Tuần 3 — Buổi 4: giới hạn tần suất, chống lạm dụng, an toàn chat (2026-11-23)
+
+### Claude đã chạy
+
+- **Không cài thư viện mới.** `tzdata` 2026.6 đã có sẵn (do `psycopg` kéo theo trên Windows); vì code dùng trực tiếp `zoneinfo` cho `USER_TIMEZONE` nên ghim `tzdata==2026.6` vào `requirements.txt`. `pip check`: không lỗi. Kiểm tra: 17:00:00Z → `2026-11-24 00:00:00+07:00` (Asia/Ho_Chi_Minh).
+- **LLMService với lỗi hết hạn mức NGÀY** (đọc code, không đoán): `LLMQuotaExhaustedError.retryable = False` → `service.py` dòng 87–88 thoát vòng thử lại ngay, không gọi lại cùng model; `fallback_allowed = True` → chuyển sang model dự phòng. Đã có test `test_non_transient_errors_are_not_retried` (max_retries=3 vẫn 1 lần gọi). **Không cần sửa.**
+- Tạo `app/core/rate_limit.py` (cửa sổ trượt dạng nhật ký, `ConcurrencyGuard`, `Cooldown`; `threading.Lock`; đồng hồ thay được; ≤ 10.000 khóa, dọn khóa hết hạn rồi bỏ khóa cũ nhất), `app/core/limits.py` (`AppLimits` gắn vào `app.state`, `client_ip` không tin `X-Forwarded-For` khi `TRUSTED_PROXY_COUNT=0`, `mask_ip`, ranh giới ngày theo múi giờ, log từ chối chỉ metadata). Cấu hình mới trong `config.py` (có `ge/le`; `0` = tắt): `CHAT_USER_PER_MINUTE=6`, `CHAT_USER_PER_DAY=40`, `CHAT_MAX_CONCURRENT_PER_USER=1`, `LLM_GLOBAL_PER_MINUTE=10`, `LLM_GLOBAL_PER_DAY=0`, `AUTH_LOGIN_FAILS_PER_EMAIL=5`, `AUTH_LOGIN_FAILS_PER_IP=20`, `AUTH_LOGIN_WINDOW_SECONDS=900`, `AUTH_REGISTER_PER_IP_PER_HOUR=10`, `USER_TIMEZONE=Asia/Ho_Chi_Minh`, `TRUSTED_PROXY_COUNT=0`. `.env.example`, README cập nhật; **`.env` không sửa** (dùng mặc định).
+- Đăng nhập: chặn theo email chuẩn hóa và IP → `429 auth_rate_limited` + Retry-After; đăng nhập đúng xóa bộ đếm email; giữ nguyên băm giả khi email không tồn tại. Đăng ký: giới hạn theo IP mỗi giờ.
+- Chat: thứ tự 404 → 422 → `409 chat_busy` → `429 chat_rate_limited` / `429 chat_daily_limit_reached` → `429 service_busy` → lưu → LLM; khóa đang xử lý nhả trong `finally`; lỗi `llm_rate_limited`/`llm_quota_exhausted` thật → tạm khóa toàn hệ thống theo `retry_after` (mặc định 30s, tối đa 60s). Giới hạn ngày đếm tin người dùng hôm nay trừ lượt hỏng do hệ thống/nhà cung cấp (giữ quyết định Tuần 3 mục 5); lượt bị chặn vì nội dung vẫn tính.
+- Đầu vào chat: bỏ ký tự điều khiển/NUL (giữ `\n`, `\t`), chuẩn hóa xuống dòng, tối đa 100 dòng. Không lọc từ khóa; 3 test cấu trúc với tin nhắn tấn công (in system prompt, thẻ `</system>` giả, đổi vai).
+- Test mới: `test_rate_limit.py` (12), `test_auth_limits.py` (17), `test_chat_limits.py` (24, gồm 1 test đồng thời thật: 5 luồng, 5 session DB riêng → đúng 1 `ok`, 4 `chat_busy`). Ranh giới nửa đêm: tin lúc 23:59:59 giờ VN không tính, tin lúc 00:00:00 giờ VN tính; Retry-After = 86370s khi "bây giờ" là 00:00:30.
+- **Làm hỏng code có chủ đích** (script áp dụng từng thay đổi, chạy `test_rate_limit/test_auth_limits/test_chat_limits/test_auth`, khôi phục; so sánh byte toàn bộ `backend/app` xác nhận nguyên vẹn):
+
+| Làm hỏng | Kết quả |
+| --- | --- |
+| Bỏ Lock (mọi bộ giới hạn) | 2 failed |
+| Không nhả khóa đồng thời khi lỗi | 9 failed |
+| Kiểm giới hạn SAU khi lưu tin | 3 failed |
+| Route không chuẩn hóa email | 0 failed — schema `LoginRequest` đã chuẩn hóa trước (lớp bảo vệ thật) |
+| Schema `LoginRequest` không chuẩn hóa email (kèm route) | 2 failed |
+| Tính ngày theo UTC thay vì `USER_TIMEZONE` | 2 failed |
+| Không dọn khóa cũ | 1 failed |
+| Tin cậy `X-Forwarded-For` | 2 failed |
+
+  Phát hiện khi làm hỏng: lần đầu "bỏ Lock" chỉ 1 failed — test của `ConcurrencyGuard` không bắt được vì `SlowDict` ngủ TRƯỚC khi đọc (các luồng đọc giá trị đã cập nhật). Sửa test: đọc rồi mới ngủ. Sau sửa: có Lock 3/3 lần pass, bỏ Lock 3/3 lần đỏ cả 2 test.
+- `pytest` không mạng, không key (`GEMINI_API_KEY=""`, `LLM_PROVIDER=fake`, proxy cổng chết): **275 passed, 1 skipped** (smoke), không cảnh báo. Chạy bình thường 3 lần liên tiếp: 275 passed, 1 skipped mỗi lần (test đồng thời ổn định). Thời gian 35–65s (test chậm nhất 1,4s do đăng ký/đăng nhập nhiều tài khoản với Argon2; không có ngủ thật).
+- `alembic check`: DB test và DB chính không lệch (không đổi schema). DB test sau khi chạy: 0 user, 0 tin nhắn.
+- Quét secret (thư mục làm việc + 12 commit): `GEMINI_API_KEY`, `POSTGRES_PASSWORD`, `JWT_SECRET` không có; `.env.example` không có giá trị key.
+
+### Chưa kiểm chứng
+
+- **Hành vi dưới tải thật nhiều tiến trình** (nhiều worker uvicorn/gunicorn, nhiều máy): bộ đếm trong bộ nhớ chỉ đúng với một tiến trình; chưa thử tải thật.
+- **Giá trị RPD thật** của gói miễn phí: chưa biết → `LLM_GLOBAL_PER_DAY=0` (tắt). Người dùng cần đặt sau khi xem AI Studio.
+- Tạm khóa sau 429 mới kiểm chứng bằng FakeLLM; chưa gặp 429 thật từ Google.
+- Hiệu quả chống prompt injection với model thật (FakeLLM chỉ chứng minh cấu trúc) — Tuần 7.
+- **Người dùng tự báo (2026-11-23):** RPD gói miễn phí của `gemini-3.5-flash-lite` = **500** (từ AI Studio). Khuyến nghị `LLM_GLOBAL_PER_DAY=200` (500 × 0,8 ÷ 2); người dùng tự đặt trong `.env` — Claude không sửa `.env` và chưa kiểm chứng giá trị đã đặt.
+- **Claude đã chạy (2026-11-23):** đọc lại `.env` sau khi người dùng đặt (không in key): `LLM_GLOBAL_PER_DAY=200` có đúng 1 dòng, không khoảng trắng thừa, không dòng trùng; `Settings()` đọc được `200`; các ngưỡng khác giữ mặc định (`LLM_GLOBAL_PER_MINUTE=10`, `CHAT_USER_PER_MINUTE=6`, `CHAT_USER_PER_DAY=40`, `LLM_MAX_RETRIES=1`, `USER_TIMEZONE=Asia/Ho_Chi_Minh`); `GEMINI_API_KEY` vẫn còn.
+- **Người dùng chốt (2026-11-23):** giữ ngưỡng mặc định Buổi 4; giữ cách đếm giới hạn ngày trừ lượt hỏng do hệ thống/nhà cung cấp. Khuyến nghị tối ưu gói miễn phí (giới hạn thực tế là RPD 500, không phải TPM): đặt `LLM_PROVIDER=fake` khi phát triển giao diện (Buổi 6), không thử chat trên `/docs` khi đang dùng `gemini`, chạy smoke test thật hạn chế, giữ `LLM_MAX_OUTPUT_TOKENS=1024` (trả lời thật ~300 token; giảm không tiết kiệm lượt gọi mà tăng nguy cơ cắt cụt).
+
+### Buổi 4 — hoàn thiện: chế độ `fake` không tính hạn mức (2026-11-23)
+
+Người dùng đồng ý (phương án 3) và cho phép commit/push.
+
+- **Claude đã chạy:** thêm `LLMProvider.consumes_quota` (mặc định `True`; `FakeLLM` mặc định `False`, test giả lập nhà cung cấp thật đặt `True`) và `LLMService.consumes_quota`. Khi nhà cung cấp không tốn hạn mức: câu trả lời lưu `model_id = "fake:<model>"` (lỗi: `"fake:"`) — cần thiết vì `.env` hiện đặt `LLM_PROVIDER=fake` kèm `LLM_MODEL_ID=gemini-3.5-flash-lite`, nếu không đánh dấu thì không phân biệt được trong DB; giới hạn ngày mỗi người và toàn hệ thống trừ lượt `fake:`; bỏ qua ngưỡng phút toàn hệ thống và tạm khóa. Vẫn giữ giới hạn phút mỗi người và khóa đồng thời. Test mới `test_chat_fake_mode.py` (7): đánh dấu `fake:` kể cả khi model ID trông như thật; lượt thật không bị đánh dấu; 4 tin `fake` liên tiếp với ngưỡng ngày/toàn hệ thống = 1 đều 200; bỏ qua tạm khóa; vẫn chặn theo phút và `chat_busy`; sau khi chuyển sang gọi thật, lượt `fake` trước đó không bị tính. Làm hỏng có chủ đích (khôi phục, `cmp` xác nhận): không đánh dấu `fake:` → 5 failed; áp giới hạn toàn hệ thống cho `fake` → 2 failed; đếm lượt `fake` vào giới hạn ngày → 3 failed. `.env.example`, README, `ARCHITECTURE.md` cập nhật.

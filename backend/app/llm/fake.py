@@ -50,7 +50,12 @@ class FakeLLM(LLMProvider):
     name = "fake"
     default_model = "fake-model"
 
-    def __init__(self, steps: Iterable[Step] = (), *, default: Step = DEFAULT_REPLY) -> None:
+    def __init__(
+        self, steps: Iterable[Step] = (), *, default: Step = DEFAULT_REPLY, consumes_quota: bool = False
+    ) -> None:
+        # Mặc định KHÔNG tốn hạn mức (đúng với LLM_PROVIDER=fake). Test cần giả lập nhà cung cấp
+        # thật (giới hạn toàn hệ thống, tạm khóa sau 429) đặt consumes_quota=True.
+        self.consumes_quota = consumes_quota
         self._steps: deque[Step] = deque(steps)
         self._default = default
         self._lock = threading.Lock()

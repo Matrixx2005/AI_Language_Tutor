@@ -85,7 +85,16 @@ async def _http_error_handler(_: Request, exc: StarletteHTTPException) -> JSONRe
     )
 
 
+async def _unexpected_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    # Chỉ log tên lớp lỗi: thông điệp/traceback có thể chứa dữ liệu người dùng hoặc secret.
+    logger.error("500 %s %s -> internal_error exc_type=%s", request.method, request.url.path, type(exc).__name__)
+    return JSONResponse(
+        error_body("internal_error", "Đã có lỗi ngoài dự kiến. Vui lòng thử lại sau."), status_code=500
+    )
+
+
 def register_error_handlers(app: FastAPI) -> None:
+    app.add_exception_handler(Exception, _unexpected_error_handler)
     app.add_exception_handler(AppError, _app_error_handler)
     app.add_exception_handler(RequestValidationError, _validation_error_handler)
     app.add_exception_handler(StarletteHTTPException, _http_error_handler)

@@ -87,7 +87,8 @@ def test_send_message_saves_turn_with_metadata(client, register_and_login, fake_
     assert "model_id" not in body["assistant_message"] and "input_tokens" not in body["assistant_message"]
 
     row = db_session.scalar(select(ChatMessageRow).where(ChatMessageRow.role == "assistant"))
-    assert (row.model_id, row.input_tokens, row.output_tokens, row.truncated) == ("fake-model", 33, 12, True)
+    # FakeLLM mặc định không tốn hạn mức → model_id được đánh dấu `fake:`.
+    assert (row.model_id, row.input_tokens, row.output_tokens, row.truncated) == ("fake:fake-model", 33, 12, True)
     assert row.latency_ms is not None and row.status == "ok"
 
 

@@ -64,6 +64,9 @@ Nêu: danh sách việc theo buổi, file tạo/sửa, thư viện (kèm phiên 
 
 **Buổi 6 — Giao diện chat và placement.**
 - Trang chat: danh sách phiên, khung chat, trạng thái đang trả lời, xử lý lỗi và giới hạn tần suất, hiển thị rõ khi AI không dẫn nguồn (chưa RAG).
+- Khi trả lời có `truncated: true`: hiển thị cho người học dòng "Câu trả lời có thể bị cắt, hãy hỏi tiếp để xem phần còn lại".
+- Hiển thị đúng các mã lỗi giới hạn (Buổi 4) bằng thông điệp tiếng Việt và **đếm ngược theo header `Retry-After`** (khóa nút gửi đến khi hết giờ): `chat_rate_limited` (429), `chat_daily_limit_reached` (429, chờ đến nửa đêm giờ Việt Nam), `chat_busy` (409, tin trước chưa xong), `service_busy` (429, hệ thống bận), `auth_rate_limited` (429, trang đăng nhập/đăng ký). Phân biệt với các mã `llm_*`.
+- Thông báo trên trang chat: nội dung chat được gửi tới Google Gemini; với gói miễn phí, Google có thể dùng nội dung để cải thiện sản phẩm và người đánh giá có thể đọc — không nhập thông tin cá nhân (căn cứ: mục điều khoản dữ liệu trong `docs/ENVIRONMENT_CHECK.md`).
 - Trang placement: làm bài từng câu hoặc cả trang, nộp bài, xem kết quả, chủ đề yếu, nút xác nhận cập nhật trình độ theo quyết định ở Bước 2. Có dòng lưu ý không phải chứng chỉ CEFR.
 - Dùng lớp client API duy nhất hiện có; giao diện tiếng Việt; không để lộ đáp án trong mã hay mạng.
 - Kiểm chứng `npm run build`. Phần thao tác trên trình duyệt: nếu bạn không tự quan sát được thì **ghi rõ chưa kiểm chứng**, tôi sẽ tự thử và báo kết quả.

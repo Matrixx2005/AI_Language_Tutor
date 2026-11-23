@@ -11,6 +11,7 @@ from app.api import health
 from app.api.router import api_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
+from app.core.limits import AppLimits
 from app.core.log_config import configure_logging
 
 
@@ -21,6 +22,8 @@ def create_app() -> FastAPI:
     settings.require_jwt_secret()
 
     app = FastAPI(title=settings.app_name)
+    # Bộ giới hạn tần suất của app này (trong bộ nhớ, một tiến trình). Xem app/core/limits.py.
+    app.state.limits = AppLimits(settings)
     # CORS chỉ cho origin cụ thể: CORS_ORIGINS trong .env, hoặc Vite dev khi development.
     cors_origins = settings.effective_cors_origins()
     if cors_origins:

@@ -15,3 +15,5 @@ pyyaml==6.0.3
 # httpx2 là HTTP client của SDK; app.llm.gemini import trực tiếp để bắt lỗi timeout/kết nối.
 google-genai==3.6.1
 httpx2==2.16.2
+# Dữ liệu múi giờ IANA cho zoneinfo (Windows không có sẵn); USER_TIMEZONE dùng trực tiếp.
+tzdata==2026.6

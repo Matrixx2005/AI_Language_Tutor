@@ -8,6 +8,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.limits import AppLimits
 from app.db.session import get_db
 from app.main import create_app
 
@@ -56,6 +57,36 @@ def client(db_session: Session) -> Iterator[TestClient]:
     app.dependency_overrides[get_db] = lambda: db_session
     with TestClient(app) as test_client:
         yield test_client
+
+
+class FakeClock:
+    """Đồng hồ đơn điệu giả cho bộ giới hạn: test tua thời gian thay vì ngủ thật."""
+
+    def __init__(self, start: float = 10_000.0):
+        self.now = start
+
+    def __call__(self) -> float:
+        return self.now
+
+    def advance(self, seconds: float) -> None:
+        self.now += seconds
+
+
+@pytest.fixture
+def limited(client: TestClient, monkeypatch):
+    """Đặt ngưỡng riêng cho test: `clock = limited(chat_user_per_minute=2, ...)`.
+
+    Thay AppLimits của app (đồng hồ giả) và Settings mà service/route đọc; không đụng .env."""
+
+    def _apply(**overrides) -> FakeClock:
+        settings = get_settings().model_copy(update=overrides)
+        clock = FakeClock()
+        client.app.state.limits = AppLimits(settings, clock=clock)
+        monkeypatch.setattr("app.services.chat.get_settings", lambda: settings)
+        monkeypatch.setattr("app.api.routes.auth.get_settings", lambda: settings)
+        return clock
+
+    return _apply
 
 
 @pytest.fixture
