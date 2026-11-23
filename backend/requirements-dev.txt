@@ -1,4 +1,4 @@
 # Dependencies cho phát triển và kiểm thử.
 -r requirements.txt
 pytest==9.2.0
-httpx==0.28.1
+# TestClient của Starlette dùng httpx2 (đã có trong requirements.txt); httpx cũ không còn cần.

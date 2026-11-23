@@ -2,7 +2,7 @@
 
 Hệ thống hỗ trợ học tiếng Anh A1–B1 cho người Việt, dùng Retrieval-Augmented Generation (BM25 + BGE-M3 + RRF), Gemini Flash và cá nhân hóa học tập. Đồ án tốt nghiệp Khoa học máy tính.
 
-**Trạng thái:** Tuần 2 — đăng ký, đăng nhập, hồ sơ học tập (backend FastAPI + PostgreSQL, frontend React). Kế hoạch: [`docs/PROJECT_MASTER_PLAN.md`](docs/PROJECT_MASTER_PLAN.md).
+**Trạng thái:** Tuần 3 (đang làm) — đã có đăng ký, đăng nhập, hồ sơ học tập (Tuần 2) và lớp LLM với nhà cung cấp Gemini; chat và placement chưa có. Kế hoạch: [`docs/PROJECT_MASTER_PLAN.md`](docs/PROJECT_MASTER_PLAN.md).
 
 Hướng dẫn dưới đây viết cho **Windows + PowerShell**, chạy từ thư mục gốc dự án trừ khi ghi khác. Làm lần lượt từ bước 1 đến bước 7.
 
@@ -51,7 +51,15 @@ Mở `.env`, điền hai giá trị trên. `.env` đã nằm trong `.gitignore` 
 | `JWT_SECRET` | **có** | Chuỗi ngẫu nhiên ≥ 32 ký tự (lệnh ở trên). Thiếu hoặc ngắn hơn → backend không khởi động |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | không (mặc định `60`) | Thời hạn token đăng nhập, 1–1440 phút |
 | `DEFAULT_LANGUAGE_CODE` | không (mặc định `en`) | Ngôn ngữ học của tài khoản mới; phải có `languages/<code>.yaml` |
-| `LLM_*`, `GEMINI_API_KEY`, `EMBEDDING_MODEL`, `QDRANT_URL` | chưa dùng | Dành cho Tuần 3–4 |
+| `LLM_PROVIDER` | không (mặc định `fake`) | `fake` = trả lời giả, không mạng, không tốn hạn mức; `gemini` = gọi Gemini thật (xem mục "Bật LLM thật") |
+| `LLM_MODEL_ID` | khi `LLM_PROVIDER=gemini` | Model chính. Đã kiểm chứng: `gemini-3.5-flash-lite`. Không dùng alias `*-latest` |
+| `LLM_FALLBACK_MODEL_IDS` | không | Model dự phòng khi model chính hết hạn mức/quá tải, cách nhau bằng dấu phẩy (ví dụ `gemini-3.8-flash`) |
+| `LLM_TIMEOUT_SECONDS` | không (mặc định `30`) | Thời gian chờ mỗi lần gọi, 1–120 giây |
+| `LLM_MAX_RETRIES` | không (mặc định `1`) | Số lần thử lại cho lỗi tạm thời, 0–3 (ít để tiết kiệm hạn mức) |
+| `LLM_MAX_OUTPUT_TOKENS` | không (mặc định `1024`) | Giới hạn token trả lời (gồm cả token "suy nghĩ" của Gemini) |
+| `GEMINI_THINKING_LEVEL` | không (mặc định `low`) | `minimal` / `low` / `medium` / `high`, để trống = mặc định của model |
+| `GEMINI_API_KEY` | khi `LLM_PROVIDER=gemini` | Tạo tại Google AI Studio. **Chỉ đặt trong `.env`**, không bao giờ trong `.env.example` hay mã nguồn |
+| `EMBEDDING_MODEL`, `QDRANT_URL` | chưa dùng | Dành cho Tuần 4 |
 
 Frontend (tùy chọn): `frontend/.env.example` có `VITE_API_BASE_URL` (mặc định `http://127.0.0.1:8000/api/v1`). Chỉ cần tạo `frontend/.env.local` khi đổi địa chỉ backend. Biến `VITE_*` bị nhúng vào trang web công khai — không đặt secret ở đó.
 
@@ -98,6 +106,22 @@ uvicorn app.main:app --app-dir backend --reload --reload-dir backend
 | `PATCH /api/v1/profile/me` | Sửa tên hiển thị, mục tiêu, trình độ (A1/A2/B1) |
 | `GET /api/v1/languages/{code}` | Danh sách trình độ hợp lệ từ `languages/<code>.yaml` (không cần token) |
 
+### Bật LLM thật (Gemini)
+
+Mặc định `LLM_PROVIDER=fake`: không gọi mạng. Để dùng Gemini thật:
+
+1. Tạo API key tại Google AI Studio. Đặt vào `.env` (dòng `GEMINI_API_KEY=...`) — **không** dán vào `.env.example`, chat, issue hay mã nguồn.
+2. Trong `.env`, đặt `LLM_PROVIDER=gemini`, `LLM_MODEL_ID=gemini-3.5-flash-lite`, `LLM_FALLBACK_MODEL_IDS=gemini-3.8-flash`, `GEMINI_THINKING_LEVEL=low`.
+3. Kiểm tra bằng **một** lời gọi thật (smoke test, mặc định bị bỏ qua):
+
+   ```powershell
+   $env:RUN_LLM_SMOKE = "1"; $env:LLM_SMOKE_CASE = "text"   # hoặc "structured"
+   pytest backend/tests/test_llm_smoke.py -s
+   Remove-Item Env:RUN_LLM_SMOKE, Env:LLM_SMOKE_CASE
+   ```
+
+Lưu ý gói miễn phí: Google có thể dùng nội dung gửi lên để cải thiện sản phẩm và người đánh giá có thể đọc nội dung đó; không gửi thông tin cá nhân. Chi tiết và nguồn: `docs/ENVIRONMENT_CHECK.md` (mục điều khoản dữ liệu). Hạn mức thật xem trong AI Studio (tài liệu không công bố con số cố định).
+
 ## 6. Frontend
 
 Mở terminal thứ hai:
@@ -121,6 +145,7 @@ cd frontend; npm run build; cd ..          # kiểm tra TypeScript + build produ
 
 - Test API chạy trên **DB test**, mỗi test tự rollback: không đụng dữ liệu thật.
 - Nếu PostgreSQL chưa chạy, các test cần DB được **bỏ qua** (skipped) thay vì treo; nếu DB test chưa migrate, pytest báo lỗi kèm lệnh cần chạy.
+- Test LLM **không cần mạng và không cần key**: dùng `FakeLLM` và SDK Gemini với HTTP giả. Smoke test gọi API thật luôn bị bỏ qua trừ khi đặt `RUN_LLM_SMOKE=1`.
 
 ## Xử lý sự cố
 

@@ -11,3 +11,7 @@ psycopg[binary]==3.3.9
 pwdlib[argon2]==0.4.2
 pyjwt==2.15.1
 pyyaml==6.0.3
+# LLM: SDK chính thức Gemini (google-generativeai cũ đã ngừng hỗ trợ 30/11/2025).
+# httpx2 là HTTP client của SDK; app.llm.gemini import trực tiếp để bắt lỗi timeout/kết nối.
+google-genai==3.6.1
+httpx2==2.16.2

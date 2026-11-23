@@ -36,6 +36,21 @@ class Settings(BaseSettings):
 
     default_language_code: str = "en"
 
+    # LLM (dùng chung, không chứa thông tin riêng của nhà cung cấp; key nằm ở module nhà cung cấp).
+    llm_provider: str = "fake"  # an toàn mặc định: không gọi mạng, không tốn hạn mức
+    llm_model_id: str = ""
+    llm_fallback_model_ids: str = ""  # cách nhau bằng dấu phẩy; dùng khi model chính hết hạn mức
+    llm_timeout_seconds: float = Field(default=30.0, gt=0, le=120)
+    llm_max_retries: int = Field(default=1, ge=0, le=3)  # ít, để tiết kiệm hạn mức gói miễn phí
+    llm_max_output_tokens: int = Field(default=1024, ge=64, le=8192)
+
+    # Chat (quyết định Tuần 3, mục 4): gửi N lượt gần nhất; giới hạn độ dài mỗi tin người dùng.
+    chat_history_turns: int = Field(default=10, ge=0, le=50)
+    chat_max_message_chars: int = Field(default=2000, ge=1, le=10_000)
+
+    def llm_fallback_model_id_list(self) -> list[str]:
+        return [model.strip() for model in self.llm_fallback_model_ids.split(",") if model.strip()]
+
     # CORS: danh sách origin cách nhau bằng dấu phẩy. Để trống → development dùng
     # DEV_CORS_ORIGINS (Vite), môi trường khác tắt CORS.
     cors_origins: str = ""
