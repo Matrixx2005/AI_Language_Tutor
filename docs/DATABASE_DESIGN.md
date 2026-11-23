@@ -139,6 +139,7 @@ erDiagram
         varchar language_code
         varchar level_code
         varchar retrieval_mode
+        varchar title
         timestamptz created_at
         timestamptz updated_at
     }
@@ -149,6 +150,13 @@ erDiagram
         varchar role
         text content
         jsonb citations
+        varchar status
+        varchar error_code
+        varchar model_id
+        integer input_tokens
+        integer output_tokens
+        integer latency_ms
+        boolean truncated
         timestamptz created_at
     }
 ```
@@ -169,8 +177,8 @@ erDiagram
 | `error_logs` | `error_id` PK; FK user; `attempt_id` nullable FK → attempts; `language_code` mặc định `en`; `level_code` VARCHAR; `topic`, `error_type`, `error_text`, `explanation`, `created_at`. |
 | `mastery` | `mastery_id` PK; FK user; `language_code` mặc định `en`; `level_code` VARCHAR; `topic`, `mastery_score`, `evidence_count`, `updated_at`. Unique `(user_id, language_code, level_code, topic)`. |
 | `review_schedule` | `schedule_id` PK; FK user; `language_code` mặc định `en`; `level_code` VARCHAR; `topic`, `due_at`, `interval_days`, `ease_factor`, `repetition_count`, `last_reviewed_at`. Unique `(user_id, language_code, level_code, topic)` cho một lịch ôn hiện hành mỗi chủ đề. |
-| `chat_sessions` | `session_id` PK; FK user; `language_code` mặc định `en`; `level_code` nullable VARCHAR; `retrieval_mode` VARCHAR (ví dụ `llm_only`, `dense`, `hybrid`); `created_at`, `updated_at`. |
-| `chat_messages` | `message_id` PK; FK session; `language_code` mặc định `en`; `role` VARCHAR; `content`, `citations` JSONB, `created_at`. Citation cần có ID tài liệu và đoạn được dùng; không chấp nhận URL/source tự sinh như nguồn xác thực. |
+| `chat_sessions` | `session_id` PK; FK user; `language_code` mặc định `en`; `level_code` nullable VARCHAR; `retrieval_mode` VARCHAR (ví dụ `llm_only`, `dense`, `hybrid`); `created_at`, `updated_at`. Bổ sung đã duyệt (Tuần 3): `title` VARCHAR(120) nullable (lấy từ tin đầu tiên). Index `(user_id, updated_at DESC)`. |
+| `chat_messages` | `message_id` PK; FK session; `language_code` mặc định `en`; `role` VARCHAR; `content`, `citations` JSONB, `created_at`. Citation cần có ID tài liệu và đoạn được dùng; không chấp nhận URL/source tự sinh như nguồn xác thực. Bổ sung đã duyệt (Tuần 3, 2026-11-23): `status` (`ok`/`error`), `error_code` (bắt buộc khi `error`), `model_id`, `input_tokens`, `output_tokens`, `latency_ms`, `truncated` (trả lời bị cắt vì chạm giới hạn token). CHECK `role IN ('user','assistant')`. Index `(session_id, created_at)`. `created_at` dùng `clock_timestamp()` để giữ thứ tự trong cùng transaction. FK `RESTRICT` (chính sách xóa chưa chốt). Migration `694e39a25fe6`. |
 
 ## Chỉ mục và toàn vẹn dữ liệu
 

@@ -10,6 +10,9 @@ from sqlalchemy.orm import Session
 from app.core.errors import AppError
 from app.core.security import InvalidTokenError, TokenExpiredError, decode_access_token
 from app.db.session import get_db
+from app.llm import get_llm_service
+from app.llm.errors import LLMConfigError
+from app.llm.service import LLMService
 from app.models import User
 
 DbSession = Annotated[Session, Depends(get_db)]
@@ -43,3 +46,14 @@ def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def get_llm() -> LLMService:
+    """LLM dùng cho request. Test thay bằng FakeLLM qua dependency_overrides."""
+    try:
+        return get_llm_service()
+    except LLMConfigError:
+        raise AppError(503, "llm_not_configured", "Gia sư AI chưa được cấu hình trên máy chủ.") from None
+
+
+LLM = Annotated[LLMService, Depends(get_llm)]
