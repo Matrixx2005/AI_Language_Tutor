@@ -33,6 +33,9 @@ def create_app() -> FastAPI:
             allow_credentials=False,
             allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
             allow_headers=["Authorization", "Content-Type"],
+            # Retry-After không thuộc nhóm header "an toàn" của CORS: phải expose thì JavaScript khác
+            # origin (Vite :5173 → API :8000) mới đọc được số giây chờ khi bị 429.
+            expose_headers=["Retry-After"],
         )
     register_error_handlers(app)
     app.include_router(health.router)

@@ -14,6 +14,8 @@ levels:
     display_name_vi: Trung cấp
 
 placement:
+  # Bộ câu hỏi trong bảng `questions` (nạp bằng scripts/load_placement.py từ data/evaluation/placement_v1.json).
+  question_set: placement_v1
   score_scale: percent
   assignment_rule: highest_level_threshold_not_exceeded
   thresholds:

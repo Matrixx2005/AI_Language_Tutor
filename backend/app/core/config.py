@@ -58,6 +58,16 @@ class Settings(BaseSettings):
     # mặc định 10 để chừa dư địa cho thử lại/model dự phòng. RPD chưa biết → mặc định tắt.
     llm_global_per_minute: int = Field(default=10, ge=0, le=100_000)
     llm_global_per_day: int = Field(default=0, ge=0, le=10_000_000)
+    # Hết hạn mức NGÀY thật từ nhà cung cấp (sau khi đã thử cả model dự phòng): tạm khóa gọi LLM toàn hệ
+    # thống trong bấy nhiêu giây (60–3600). 0 = như giới hạn theo phút (retry_after, tối đa 60s).
+    llm_quota_cooldown_seconds: int = Field(default=900, ge=0, le=3600)
+
+    @field_validator("llm_quota_cooldown_seconds")
+    @classmethod
+    def _quota_cooldown_range(cls, value: int) -> int:
+        if 0 < value < 60:
+            raise ValueError("LLM_QUOTA_COOLDOWN_SECONDS phải là 0 hoặc trong khoảng 60–3600")
+        return value
     auth_login_fails_per_email: int = Field(default=5, ge=0, le=1000)
     auth_login_fails_per_ip: int = Field(default=20, ge=0, le=100_000)
     auth_login_window_seconds: int = Field(default=900, ge=60, le=86_400)

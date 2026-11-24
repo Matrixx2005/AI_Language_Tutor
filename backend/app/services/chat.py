@@ -18,8 +18,8 @@ from app.core.errors import AppError
 from app.core import limits as limits_module
 from app.core.languages import get_language_config
 from app.core.limits import (
-    LLM_COOLDOWN_DEFAULT_SECONDS,
     AppLimits,
+    llm_cooldown_seconds,
     local_day_bounds,
     log_rejection,
     rate_limit_error,
@@ -265,10 +265,11 @@ def _process_turn(db: Session, llm: LLMService, user: User, chat: ChatSession, c
     try:
         result: LLMResult = llm.generate(request)
     except LLMError as error:
-        if limits is not None and error.code in ("llm_rate_limited", "llm_quota_exhausted"):
-            # Nhà cung cấp đã báo giới hạn: tạm khóa toàn hệ thống (≤ 60s) để request kế tiếp bị
-            # từ chối sớm bằng `service_busy` thay vì tiếp tục đập vào API.
-            limits.llm_cooldown.block(error.retry_after or LLM_COOLDOWN_DEFAULT_SECONDS)
+        cooldown = llm_cooldown_seconds(error.code, error.retry_after, settings.llm_quota_cooldown_seconds)
+        if limits is not None and cooldown is not None:
+            # Nhà cung cấp đã báo giới hạn: tạm khóa toàn hệ thống để request kế tiếp bị từ chối sớm
+            # bằng `service_busy` thay vì tiếp tục đập vào API (theo phút ≤ 60s; hết hạn mức ngày lâu hơn).
+            limits.llm_cooldown.block(cooldown)
         _save_error_turn(db, chat, chat_id, language_code, error.code, model_id=fake_prefix or None)
         logger.warning(
             "chat llm_error session=%s code=%s history_messages=%d message_chars=%d",

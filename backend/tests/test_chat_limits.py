@@ -197,8 +197,10 @@ def test_global_rejection_does_not_consume_user_minute_quota(client, register_an
     ("error", "expected_wait"),
     [
         (LLMRateLimitError(retry_after=20), 20),
-        (LLMQuotaExhaustedError(), 30),  # không có retry_after → mặc định 30s
-        (LLMRateLimitError(retry_after=999), 60),  # tối đa 60s
+        (LLMRateLimitError(), 30),  # không có retry_after → mặc định 30s
+        (LLMRateLimitError(retry_after=999), 60),  # theo phút: tối đa 60s
+        (LLMQuotaExhaustedError(), 900),  # hết hạn mức NGÀY: LLM_QUOTA_COOLDOWN_SECONDS (mặc định 900)
+        (LLMQuotaExhaustedError(retry_after=5), 900),  # không bị rút ngắn bởi retry_after
     ],
 )
 def test_provider_429_triggers_global_cooldown(client, register_and_login, fake_llm, limited, error, expected_wait):
@@ -217,6 +219,70 @@ def test_provider_429_triggers_global_cooldown(client, register_and_login, fake_
     assert len(fake_llm.calls) == calls  # không đập tiếp vào API
     clock.advance(expected_wait)
     assert send(client, headers_b, session_b).status_code == 200
+
+
+def test_quota_exhausted_locks_longer_than_rate_limited(client, register_and_login, fake_llm, limited):
+    clock = limited(chat_user_per_minute=0, llm_quota_cooldown_seconds=900)
+    headers = register_and_login()
+    session_id = new_session(client, headers)
+    fake_llm.queue(Fail(LLMRateLimitError(retry_after=20)))
+    send(client, headers, session_id)
+    rate_wait = int(send(client, headers, session_id).headers["retry-after"])
+    clock.advance(rate_wait)
+
+    fake_llm.queue(Fail(LLMQuotaExhaustedError()))
+    send(client, headers, session_id)
+    quota_wait = int(send(client, headers, session_id).headers["retry-after"])
+
+    assert (rate_wait, quota_wait) == (20, 900)
+    clock.advance(899)
+    assert send(client, headers, session_id).json()["error"]["code"] == "service_busy"  # còn 1 giây
+    clock.advance(1)
+    assert send(client, headers, session_id).status_code == 200
+
+
+def test_quota_cooldown_zero_keeps_short_behavior(client, register_and_login, fake_llm, limited):
+    limited(chat_user_per_minute=0, llm_quota_cooldown_seconds=0)
+    headers = register_and_login()
+    session_id = new_session(client, headers)
+    fake_llm.queue(Fail(LLMQuotaExhaustedError(retry_after=999)))
+    send(client, headers, session_id)
+    assert send(client, headers, session_id).headers["retry-after"] == "60"
+
+
+@pytest.mark.parametrize(
+    ("code", "retry_after", "setting", "expected"),
+    [
+        ("llm_rate_limited", None, 900, 30),
+        ("llm_rate_limited", 12, 900, 12),
+        ("llm_rate_limited", 500, 900, 60),
+        ("llm_quota_exhausted", None, 900, 900),
+        ("llm_quota_exhausted", 5, 1800, 1800),
+        ("llm_quota_exhausted", None, 0, 30),
+        ("llm_quota_exhausted", 500, 0, 60),
+        ("llm_timeout", 10, 900, None),  # lỗi khác: không tạm khóa
+        ("llm_provider_error", None, 900, None),
+    ],
+)
+def test_llm_cooldown_seconds(code, retry_after, setting, expected):
+    from app.core.limits import llm_cooldown_seconds
+
+    assert llm_cooldown_seconds(code, retry_after, setting) == expected
+
+
+@pytest.mark.parametrize("value", [1, 59, 3601, -1])
+def test_quota_cooldown_setting_range(value):
+    from app.core.config import Settings
+
+    with pytest.raises(ValueError):
+        Settings(_env_file=None, llm_quota_cooldown_seconds=value)
+
+
+@pytest.mark.parametrize("value", [0, 60, 900, 3600])
+def test_quota_cooldown_setting_accepts_valid_values(value):
+    from app.core.config import Settings
+
+    assert Settings(_env_file=None, llm_quota_cooldown_seconds=value).llm_quota_cooldown_seconds == value
 
 
 # ---------- Giới hạn đồng thời ----------
@@ -275,7 +341,7 @@ def test_real_threads_only_one_request_gets_in():
     """Nhiều luồng THẬT cùng gửi cho một người dùng, CHAT_MAX_CONCURRENT_PER_USER=1."""
     settings = get_settings().model_copy(update={"chat_max_concurrent_per_user": 1, "chat_user_per_minute": 0})
     limits = AppLimits(settings)
-    engine = create_engine(settings.database_url(test=True), connect_args={"connect_timeout": 5})
+    engine = create_engine(settings.database_url(test=True), connect_args={"connect_timeout": 5, "options": "-c lock_timeout=15000"})
     release_llm = threading.Event()
     entered = threading.Event()
 
@@ -302,18 +368,20 @@ def test_real_threads_only_one_request_gets_in():
         db = Session(bind=engine)
         try:
             me = db.scalar(select(User).where(User.email == email))
-            barrier.wait()
+            barrier.wait(timeout=15)
             chat_service.send_message(db, llm, me, chat_id, "đồng thời", limits)
             results.append("ok")
         except AppError as error:
             results.append(error.code)
+        except Exception as exc:
+            results.append(type(exc).__name__)
         finally:
             db.close()
 
     import unittest.mock as mock
 
     with mock.patch.object(chat_service, "get_settings", lambda: settings):
-        threads = [threading.Thread(target=worker) for _ in range(5)]
+        threads = [threading.Thread(target=worker, daemon=True) for _ in range(5)]
         for thread in threads:
             thread.start()
         entered.wait(timeout=10)

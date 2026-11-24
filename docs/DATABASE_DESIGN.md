@@ -67,6 +67,9 @@ erDiagram
     }
     QUESTIONS {
         uuid question_id PK
+        varchar external_id UK
+        varchar question_set
+        varchar category
         uuid source_document_id FK
         varchar language_code
         varchar level_code
@@ -82,11 +85,16 @@ erDiagram
         uuid result_id PK
         uuid user_id FK
         varchar language_code
+        varchar question_set
+        varchar status
+        jsonb question_ids
+        timestamptz started_at
         varchar level_code
         numeric score
         numeric max_score
         jsonb answer_summary
         timestamptz completed_at
+        timestamptz applied_at
     }
     ATTEMPTS {
         uuid attempt_id PK
@@ -171,8 +179,8 @@ erDiagram
 | `learner_profiles` | `user_id` PK/FK → users (1:1); `language_code VARCHAR NOT NULL DEFAULT 'en'` là ngôn ngữ đang học; `current_level_code VARCHAR NOT NULL DEFAULT 'A1'`; `native_language_code VARCHAR NOT NULL DEFAULT 'vi'`; `learning_goal TEXT NULL` là mục tiêu học tập do người học tự nhập (bổ sung 2026-11-18, đã duyệt). |
 | `documents` | `document_id` PK; `language_code` mặc định `en`; `level_code` VARCHAR; `title`, `topic`, `content`, `source`, `license`, `version` bắt buộc cho corpus đã duyệt. Tách `language_code` khỏi tên hiển thị ngôn ngữ. |
 | `lessons` | `lesson_id` PK; `language_code` mặc định `en`; `level_code` VARCHAR; `title`, `topic`, `objective`, `content`; `source_document_id` nullable FK → documents. |
-| `questions` | `question_id` PK; `language_code` mặc định `en`; `level_code` VARCHAR; `topic`, `question_type`, `prompt`, `correct_answer`, `explanation`, `points`; `options` JSONB; `source_document_id` nullable FK. Đáp án đúng chỉ được trả cho client qua luồng chấm phù hợp. |
-| `placement_results` | `result_id` PK; FK `user_id`; `language_code` mặc định `en`; `level_code` VARCHAR là cấp được xếp; `score`, `max_score`, `answer_summary` JSONB, `completed_at`. Mỗi lần làm tạo một kết quả mới. |
+| `questions` | `question_id` PK; `language_code` mặc định `en`; `level_code` VARCHAR; `topic`, `question_type`, `prompt`, `correct_answer`, `explanation`, `points`; `options` JSONB; `source_document_id` nullable FK. Đáp án đúng chỉ được trả cho client qua luồng chấm phù hợp. Bổ sung đã duyệt (Tuần 3): `external_id` VARCHAR(64) UNIQUE (ID trong file nguồn, nạp lại không trùng), `question_set` (ví dụ `placement_v1`), `category`; `question_type` mặc định `multiple_choice`. **Chưa có** `source_document_id` (bảng `documents` chưa tồn tại — thêm khi làm corpus). Index `(question_set, language_code, level_code, topic)`. Nạp bằng `scripts/load_placement.py`. |
+| `placement_results` | `result_id` PK; FK `user_id`; `language_code` mặc định `en`; `level_code` VARCHAR là cấp được xếp; `score`, `max_score`, `answer_summary` JSONB, `completed_at`. Mỗi lần làm tạo một kết quả mới. Bổ sung đã duyệt (Tuần 3): `question_set`, `status` (`in_progress`/`completed`), `question_ids` JSONB (thứ tự đề), `started_at` (`clock_timestamp()`), `applied_at` (lúc người dùng xác nhận dùng trình độ đề xuất); `completed_at`, `level_code`, `score`, `max_score`, `answer_summary` NULL khi đang làm. CHECK: `completed` phải có đủ kết quả; `applied_at` chỉ khi `completed`. Unique index có điều kiện `(user_id, language_code) WHERE status='in_progress'` (mỗi người một lượt đang làm). `level_code` là trình độ ĐỀ XUẤT. Migration `dfd85f565969`. |
 | `attempts` | `attempt_id` PK; FK đến user/question; `language_code` mặc định `en`; `level_code` VARCHAR; `submitted_answer` JSONB, `is_correct`, `score`, `submitted_at`. Lưu lịch sử thay vì ghi đè lần làm trước. |
 | `error_logs` | `error_id` PK; FK user; `attempt_id` nullable FK → attempts; `language_code` mặc định `en`; `level_code` VARCHAR; `topic`, `error_type`, `error_text`, `explanation`, `created_at`. |
 | `mastery` | `mastery_id` PK; FK user; `language_code` mặc định `en`; `level_code` VARCHAR; `topic`, `mastery_score`, `evidence_count`, `updated_at`. Unique `(user_id, language_code, level_code, topic)`. |
@@ -192,4 +200,7 @@ erDiagram
 
 ## Chưa quyết định
 
-Trạng thái duyệt: **ERD logic đã được người dùng (người quản lý dự án) xác nhận duyệt ngày 2026-11-18.** Duyệt ERD logic chưa đồng nghĩa sẵn sàng migration. Trước khi chuyển thành migration phải chốt các quyết định còn mở gồm chính sách xóa tài khoản/dữ liệu, lưu đáp án placement chi tiết hay chỉ summary, cấu trúc citations, miền `mastery_score`, và việc tách bảng tài liệu–đoạn (chunks) cho vector index.
+Trạng thái duyệt: **ERD logic đã được người dùng (người quản lý dự án) xác nhận duyệt ngày 2026-11-18.** Duyệt ERD logic chưa đồng nghĩa sẵn sàng migration. Trước khi chuyển thành migration phải chốt các quyết định còn mở gồm chính sách xóa tài khoản/dữ liệu, cấu trúc citations, miền `mastery_score`, và việc tách bảng tài liệu–đoạn (chunks) cho vector index.
+
+
+**Đã chốt (Tuần 3, Buổi 5):** `placement_results.answer_summary` lưu **chi tiết từng câu** (`question_id`, `selected`, `is_correct`) kèm nhóm (trình độ × loại), chủ đề cần ôn, ngưỡng đã dùng và trạng thái ngưỡng. Lý do: cần để hiển thị lại kết quả/đáp án sau khi nộp, tính nhóm yếu, và hiệu chuẩn ngưỡng sau này; dữ liệu nhỏ (30 câu).

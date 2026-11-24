@@ -64,8 +64,9 @@ Mở `.env`, điền hai giá trị trên. `.env` đã nằm trong `.gitignore` 
 | `CHAT_USER_PER_MINUTE` | không (mặc định `6`) | Tin chat mỗi phút mỗi người; vượt → `429 chat_rate_limited`. `0` = tắt |
 | `CHAT_USER_PER_DAY` | không (mặc định `40`) | Tin chat mỗi ngày (theo `USER_TIMEZONE`) mỗi người; vượt → `429 chat_daily_limit_reached`. Lượt hỏng do hệ thống không tính |
 | `CHAT_MAX_CONCURRENT_PER_USER` | không (mặc định `1`) | Số tin chờ trả lời cùng lúc mỗi người; vượt → `409 chat_busy` |
-| `LLM_GLOBAL_PER_MINUTE` | không (mặc định `10`) | Lượt gọi LLM mỗi phút **toàn hệ thống** (một key chung); vượt → `429 service_busy` |
+| `LLM_GLOBAL_PER_MINUTE` | không (mặc định `10`) | Số **request chat** mỗi phút **toàn hệ thống** (một key chung); vượt → `429 service_busy`. Một request có thể gây tối đa (1 + `LLM_MAX_RETRIES`) × số model lời gọi thật; điểm xuất phát khuyến nghị: 15 ÷ (1 + `LLM_MAX_RETRIES`) |
 | `LLM_GLOBAL_PER_DAY` | không (mặc định `0` = tắt) | Lượt gọi LLM mỗi ngày toàn hệ thống. Đặt thấp hơn RPD thật trong AI Studio |
+| `LLM_QUOTA_COOLDOWN_SECONDS` | không (mặc định `900`) | Khi nhà cung cấp báo hết hạn mức NGÀY: tạm khóa gọi LLM toàn hệ thống (60–3600 giây; `0` = như giới hạn theo phút, tối đa 60 giây). Trong lúc khóa, chat trả `429 service_busy` kèm Retry-After |
 | `AUTH_LOGIN_FAILS_PER_EMAIL`, `AUTH_LOGIN_FAILS_PER_IP` | không (`5`, `20`) | Số lần đăng nhập sai trong cửa sổ; vượt → `429 auth_rate_limited` |
 | `AUTH_LOGIN_WINDOW_SECONDS` | không (`900`) | Cửa sổ đếm đăng nhập sai, 60–86400 giây |
 | `AUTH_REGISTER_PER_IP_PER_HOUR` | không (`10`) | Số lần đăng ký mỗi giờ mỗi IP |
@@ -94,11 +95,20 @@ Chạy từ thư mục `backend/`:
 cd backend
 alembic upgrade head               # DB chính
 alembic -x db=test upgrade head    # DB test (cần cho pytest)
-alembic current                    # → 58871d077b8e (head)
+alembic current                    # → dfd85f565969 (head)
 cd ..
 ```
 
 Xem trước SQL mà không chạm DB: `alembic upgrade head --sql`.
+
+Nạp ngân hàng câu hỏi placement (kiểm tra dữ liệu trước, nạp lại không tạo bản trùng, không sửa file nguồn):
+
+```powershell
+python scripts/load_placement.py --target main --dry-run   # xem trước
+python scripts/load_placement.py --target main             # DB chính
+```
+
+Test tự nạp câu hỏi vào DB test trong transaction rồi rollback, không cần chạy lệnh này cho DB test.
 
 ## 5. Backend
 
@@ -117,6 +127,10 @@ uvicorn app.main:app --app-dir backend --reload --reload-dir backend
 | `GET /api/v1/profile/me` | Xem hồ sơ của mình (cần token) |
 | `PATCH /api/v1/profile/me` | Sửa tên hiển thị, mục tiêu, trình độ (A1/A2/B1) |
 | `GET /api/v1/languages/{code}` | Danh sách trình độ hợp lệ từ `languages/<code>.yaml` (không cần token) |
+| `POST /api/v1/placement/attempts` | Bắt đầu bài kiểm tra đầu vào (30 câu, **không kèm đáp án**); đang có lượt dở → trả lại lượt đó |
+| `GET /api/v1/placement/attempts`, `GET .../attempts/{id}` | Lịch sử và chi tiết lượt của mình (đáp án, giải thích chỉ có sau khi nộp) |
+| `POST .../attempts/{id}/submit` | Nộp một lần (lần hai → `409`); chấm phía máy chủ, không dùng LLM; trả trình độ **đề xuất**, nhóm yếu, chủ đề cần ôn |
+| `POST .../attempts/{id}/apply` | Người dùng xác nhận → cập nhật trình độ trong hồ sơ |
 
 ### Bật LLM thật (Gemini)
 
@@ -145,6 +159,15 @@ npm run dev                        # → http://localhost:5173 (hoặc http://12
 ```
 
 Giao diện tiếng Việt: đăng ký → đăng nhập → hồ sơ (chọn trình độ từ danh sách) → đăng xuất. Token lưu trong `sessionStorage` (mất khi đóng tab). Vite được ghim cổng 5173: nếu cổng bận, lệnh báo lỗi thay vì tự đổi sang cổng khác (cổng khác sẽ bị CORS chặn).
+
+| Trang | Nội dung |
+| --- | --- |
+| `/chat` — **Gia sư AI** | Danh sách cuộc trò chuyện, khung chat (Enter gửi, Shift+Enter xuống dòng), đếm ký tự, tin hiện ngay khi gửi, "Thử lại" khi lỗi, đếm ngược khi bị giới hạn tần suất |
+| `/placement` — **Kiểm tra đầu vào** | 30 câu trên một trang, tiến độ "Đã trả lời X/30", nộp bài (hỏi lại nếu còn câu trống), kết quả, nhóm yếu, chủ đề cần ôn, xem lại đáp án, nút "Dùng trình độ này" |
+
+**Làm giao diện mà không tốn hạn mức Gemini:** đặt `LLM_PROVIDER=fake` trong `.env` rồi khởi động lại backend. Gia sư trả một câu cố định (`Đây là câu trả lời thử nghiệm từ FakeLLM…`), không gọi mạng; lượt `fake` không tính vào giới hạn ngày (vẫn tính giới hạn 6 tin/phút). Placement không dùng AI nên chạy giống hệt ở cả hai chế độ.
+
+**Bật Gemini thật:** đặt `LLM_PROVIDER=gemini` (cùng các dòng ở mục "Bật LLM thật"), khởi động lại backend, rồi **tạo cuộc trò chuyện mới** (để lịch sử không chứa câu trả lời giả).
 
 ## 7. Kiểm thử
 

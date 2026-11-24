@@ -68,6 +68,7 @@ Nêu: danh sách việc theo buổi, file tạo/sửa, thư viện (kèm phiên 
 - Hiển thị đúng các mã lỗi giới hạn (Buổi 4) bằng thông điệp tiếng Việt và **đếm ngược theo header `Retry-After`** (khóa nút gửi đến khi hết giờ): `chat_rate_limited` (429), `chat_daily_limit_reached` (429, chờ đến nửa đêm giờ Việt Nam), `chat_busy` (409, tin trước chưa xong), `service_busy` (429, hệ thống bận), `auth_rate_limited` (429, trang đăng nhập/đăng ký). Phân biệt với các mã `llm_*`.
 - Thông báo trên trang chat: nội dung chat được gửi tới Google Gemini; với gói miễn phí, Google có thể dùng nội dung để cải thiện sản phẩm và người đánh giá có thể đọc — không nhập thông tin cá nhân (căn cứ: mục điều khoản dữ liệu trong `docs/ENVIRONMENT_CHECK.md`).
 - Trang placement: làm bài từng câu hoặc cả trang, nộp bài, xem kết quả, chủ đề yếu, nút xác nhận cập nhật trình độ theo quyết định ở Bước 2. Có dòng lưu ý không phải chứng chỉ CEFR.
+- Xử lý mã lỗi placement: `placement_superseded` (409, xác nhận lượt cũ → báo "Đã có kết quả mới hơn", chuyển tới lượt mới nhất, chỉ hiện nút xác nhận ở lượt mới nhất); `placement_questions_changed` (409, bộ câu hỏi đã đổi → báo và gọi lại `POST /placement/attempts` để nhận lượt mới); `placement_already_submitted`, `placement_not_available`.
 - Dùng lớp client API duy nhất hiện có; giao diện tiếng Việt; không để lộ đáp án trong mã hay mạng.
 - Kiểm chứng `npm run build`. Phần thao tác trên trình duyệt: nếu bạn không tự quan sát được thì **ghi rõ chưa kiểm chứng**, tôi sẽ tự thử và báo kết quả.
 

@@ -23,6 +23,29 @@ def client_for_environment(monkeypatch: pytest.MonkeyPatch) -> Callable[[str], T
     return make_client
 
 
+def test_retry_after_is_exposed_to_browser_on_rate_limited_response(
+    client_for_environment: Callable[[str], TestClient],
+) -> None:
+    """Frontend khác origin chỉ đọc được Retry-After nếu nó nằm trong Access-Control-Expose-Headers."""
+    from app.core.limits import AppLimits
+
+    with client_for_environment("development") as client:
+        settings = client.app.state.limits.settings.model_copy(update={"auth_register_per_ip_per_hour": 1})
+        client.app.state.limits = AppLimits(settings)
+        # Dùng hết lượt ngay trong bộ đếm (IP của TestClient là "testclient") → request bên dưới bị chặn ở
+        # bộ giới hạn, TRƯỚC khi chạm DB (test này không dùng DB test nên không được ghi gì).
+        client.app.state.limits.register_ip.hit("register-ip:testclient")
+        blocked = client.post(
+            "/api/v1/auth/register",
+            json={"email": "b@example.com", "password": "matkhau123"},
+            headers={"Origin": DEV_ORIGIN},
+        )
+
+    assert blocked.status_code == 429 and blocked.headers["retry-after"]
+    exposed = [h.strip().lower() for h in blocked.headers.get("access-control-expose-headers", "").split(",")]
+    assert "retry-after" in exposed
+
+
 def test_development_origin_is_allowed(client_for_environment: Callable[[str], TestClient]) -> None:
     with client_for_environment("development") as client:
         response = client.options(

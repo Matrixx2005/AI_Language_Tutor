@@ -334,3 +334,87 @@ Người dùng cho phép: migrate DB chính, duyệt cột `truncated`, chat th�
 Người dùng đồng ý (phương án 3) và cho phép commit/push.
 
 - **Claude đã chạy:** thêm `LLMProvider.consumes_quota` (mặc định `True`; `FakeLLM` mặc định `False`, test giả lập nhà cung cấp thật đặt `True`) và `LLMService.consumes_quota`. Khi nhà cung cấp không tốn hạn mức: câu trả lời lưu `model_id = "fake:<model>"` (lỗi: `"fake:"`) — cần thiết vì `.env` hiện đặt `LLM_PROVIDER=fake` kèm `LLM_MODEL_ID=gemini-3.5-flash-lite`, nếu không đánh dấu thì không phân biệt được trong DB; giới hạn ngày mỗi người và toàn hệ thống trừ lượt `fake:`; bỏ qua ngưỡng phút toàn hệ thống và tạm khóa. Vẫn giữ giới hạn phút mỗi người và khóa đồng thời. Test mới `test_chat_fake_mode.py` (7): đánh dấu `fake:` kể cả khi model ID trông như thật; lượt thật không bị đánh dấu; 4 tin `fake` liên tiếp với ngưỡng ngày/toàn hệ thống = 1 đều 200; bỏ qua tạm khóa; vẫn chặn theo phút và `chat_busy`; sau khi chuyển sang gọi thật, lượt `fake` trước đó không bị tính. Làm hỏng có chủ đích (khôi phục, `cmp` xác nhận): không đánh dấu `fake:` → 5 failed; áp giới hạn toàn hệ thống cho `fake` → 2 failed; đếm lượt `fake` vào giới hạn ngày → 3 failed. `.env.example`, README, `ARCHITECTURE.md` cập nhật.
+
+### Buổi 4 — hoàn thiện nhỏ (2026-11-23)
+
+#### Claude đã chạy
+
+- `docs/ARCHITECTURE.md` — bảng "Giới hạn đã biết": thêm (a) kẻ khác cố ý đăng nhập sai `AUTH_LOGIN_FAILS_PER_EMAIL` lần để khóa email người khác trong `AUTH_LOGIN_WINDOW_SECONDS` (chấp nhận cho đồ án; Tuần 8: khóa theo cặp email + IP hoặc CAPTCHA); (b) tạm khóa sau hết hạn mức ngày nằm trong bộ nhớ, mất khi khởi động lại. Ghi rõ `LLM_GLOBAL_PER_MINUTE` đếm request người dùng, không đếm lời gọi thật (tối đa (1 + `LLM_MAX_RETRIES`) × số model lời gọi mỗi request), khuyến nghị điểm xuất phát `15 ÷ (1 + LLM_MAX_RETRIES)` (= 7 với `LLM_MAX_RETRIES=1`); không đổi code ở mục này.
+- Cấu hình `LLM_QUOTA_COOLDOWN_SECONDS` (mặc định 900; 0 hoặc 60–3600, giá trị 1–59 bị từ chối). Hàm thuần `llm_cooldown_seconds()`: `llm_rate_limited` giữ nguyên (retry_after, mặc định 30s, tối đa 60s); `llm_quota_exhausted` khóa theo cấu hình (0 = như theo phút). Trần cứng của bộ tạm khóa nâng từ 60 lên 3600 giây. `.env.example`, README, `ARCHITECTURE.md` cập nhật; `.env` không sửa (app dùng mặc định 900).
+- Test mới/sửa (`test_chat_limits.py`): quota_exhausted khóa 900s còn rate_limited 20s; còn 1 giây vẫn `service_busy`, hết hạn thì 200; cấu hình 0 → 60s; 9 trường hợp hàm thuần; kiểm tra khoảng cấu hình. Làm hỏng có chủ đích (khôi phục, `cmp` xác nhận): hết hạn mức ngày khóa ngắn → 5 failed; rate_limited khóa lâu → 7 failed; quên nâng trần cứng (vẫn 60s) → 3 failed; bỏ kiểm tra khoảng 60–3600 → 2 failed.
+- `pytest` không mạng, không key: **303 passed, 1 skipped**; chạy bình thường: 303 passed, 1 skipped, không cảnh báo. `alembic check`: DB test và DB chính không lệch. Quét secret: sạch.
+
+#### Chưa kiểm chứng
+
+- Chưa gặp `llm_quota_exhausted` thật từ Google: cấu trúc lỗi hết hạn mức ngày (QuotaFailure PerDay) mới kiểm bằng test.
+- Mức `LLM_GLOBAL_PER_MINUTE` tối ưu dưới tải thật (khuyến nghị 7, đang để 10).
+
+## Tuần 3 — Buổi 5: placement test (backend) (2026-11-23)
+
+Người dùng: giữ `LLM_GLOBAL_PER_MINUTE=10`. Phần hoàn thiện nhỏ Buổi 4 chưa được cho phép commit → gộp vào lần commit sau.
+
+### Claude đã chạy
+
+- **Chấm điểm** (`services/placement_scoring.py`, hàm thuần, không LLM): trình độ cao nhất có ngưỡng ≤ điểm, so sánh nguyên (`đúng × 100 ≥ ngưỡng × tổng`); nhóm (trình độ × loại) yếu khi < 60%; chủ đề làm sai; câu lạ → `unknown_question`, lựa chọn lạ → `invalid_option`. Không chứa mã trình độ cố định (có test). `LanguageConfig.placement` đọc và kiểm tra chặt khối `placement` của YAML (percent, đúng quy tắc, trình độ thấp nhất = 0, tăng dần ≤ 100); `en.yaml` thêm `question_set: placement_v1`.
+- **Migration `dfd85f565969`** (autogenerate so với DB test): `questions` (`external_id` UNIQUE, `question_set`, `category`; chưa có `source_document_id`), `placement_results` (`status`, `question_ids`, `started_at`, `applied_at`; CHECK kết quả đầy đủ khi `completed`; unique index có điều kiện một lượt `in_progress` mỗi người/ngôn ngữ). DB test: upgrade → check sạch → downgrade -1 → upgrade → check sạch. Phát hiện khi tự soát: `started_at` mặc định `now()` (thời điểm bắt đầu transaction) → đổi sang `clock_timestamp()` cho `started_at`, `completed_at`, `applied_at`; chạy lại downgrade/upgrade trên DB test, `column_default = clock_timestamp()`. **DB chính chưa migrate** (`694e39a25fe6`; `alembic check` báo "not up to date" đúng dự kiến).
+- **Nạp câu hỏi** (`services/question_bank.py` + `scripts/load_placement.py --target test|main [--dry-run]`): kiểm tra bằng validator Tuần 1 trước, idempotent theo `external_id`, chỉ đọc file nguồn (SHA-256 trước/sau bằng nhau trong test). Dry-run trên DB test: `30 câu — thêm 30, cập nhật 0, không đổi 0 — DRY-RUN (không ghi)`. **Chưa nạp vào DB nào** (test tự nạp trong transaction rồi rollback).
+- **API** `/api/v1/placement/attempts`: bắt đầu (201; đang có lượt dở → 200 trả lại lượt đó), danh sách, chi tiết, nộp (`SELECT ... FOR UPDATE`; lần hai → 409 `placement_already_submitted`), `apply` (xác nhận mới cập nhật `current_level_code`, ghi `applied_at`, gọi lại không lỗi). Lượt người khác → 404 `placement_not_found`; ngôn ngữ không hỗ trợ/chưa nạp câu hỏi → 422 `placement_not_available`. `answer_summary` lưu chi tiết từng câu (chốt câu hỏi còn mở trong ERD).
+- Test mới: `test_placement_scoring.py` (25), `test_placement_api.py` (26, dùng bộ câu hỏi THẬT). Điểm kỳ vọng tính tay: 30/21/20/12/11/0 câu đúng → B1/B1/A2/A2/A1/A1; sai 3/5 ngữ pháp A2 → nhóm yếu duy nhất (2/5 = 40%), 3/5 = 60% không yếu. Phản hồi khi đang làm bài được duyệt đệ quy: không có khóa `correct_answer`, `explanation`, `is_correct`, `level_code`, `topic`, `answer_summary` (cả schema OpenAPI). Nộp đồng thời thật (2 luồng, chấm điểm làm chậm 0,3s): đúng 1 `ok`, 1 `placement_already_submitted`.
+- **Làm hỏng code có chủ đích** (khôi phục, so sánh byte toàn bộ `backend/app`): lộ đáp án → 2 failed; ngưỡng `>` thay `>=` → 5; bỏ `FOR UPDATE` → 1; bỏ kiểm tra chủ sở hữu → 1; tự cập nhật trình độ khi nộp → 13; nhóm yếu `<=` → 1; bỏ kiểm tra câu lạ → 2. **Sự cố trong lần chạy đầu:** lần làm hỏng thứ 4 làm bộ test treo quá 600s; script ngắt, khôi phục code và kết thúc exit 0 mà chưa chạy các lần 4–7. Nguyên nhân khả dĩ: hai test đồng thời dùng luồng non-daemon, `barrier.wait()` không giới hạn và `FOR UPDATE` có thể chờ vô hạn. Đã gia cố: luồng daemon, `barrier.wait(timeout=15)`, `lock_timeout=15000` cho session test, ghi nhận mọi exception. Chạy lại đủ 7 lần với giới hạn 240s mỗi lần: **0 lần timeout**, cả 7 đều bị bắt.
+- `pytest` không mạng, không key: **354 passed, 1 skipped**; chạy bình thường: 354 passed, 1 skipped, không cảnh báo. Hai script validate: 0 lỗi. DB test sau khi chạy: 0 user, 0 câu hỏi, 0 lượt placement. Quét secret: sạch.
+
+### Chưa kiểm chứng
+
+- Migration và nạp câu hỏi trên **DB chính** (chờ người dùng cho phép).
+- Độ tin cậy của 30 câu và ngưỡng 40%/70% với người học thật (ngưỡng tạm thời; hiệu chuẩn ở Tuần 7).
+- Nguyên nhân chính xác của lần treo đầu (không tái hiện được khi chạy riêng; đã loại bỏ các điểm có thể chờ vô hạn).
+
+### Buổi 5 — migration và nạp câu hỏi vào DB chính (2026-11-23/24)
+
+Người dùng cho phép: migrate DB chính, nạp 30 câu hỏi vào DB chính.
+
+#### Claude đã chạy
+
+- **Migration DB chính:** trước `users/learner_profiles/chat_sessions/chat_messages = 1/1/0/0`; `alembic upgrade head` → `Running upgrade 694e39a25fe6 -> dfd85f565969`; `alembic current` → `dfd85f565969 (head)`; `alembic check` → không lệch; sau `1/1/0/0`. Có `questions`, `placement_results`, index `uq_placement_results_one_in_progress`, `started_at` mặc định `clock_timestamp()`.
+- **Nạp câu hỏi lần đầu thất bại an toàn:** Docker Desktop lại tắt (máy khởi động lại) → cả 3 lệnh lỗi kết nối, không ghi gì, file nguồn không đổi. Cải tiến `scripts/load_placement.py`: lỗi kết nối → một dòng `ERROR: không kết nối được DB (...). Thử: docker compose up -d --wait` (exit 2) thay vì traceback; thiếu bảng → nhắc chạy migration. Claude mở lại Docker Desktop; DB chính còn nguyên (1 user, 0 câu hỏi, `dfd85f565969`).
+- **Nạp vào DB chính:** dry-run `thêm 30 … DRY-RUN (không ghi)` (vẫn 0 câu); nạp thật `thêm 30 … đã ghi` (30 câu); chạy lại `thêm 0, cập nhật 0, không đổi 30` (vẫn 30 — idempotent). Phân bố: mỗi trình độ A1/A2/B1 có 5 ngữ pháp + 5 từ vựng; 30 `external_id` khác nhau; 30/30 đáp án đúng nằm trong danh sách lựa chọn. File nguồn không đổi (SHA-256 trước/sau bằng nhau).
+- **Kiểm tra toàn luồng trên DB chính** (transaction rồi rollback, không LLM): đăng ký → bắt đầu 201, 30 câu, không lộ đáp án → nộp 15/30 đúng → đề xuất A2 "Sơ trung cấp", 3 nhóm yếu → nộp lại `placement_already_submitted` → xác nhận → hồ sơ A2. Sau rollback: DB chính 1 user, 0 lượt placement, 30 câu hỏi.
+- `pytest` không mạng, không key: **354 passed, 1 skipped**; `alembic check` DB chính và DB test: không lệch.
+
+### Buổi 5 — hoàn thiện (2026-11-24)
+
+#### Claude đã chạy
+
+- **Lượt đang làm lỗi thời** (`services/placement.py`): `start_attempt` kiểm tra `question_ids` của lượt dở còn đủ trong `questions`; nếu thiếu → `DELETE` lượt đó với điều kiện `result_id` + `user_id` + `status='in_progress'` ngay trong câu lệnh (không bao giờ xóa lượt đã nộp), log `placement stale_attempt_discarded attempt=... deleted=...`, tạo lượt mới từ bộ câu hỏi hiện tại → 201. `get_attempt` với lượt dở lỗi thời vẫn trả 409 `placement_questions_changed`. Không đổi schema, không migration.
+- **apply chỉ với lượt mới nhất:** so với lượt `completed` mới nhất (theo `completed_at`, rồi `started_at`) của người dùng cho cùng ngôn ngữ; lượt cũ hơn → 409 `placement_superseded` ("Đã có kết quả mới hơn"); gọi lại với lượt mới nhất không lỗi; lượt mới đang làm (chưa nộp) không chặn việc áp dụng lượt đã nộp.
+- Test mới `test_placement_lifecycle.py` (6): xóa một câu trong transaction test → xem lượt dở cũ 409 → `start` trả 201 với 29 câu, lượt dở cũ đã bị xóa, lượt đã nộp của chính người dùng và của người khác còn nguyên, log có `stale_attempt_discarded`; gọi nhầm hàm xóa với lượt đã nộp → không xóa; apply lượt cũ → 409 và `applied_at` vẫn NULL; apply lượt mới nhất hai lần → 200 cả hai.
+- Làm hỏng có chủ đích (khôi phục, `cmp` xác nhận): không xóa lượt dở lỗi thời → 1 failed; xóa nhầm cả lượt đã nộp (bỏ điều kiện `status` và `result_id`) → 2 failed; bỏ kiểm tra lượt mới nhất khi apply → 1 failed; lấy lượt cũ nhất thay vì mới nhất → 2 failed.
+- Tài liệu: `ARCHITECTURE.md` — mục placement và bảng "Giới hạn đã biết" (làm lại với cùng 30 câu sau khi xem đáp án; trình độ chỉ theo điểm tổng, ngưỡng tạm thời, hiệu chuẩn Tuần 7; endpoint placement chưa giới hạn tần suất vì không dùng LLM; câu hỏi bị xóa làm lượt đã nộp không xem lại chi tiết được). `PROMPT_WEEK3.md` checklist Buổi 6: xử lý `placement_superseded`, `placement_questions_changed`.
+- `pytest` không mạng, không key: **360 passed, 1 skipped**; chạy bình thường: 360 passed, 1 skipped, không cảnh báo. `alembic check` DB test và DB chính: không lệch. DB test sau khi chạy 0/0/0 (user/câu hỏi/lượt); DB chính 1 user, 30 câu hỏi, 0 lượt (không đổi). Quét secret: sạch.
+
+#### Chưa kiểm chứng
+
+- Lượt đã nộp dùng câu hỏi bị xóa không xem lại chi tiết được (409) — mới ghi thành giới hạn, chưa xử lý (cách tránh: không xóa câu đã dùng, tạo `question_set` mới).
+- Hai request `start` đồng thời đúng lúc lượt dở bị lỗi thời: unique index chặn trùng, request thua nhận lại lượt mới; chưa có test đồng thời riêng cho trường hợp này.
+
+## Tuần 3 — Buổi 6: giao diện chat và placement (2026-11-24)
+
+### Claude đã chạy
+
+- **Lỗi backend thật phát hiện trước khi viết giao diện:** phản hồi 429 có `Retry-After` nhưng CORS không có `Access-Control-Expose-Headers` → JavaScript khác origin (5173 → 8000) không đọc được → đếm ngược không có số giây. Người dùng cho phép sửa: thêm `expose_headers=["Retry-After"]` vào `CORSMiddleware` (`backend/app/main.py`) + test `test_retry_after_is_exposed_to_browser_on_rate_limited_response` (dùng hết lượt trong bộ đếm để request bị chặn TRƯỚC khi chạm DB). Làm hỏng có chủ đích (`expose_headers=[]`) → 1 failed; khôi phục, `cmp` xác nhận.
+- **Sự cố do Claude gây ra và đã khắc phục:** lần kiểm tra CORS đầu tiên dùng `create_app()` không đổi DB → lần đăng ký đầu tiên ghi tài khoản `cors-a@example.com` vào **DB chính**. Claude kiểm tra (0 phiên chat, 0 lượt placement) rồi xóa đúng hồ sơ + tài khoản đó trong một transaction có điều kiện email; DB chính trở về 1 user, 1 hồ sơ. Test viết sau đó cũng được sửa để không chạm DB. Mọi kiểm tra HTTP còn lại chạy trên DB test.
+- **Frontend (không thêm thư viện):** `types.ts` (kiểu chat/placement khớp `backend/app/schemas/chat.py`, `placement.py`), `api/client.ts` (thêm hàm chat/placement, `ApiRequestError.retryAfterSeconds`), `lib/{apiErrors,time,chat,placement}.ts` (logic thuần), `hooks/useCountdown.ts`, `components/ProtectedRoute.tsx`, `pages/{ChatPage,PlacementPage}.tsx`, route `/chat`, `/placement`, liên kết trong `AppLayout` (màn hình hẹp chỉ biểu tượng + `aria-label`), đếm ngược `auth_rate_limited` ở Login/Register, CSS `:focus-visible`, `button:disabled { cursor: not-allowed }`, `.secondary-button`.
+- **Logic thuần kiểm bằng Node 24 + `node:assert`** (chạy trực tiếp file `.ts`, không thêm framework): 12 nhóm đạt. Kiểm tra bắt được lỗi thật: `parseRetryAfter("-5")` trả 0 vì `Date.parse` hiểu là năm -5 → chỉ nhận ngày HTTP dạng IMF-fixdate.
+- `npm run build` (`tsc -b` + `vite build`): pass, 1710 modules; lần đầu báo 1 lỗi `noUnusedParameters` (đã sửa); không cảnh báo TypeScript còn lại.
+- **Luồng HTTP thật** (uvicorn cổng 8010, `POSTGRES_DB=ai_language_tutor_test`, `LLM_PROVIDER=fake`, `GEMINI_API_KEY=""`, header `Origin: http://localhost:5173`): đăng ký 201 → tạo phiên 201 → gửi tin 200 (FakeLLM, phản hồi không có `model_id`/token) → lịch sử `[user ok, assistant ok]` → tiêu đề phiên = tin đầu → tin 2001 ký tự `422 message_too_long` "Tin nhắn dài tối đa 2000 ký tự." → tin thứ 7 trong 1 phút `429 chat_rate_limited`, `Retry-After: 60`, `Access-Control-Expose-Headers: Retry-After`, `Access-Control-Allow-Origin: http://localhost:5173`. Placement: bắt đầu 201, 30 câu, không có khóa `correct_answer/explanation/is_correct/level_code/topic` → bắt đầu lại 200 cùng lượt → nộp 20/30 câu (chọn bừa) → 5/30 (16,7%) A1 "Sơ cấp", review 30 câu, có `disclaimer` → nộp lại `placement_already_submitted` → apply lượt cũ `409 placement_superseded` → apply lượt mới nhất 200. Đăng nhập sai lần 6 → `429 auth_rate_limited`, `Retry-After: 900`, expose đúng. Log server không chứa nội dung tin nhắn. Dọn DB test sau đó: 0 user, 0 câu hỏi, 0 tin nhắn; DB chính không đổi (1 user, 30 câu hỏi).
+  - Lần chạy đầu in `Retry-After=None`: lỗi của **script kiểm tra** (chuyển header sang `dict` rồi tra chữ hoa trong khi uvicorn gửi chữ thường), không phải backend; sửa script và chạy lại cho kết quả trên.
+- Vite dev: `/chat`, `/placement` → 200 (SPA). Quét `src`: không `dangerouslySetInnerHTML`, `innerHTML`, `console.log`; `localStorage` chỉ trong chú thích; `sessionStorage` chỉ cho token; `correct_answer` chỉ ở phần xem lại sau khi nộp.
+- `pytest` không mạng, không key: **361 passed, 1 skipped**. `alembic check` DB test và DB chính: không lệch. Quét secret (thư mục làm việc, 13 commit, `frontend/dist`): sạch.
+
+### Người dùng tự báo
+
+- (Chưa có — chờ người dùng thử trên trình duyệt theo danh sách trong báo cáo Buổi 6.)
+
+### Chưa kiểm chứng trên trình duyệt
+
+Toàn bộ thao tác trên giao diện (bấm, gõ, đếm ngược hiển thị, bố cục màn hình hẹp 360px, focus bằng bàn phím, Enter khi gõ Telex/VNI) — Claude không quan sát được trình duyệt; chỉ kiểm chứng qua build TypeScript và các phản hồi HTTP mà giao diện sẽ nhận.

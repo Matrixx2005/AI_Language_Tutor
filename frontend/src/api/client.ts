@@ -1,4 +1,15 @@
-import type { ApiError, Language, Profile, ProfileUpdate } from '../types'
+import { parseRetryAfter } from '../lib/time'
+import type {
+  ApiError,
+  ChatMessage,
+  ChatSession,
+  ChatTurn,
+  Language,
+  PlacementAttempt,
+  PlacementAttemptSummary,
+  Profile,
+  ProfileUpdate,
+} from '../types'
 
 const TOKEN_KEY = 'alt_access_token'
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1').replace(/\/$/, '')
@@ -9,6 +20,8 @@ export class ApiRequestError extends Error {
     public readonly status: number,
     public readonly code: string,
     public readonly details?: ApiError['details'],
+    /** Giây cần chờ từ header Retry-After (429); undefined nếu máy chủ không gửi. */
+    public readonly retryAfterSeconds?: number,
   ) {
     super(message)
     this.name = 'ApiRequestError'
@@ -56,6 +69,7 @@ class ApiClient {
         response.status,
         error?.code || 'http_error',
         error?.details,
+        parseRetryAfter(response.headers.get('Retry-After')),
       )
     }
 
@@ -86,6 +100,52 @@ class ApiClient {
   /** Danh sách trình độ hợp lệ; không hardcode A1/A2/B1 ở frontend. */
   getLanguage(languageCode: string) {
     return this.request<Language>(`/languages/${encodeURIComponent(languageCode)}`)
+  }
+
+  // ---------- Chat ----------
+
+  listChatSessions() {
+    return this.request<ChatSession[]>('/chat/sessions')
+  }
+
+  createChatSession() {
+    return this.request<ChatSession>('/chat/sessions', { method: 'POST' })
+  }
+
+  listChatMessages(sessionId: string) {
+    return this.request<ChatMessage[]>(`/chat/sessions/${encodeURIComponent(sessionId)}/messages`)
+  }
+
+  sendChatMessage(sessionId: string, content: string) {
+    return this.request<ChatTurn>(`/chat/sessions/${encodeURIComponent(sessionId)}/messages`, {
+      method: 'POST', body: JSON.stringify({ content }),
+    })
+  }
+
+  // ---------- Placement ----------
+
+  /** Bắt đầu, hoặc nhận lại lượt đang làm. Câu hỏi KHÔNG kèm đáp án. */
+  startPlacement() {
+    return this.request<PlacementAttempt>('/placement/attempts', { method: 'POST' })
+  }
+
+  listPlacementAttempts() {
+    return this.request<PlacementAttemptSummary[]>('/placement/attempts')
+  }
+
+  getPlacementAttempt(attemptId: string) {
+    return this.request<PlacementAttempt>(`/placement/attempts/${encodeURIComponent(attemptId)}`)
+  }
+
+  /** Câu bỏ trống không cần gửi (máy chủ tính là sai). */
+  submitPlacement(attemptId: string, answers: Record<string, string>) {
+    return this.request<PlacementAttempt>(`/placement/attempts/${encodeURIComponent(attemptId)}/submit`, {
+      method: 'POST', body: JSON.stringify({ answers }),
+    })
+  }
+
+  applyPlacement(attemptId: string) {
+    return this.request<Profile>(`/placement/attempts/${encodeURIComponent(attemptId)}/apply`, { method: 'POST' })
   }
 }
 

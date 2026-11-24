@@ -20,8 +20,24 @@ from app.core.rate_limit import Clock, ConcurrencyGuard, Cooldown, SlidingWindow
 
 security_logger = logging.getLogger("app.security")
 
-LLM_COOLDOWN_MAX_SECONDS = 60.0
+LLM_COOLDOWN_MAX_SECONDS = 60.0  # trần cho llm_rate_limited (giới hạn theo phút)
 LLM_COOLDOWN_DEFAULT_SECONDS = 30.0  # khi nhà cung cấp không báo retry_after
+LLM_QUOTA_COOLDOWN_HARD_MAX_SECONDS = 3600.0  # trần cứng của bộ tạm khóa (khớp giới hạn cấu hình)
+
+
+def llm_cooldown_seconds(error_code: str, retry_after: float | None, quota_cooldown_seconds: int) -> float | None:
+    """Thời gian tạm khóa toàn hệ thống sau lỗi giới hạn thật từ nhà cung cấp (None = không khóa).
+
+    - `llm_rate_limited` (theo phút): theo retry_after, mặc định 30s, tối đa 60s.
+    - `llm_quota_exhausted` (hết hạn mức NGÀY, đã thử cả model dự phòng): khóa
+      `LLM_QUOTA_COOLDOWN_SECONDS` để không tiếp tục gọi API vô ích; 0 = dùng cách tính như rate_limited.
+    """
+    short = min(retry_after or LLM_COOLDOWN_DEFAULT_SECONDS, LLM_COOLDOWN_MAX_SECONDS)
+    if error_code == "llm_rate_limited":
+        return short
+    if error_code == "llm_quota_exhausted":
+        return float(quota_cooldown_seconds) if quota_cooldown_seconds > 0 else short
+    return None
 
 
 def utcnow() -> datetime:
@@ -49,7 +65,7 @@ class AppLimits:
         self.login_ip = SlidingWindowLimiter(s.auth_login_fails_per_ip, s.auth_login_window_seconds, clock=c)
         self.register_ip = SlidingWindowLimiter(s.auth_register_per_ip_per_hour, 3600, clock=c)
         self.chat_in_flight = ConcurrencyGuard()
-        self.llm_cooldown = Cooldown(clock=c, max_seconds=LLM_COOLDOWN_MAX_SECONDS)
+        self.llm_cooldown = Cooldown(clock=c, max_seconds=LLM_QUOTA_COOLDOWN_HARD_MAX_SECONDS)
 
 
 def get_limits(request: Request) -> AppLimits:

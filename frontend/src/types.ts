@@ -30,6 +30,101 @@ export interface Language {
   levels: LevelOption[]
 }
 
+// ---------- Chat (khớp backend/app/schemas/chat.py) ----------
+
+export interface ChatSession {
+  session_id: string
+  language_code: string
+  level_code: string | null
+  retrieval_mode: string
+  title: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ChatMessage {
+  message_id: string
+  role: 'user' | 'assistant'
+  content: string
+  status: 'ok' | 'error'
+  error_code: string | null
+  truncated: boolean
+  created_at: string
+}
+
+export interface ChatTurn {
+  user_message: ChatMessage
+  assistant_message: ChatMessage
+  has_citations: boolean
+}
+
+// ---------- Placement (khớp backend/app/schemas/placement.py) ----------
+
+/** Câu hỏi khi đang làm bài: máy chủ KHÔNG gửi đáp án, giải thích, trình độ hay chủ đề. */
+export interface PlacementQuestion {
+  question_id: string
+  position: number
+  category: string
+  prompt: string
+  options: string[]
+}
+
+export interface PlacementGroup {
+  level_code: string
+  category: string
+  correct: number
+  total: number
+  percent: number
+  weak: boolean
+}
+
+/** Chỉ có SAU khi nộp bài. */
+export interface PlacementReviewItem {
+  question_id: string
+  prompt: string
+  options: string[]
+  selected: string | null
+  correct_answer: string
+  is_correct: boolean
+  explanation: string | null
+}
+
+export interface PlacementOutcome {
+  score: number
+  max_score: number
+  percent: number
+  suggested_level_code: string
+  suggested_level_name_vi: string
+  groups: PlacementGroup[]
+  weak_groups: PlacementGroup[]
+  missed_topics: string[]
+  review: PlacementReviewItem[]
+  applied_at: string | null
+  disclaimer: string
+}
+
+export interface PlacementAttempt {
+  attempt_id: string
+  status: 'in_progress' | 'completed'
+  language_code: string
+  started_at: string
+  completed_at: string | null
+  questions: PlacementQuestion[] | null
+  result: PlacementOutcome | null
+}
+
+export interface PlacementAttemptSummary {
+  attempt_id: string
+  status: 'in_progress' | 'completed'
+  language_code: string
+  started_at: string
+  completed_at: string | null
+  suggested_level_code: string | null
+  score: number | null
+  max_score: number | null
+  applied_at: string | null
+}
+
 export interface ApiError {
   code: string
   message: string

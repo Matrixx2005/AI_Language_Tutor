@@ -2,6 +2,9 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ApiRequestError, api } from '../api/client'
 import { FieldError, FormMessage } from '../components/FormMessage'
+import { useCountdown } from '../hooks/useCountdown'
+import { messageForCode } from '../lib/apiErrors'
+import { formatWait } from '../lib/time'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -10,14 +13,21 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [emailError, setEmailError] = useState('')
+  const countdown = useCountdown()
+  const waiting = countdown.remaining > 0
 
   async function submit(event: FormEvent) {
-    event.preventDefault(); setError(''); setEmailError(''); setBusy(true)
+    event.preventDefault()
+    if (waiting) return
+    setError(''); setEmailError(''); setBusy(true)
     try {
       await api.login({ email, password })
       navigate('/profile', { replace: true })
     } catch (caught) {
-      if (caught instanceof ApiRequestError && caught.code === 'validation_error') {
+      if (caught instanceof ApiRequestError && caught.code === 'auth_rate_limited') {
+        // Đăng nhập sai quá nhiều lần: khóa nút theo Retry-After (đọc được nhờ CORS expose).
+        countdown.start(caught.retryAfterSeconds ?? 60)
+      } else if (caught instanceof ApiRequestError && caught.code === 'validation_error') {
         setEmailError(caught.details?.find((item) => item.field === 'email')?.message || '')
         setError(caught.details?.some((item) => item.field === 'password') ? 'Vui lòng kiểm tra lại mật khẩu.' : caught.message)
       } else setError(caught instanceof Error ? caught.message : 'Đăng nhập chưa thành công.')
@@ -34,10 +44,11 @@ export function LoginPage() {
     <div className="p-7 sm:p-12 md:p-14">
       <p className="text-sm font-medium text-[#43836a]">Rất vui được gặp lại</p><h2 className="mt-2 text-3xl font-semibold tracking-tight">Đăng nhập</h2><p className="mt-2 text-sm leading-6 text-[#74867e]">Tiếp tục hành trình học tập của bạn.</p>
       <form onSubmit={submit} className="mt-8 space-y-5">
-        {error && <FormMessage>{error}</FormMessage>}
+        {waiting && <FormMessage>{messageForCode('auth_rate_limited')} Vui lòng thử lại sau {formatWait(countdown.remaining)}.</FormMessage>}
+        {error && !waiting && <FormMessage>{error}</FormMessage>}
         <label className="field-label">Email<input className="field-input" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ban@example.com" /><FieldError>{emailError}</FieldError></label>
         <label className="field-label">Mật khẩu<input className="field-input" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Nhập mật khẩu" /></label>
-        <button disabled={busy} className="primary-button w-full">{busy ? 'Đang đăng nhập…' : 'Đăng nhập'}</button>
+        <button disabled={busy || waiting} className="primary-button w-full">{waiting ? `Đợi ${formatWait(countdown.remaining)}` : busy ? 'Đang đăng nhập…' : 'Đăng nhập'}</button>
       </form>
       <p className="mt-7 text-center text-sm text-[#74867e]">Chưa có tài khoản? <Link className="font-semibold text-[#28765c] hover:underline" to="/register">Tạo tài khoản</Link></p>
     </div>
