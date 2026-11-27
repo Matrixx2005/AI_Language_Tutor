@@ -77,6 +77,27 @@ Không có API nghiệp vụ, migration, tích hợp Gemini, tải model/dataset
 | Đăng ký trùng email trả 409 → có thể dò email đã đăng ký | Trải nghiệm người dùng rõ ràng; chống dò triệt để cần email xác nhận | Tuần 8 |
 | ~~Chưa giới hạn số lần đăng nhập sai (brute force)~~ | **Đã xử lý ở Tuần 3, Buổi 4** (theo email và IP, trong bộ nhớ) — xem mục bên dưới | Tuần 8: chuyển sang Redis nếu chạy nhiều tiến trình |
 
+## Luồng chat với gia sư AI (Tuần 3) và điểm nối RAG (Tuần 4)
+
+Baseline Tuần 3 là **LLM-only** (`chat_sessions.retrieval_mode = 'llm_only'`): chưa truy xuất tài liệu, chưa có citation; giao diện luôn ghi "AI không dẫn nguồn".
+
+`POST /api/v1/chat/sessions/{id}/messages` (`app/api/routes/chat.py` → `app/services/chat.py::send_message`):
+
+1. **Xác thực** (Bearer JWT) → **chủ sở hữu phiên**: phiên không tồn tại hoặc của người khác đều trả `404 chat_session_not_found` giống hệt nhau.
+2. **Đầu vào**: bỏ ký tự điều khiển, tối đa `CHAT_MAX_MESSAGE_CHARS` (`422 message_too_long`).
+3. **Giới hạn** (chi tiết ở mục dưới): đồng thời → phút → ngày → toàn hệ thống. Bị chặn: không lưu, không gọi LLM, trả `Retry-After`.
+4. **Chuẩn bị** (`_process_turn`): đọc lịch sử gần nhất (`chat_history.build_history`: tối đa `CHAT_HISTORY_TURNS` lượt, bỏ lượt lỗi), dựng system prompt từ `prompts/<language_code>/tutor.md` với trình độ **hiện tại trong hồ sơ** (`level_code`, `level_name`). Nội dung người dùng chỉ nằm trong danh sách tin vai `user`, không ghép vào system prompt.
+5. **Lưu tin người dùng và commit** trước khi gọi LLM (không giữ kết nối DB trong lúc chờ).
+6. **Gọi LLM** qua `LLMService` (`app/llm/service.py`): timeout, thử lại lỗi tạm thời có backoff, model dự phòng, chuẩn hóa lỗi thành 7 mã `llm_*`. Nhà cung cấp: `GeminiProvider` hoặc `FakeLLM` (`LLM_PROVIDER`).
+7. **Lưu trả lời** kèm metadata (model, token, độ trễ, `truncated`); lỗi → lưu dòng trợ lý `status='error'` + `error_code`, trả lỗi theo định dạng chung `{"error": {"code", "message"}}` (không lộ thông điệp nội bộ của nhà cung cấp). Log chỉ ghi metadata (độ dài, độ trễ, token, mã lỗi), không ghi nội dung.
+
+**Điểm nối RAG cho Tuần 4 (chưa cài đặt gì):** chèn bước truy xuất giữa bước 4 và bước 6 trong `_process_turn`:
+
+- Đầu vào sẵn có: `language_code`, `level_code` (lọc tài liệu theo ngôn ngữ và trình độ), `content` (truy vấn), lịch sử.
+- Ngữ cảnh truy xuất đi vào **phần riêng của prompt** (khối tài liệu có mã nguồn, tách khỏi tin người dùng để giữ nguyên nguyên tắc chống prompt injection), qua template prompt riêng (ví dụ `prompts/<code>/tutor_rag.md`) thay cho dòng "không có tài liệu tham khảo" của `tutor.md`.
+- Ghi `retrieval_mode` của phiên (`llm_only` / `bm25` / `dense` / `hybrid`, xem mục "Các chế độ đánh giá") và citation của từng câu trả lời; giao diện bỏ lưu ý "không dẫn nguồn" khi có citation.
+- Các phần còn lại (giới hạn, lưu tin, xử lý lỗi, log metadata) giữ nguyên.
+
 ## Giới hạn tần suất và chống lạm dụng (Tuần 3, Buổi 4)
 
 - **Thuật toán:** cửa sổ trượt dạng nhật ký (`app/core/rate_limit.py`): đúng nghĩa "N lần trong X giây", Retry-After chính xác, bộ nhớ chặn trên (≤ `limit` mốc mỗi khóa, ≤ 10.000 khóa; dọn khóa hết hạn rồi bỏ khóa cũ nhất). An toàn đa luồng bằng `threading.Lock`. Ngưỡng cấu hình qua `.env` (`0` = tắt).
@@ -104,9 +125,9 @@ Không có API nghiệp vụ, migration, tích hợp Gemini, tải model/dataset
 
 - **Route** (React Router, bảo vệ bằng `ProtectedRoute` — chưa có token → `/login`): `/chat` (`ChatPage`), `/placement` (`PlacementPage`), cùng `/profile`, `/login`, `/register`. `AppLayout` có liên kết "Gia sư AI", "Kiểm tra đầu vào"; màn hình hẹp chỉ hiện biểu tượng (có `aria-label`).
 - **Một lớp gọi API duy nhất** (`src/api/client.ts`): thêm hàm chat/placement; `ApiRequestError` có `code`, `status`, `details`, `retryAfterSeconds` (đọc header `Retry-After`). Backend phải khai báo `expose_headers=["Retry-After"]` trong CORS thì JavaScript khác origin (5173 → 8000) mới đọc được header này (sửa ở Buổi 6).
-- **Logic thuần** (`src/lib/*.ts`, không phụ thuộc React, kiểm bằng Node `node:assert`): `apiErrors.ts` (mã lỗi → thông điệp tiếng Việt; tách nhóm giới hạn `chat_rate_limited`/`chat_daily_limit_reached`/`chat_busy`/`service_busy`/`auth_rate_limited` khỏi nhóm `llm_*`; lỗi nào thử lại được), `time.ts` (đọc Retry-After số giây hoặc ngày HTTP, giây còn lại theo mốc kết thúc, định dạng "12 giây" / "khoảng 5 giờ 12 phút"), `chat.ts` (ẩn lượt lỗi đã thử lại, chọn phiên, đếm ký tự), `placement.ts` (nhãn loại câu, đếm câu đã trả lời, lượt hoàn thành mới nhất, quyền xác nhận).
+- **Logic thuần** (`src/lib/*.ts`, không phụ thuộc React; test `frontend/tests/*.test.ts` chạy bằng `npm test` = `node:test`, không thêm thư viện): `apiErrors.ts` (mã lỗi → thông điệp tiếng Việt; tách nhóm giới hạn `chat_rate_limited`/`chat_daily_limit_reached`/`chat_busy`/`service_busy`/`auth_rate_limited` khỏi nhóm `llm_*`; lỗi nào thử lại được), `time.ts` (đọc Retry-After số giây hoặc ngày HTTP, giây còn lại theo mốc kết thúc, định dạng "12 giây" / "khoảng 5 giờ 12 phút"), `chat.ts` (ẩn lượt lỗi đã thử lại, chọn phiên, đếm ký tự), `placement.ts` (nhãn loại câu, đếm câu đã trả lời, lượt hoàn thành mới nhất, quyền xác nhận).
 - **Đếm ngược** (`src/hooks/useCountdown.ts`): tính theo mốc kết thúc (không trôi khi tab ẩn, cập nhật lại khi tab hiện), không rút ngắn thời gian chờ đang có, dọn timer khi rời trang. Dùng cho nút gửi chat và đăng nhập/đăng ký; nút bị khóa ghi rõ "Đợi …".
-- **Chat:** tin người dùng hiện ngay (state `pending` tách khỏi lịch sử máy chủ). Lỗi `llm_*`/`internal_error`: máy chủ đã lưu tin + dòng lỗi → tải lại lịch sử; "Thử lại" gửi lại đúng nội dung và lượt lỗi cũ được ẩn (`collapseRetriedTurns`) để không hiện hai lần. Lỗi giới hạn: máy chủ không lưu → giữ tin `pending`, đếm ngược rồi cho "Thử lại". Lỗi phải sửa nội dung (`message_too_long`): trả nội dung về ô nhập. Nội dung hiển thị là văn bản thuần (`whitespace-pre-wrap`), không `dangerouslySetInnerHTML`, không render markdown. Enter gửi trừ khi đang gõ bằng bộ gõ (`isComposing`, tránh gửi nhầm với Telex/VNI). Luôn hiện lưu ý "AI không dẫn nguồn" và thông báo dữ liệu gửi tới Google; `truncated` → dòng "Câu trả lời có thể bị cắt…".
+- **Chat:** tin người dùng hiện ngay (state `pending` tách khỏi lịch sử máy chủ). Lỗi `llm_*`/`internal_error`: máy chủ đã lưu tin + dòng lỗi → tải lại lịch sử; "Thử lại" gửi lại đúng nội dung và lượt lỗi cũ được ẩn (`collapseRetriedTurns`) để không hiện hai lần. Lỗi giới hạn: máy chủ không lưu → giữ tin `pending`, đếm ngược rồi cho "Thử lại". Lỗi phải sửa nội dung (`message_too_long`): trả nội dung về ô nhập. Nội dung hiển thị là văn bản thuần (`whitespace-pre-wrap`), không `dangerouslySetInnerHTML`, không render markdown. Enter gửi trừ khi đang gõ bằng bộ gõ (`isComposing`, tránh gửi nhầm với Telex/VNI). Khi đang chờ trả lời, nút đổi phiên/tạo phiên bị khóa; ngoài ra phản hồi gửi tin và lịch sử tải về chỉ được áp dụng nếu phiên của yêu cầu vẫn đang được chọn (`selectedIdRef` + `isForCurrentSession`), tránh lẫn tin giữa các phiên. Luôn hiện lưu ý "AI không dẫn nguồn" và thông báo dữ liệu gửi tới Google; `truncated` → dòng "Câu trả lời có thể bị cắt…".
 - **Placement:** làm bài cả trang (30 câu ngắn: thấy toàn bộ đề, bỏ qua rồi quay lại dễ, ít thao tác). Đáp án chỉ ở state của trang. Xử lý `placement_superseded` (chuyển tới lượt mới nhất), `placement_questions_changed` (gọi lại `POST /placement/attempts`), `placement_already_submitted` (hiện kết quả), `placement_not_available`. Lưu ý không phải chứng chỉ CEFR dùng đúng chuỗi `disclaimer` của máy chủ.
 
 ## Bài kiểm tra đầu vào — placement (Tuần 3, Buổi 5)

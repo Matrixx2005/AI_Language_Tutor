@@ -418,3 +418,189 @@ Người dùng cho phép: migrate DB chính, nạp 30 câu hỏi vào DB chính.
 ### Chưa kiểm chứng trên trình duyệt
 
 Toàn bộ thao tác trên giao diện (bấm, gõ, đếm ngược hiển thị, bố cục màn hình hẹp 360px, focus bằng bàn phím, Enter khi gõ Telex/VNI) — Claude không quan sát được trình duyệt; chỉ kiểm chứng qua build TypeScript và các phản hồi HTTP mà giao diện sẽ nhận.
+
+## Tuần 3 — Buổi 6 — hoàn thiện (2026-11-25)
+
+Không sửa backend, không sửa `.env`, không gọi API thật, không chạm DB chính, không thêm thư viện, không commit.
+
+### Claude đã chạy
+
+- **Đổi phiên trong lúc đang gửi** (`ChatPage.tsx`):
+  - Nút "Cuộc trò chuyện mới" và các phiên khác bị khóa khi đang chờ trả lời. Có `title`, có dòng giải thích hiện trên màn hình, và `aria-describedby` trỏ tới dòng đó.
+  - `selectedIdRef` được cập nhật đồng bộ qua `setSelectedId`.
+  - `send()` chỉ ghi vào danh sách tin và tin đang chờ khi phiên của lượt gửi vẫn đang được chọn; nếu không thì chỉ làm mới danh sách phiên.
+  - `loadMessages()` bỏ qua lịch sử của phiên khác về muộn.
+  - Đếm ngược giới hạn vẫn bật dù đã đổi phiên, vì giới hạn tính cho cả tài khoản.
+  - Điều kiện tách thành hàm thuần `isForCurrentSession` trong `src/lib/chat.ts`, có test.
+- **Placement, lỗi `placement_questions_changed`:** `start(keepNotice)` đặt thông báo cùng lúc khởi tạo bài mới, nên thông báo không còn bị xóa. Các nút gọi `start` đổi thành `() => start()` để không truyền nhầm sự kiện click vào tham số. Hành vi khác không đổi.
+- **Test logic lưu vào repo:**
+  - 4 file `frontend/tests/*.test.ts` dùng `node:test` + `node:assert/strict`: 12 nhóm cũ cộng 1 nhóm mới `isForCurrentSession`.
+  - Script `"test": "node --test tests/*.test.ts"`; không cần cờ thêm vì Node 24.15 tự bỏ kiểu TypeScript.
+  - Cách ghi `node --test tests/` như trong yêu cầu **không chạy được**: Node 24 coi `tests/` là một file và báo `MODULE_NOT_FOUND`. Vì vậy script dùng glob, do Node tự mở rộng nên chạy giống nhau trong cả PowerShell lẫn bash.
+- **`npm test`:** 13/13 pass, chạy được cả trong PowerShell và Git Bash, không có cảnh báo experimental.
+- **Làm hỏng có chủ đích** (mỗi lần khôi phục xong đều xác nhận bằng `cmp`):
+
+  | Hàm làm hỏng | Kết quả test |
+  |---|---|
+  | `parseRetryAfter`: bỏ kiểm tra định dạng IMF-fixdate | 1 fail |
+  | `collapseRetriedTurns`: bỏ so nội dung | 1 fail |
+  | `latestCompletedId`: đảo thứ tự sắp xếp | 2 fail |
+  | `isForCurrentSession`: bỏ so phiên | 1 fail |
+- **`npm run build`** (`tsc -b` + `vite build`): pass, không lỗi và không cảnh báo TypeScript.
+- **Quét mã:** không có `dangerouslySetInnerHTML`, `innerHTML` hay `console.log/debug/info` trong `src` và `tests`.
+- **`pytest`** không mạng, không key: **361 passed, 1 skipped** (không giảm).
+- **Quét secret:** key Gemini, JWT secret và mật khẩu DB không có trong file sẽ commit, `frontend/dist`, hay lịch sử 14 commit.
+
+### Người dùng tự báo
+
+- Trước phần hoàn thiện này, ảnh chụp trang chat ở chế độ `fake` cho thấy: tin gửi và câu trả lời FakeLLM hiện đúng thứ tự, có 2 thông báo (không dẫn nguồn; dữ liệu gửi Google), bộ đếm `0/2000`.
+- Các mục thử khác: chưa có báo cáo.
+
+### Chưa kiểm chứng trên trình duyệt
+
+- Nút phiên bị khóa trong lúc gửi: hiển thị, tooltip, trình đọc màn hình. Với FakeLLM lượt gửi xong rất nhanh, nên khó quan sát bằng mắt.
+- Việc bỏ qua phản hồi hoặc lịch sử về muộn của phiên khác: chỉ kiểm qua hàm thuần và build. Chưa tái hiện được tình huống chạy đua thật trong trình duyệt.
+- Thông báo "Bộ câu hỏi vừa được cập nhật…" khi gặp `placement_questions_changed`: muốn thấy phải đổi bộ câu hỏi trong DB, việc này chưa làm.
+- File `tests/*.test.ts` không nằm trong `tsconfig` (`include: ["src"]`), nên `tsc` không kiểm kiểu cho chúng; Node chỉ bỏ kiểu chứ không kiểm.
+
+## Tuần 3 — Buổi 7: kiểm thử toàn tuyến và nghiệm thu (2026-11-25)
+
+Bảng tiêu chí nghiệm thu: `docs/WEEK3_ACCEPTANCE.md`. Không sửa `.env`, không migrate DB chính, không cài gì vào môi trường dự án, không commit.
+
+### Claude đã chạy
+
+**A. Kiểm tra tự động**
+
+- `pytest` không mạng, không key (`GEMINI_API_KEY="" LLM_PROVIDER=fake HTTP(S)_PROXY=http://127.0.0.1:9`, `-rsw`): **370 passed, 1 skipped**, không có cảnh báo.
+  - Mục skipped duy nhất là `test_llm_smoke.py` (gọi API thật, chỉ chạy khi `RUN_LLM_SMOKE=1`).
+  - 370 = 361 test trước đó + 9 test mới trong `test_e2e_week3.py`.
+- Frontend:
+  - `npm test`: 13/13 pass.
+  - `npm run build`: pass (`tsc -b` không lỗi).
+- Alembic trên DB test (`alembic -x db=test …`):
+
+  | Lệnh | Kết quả |
+  |---|---|
+  | `current` | `dfd85f565969 (head)` |
+  | `upgrade head` | Không có gì để chạy |
+  | `check` | "No new upgrade operations detected." |
+  | `downgrade -1` | `dfd85f565969 -> 694e39a25fe6`, `current` = `694e39a25fe6` |
+  | `upgrade head` | `694e39a25fe6 -> dfd85f565969` |
+  | `check` | Không lệch |
+
+  DB chính chỉ được đọc: `alembic current` = `dfd85f565969 (head)`, `alembic check` không lệch (lệnh chỉ so sánh, không ghi).
+- Kiểm tra dữ liệu:
+  - `scripts/validate_dataset.py`: "Validation passed: 15 records, 0 errors.", exit 0.
+  - `scripts/validate_evaluation.py`: "30 placement questions, 30 RAG queries, 20 dev / 10 test", exit 0.
+- Quét secret (lấy giá trị thật từ `.env`, chỉ đếm số lần xuất hiện, không in giá trị):
+  - `GEMINI_API_KEY`, `JWT_SECRET`, `POSTGRES_PASSWORD`: 0 lần trong file sẽ commit, 0 trong `frontend/dist`, 0 trong `git log -p --all` (14 commit).
+  - Chuỗi dạng `AIza…`: 0 ở cả ba nơi.
+  - `.env` không được Git theo dõi và chưa từng được commit.
+  - Trong `.env.example` cả ba biến đều trống.
+- Log: đã đọc toàn bộ 13 lời gọi `logger.*` trong `backend/app`. Chỉ có metadata (đường dẫn, mã lỗi, id phiên/lượt, số ký tự, độ trễ, token, IP rút gọn); không lời gọi nào ghi nội dung tin, email hay mật khẩu.
+  - Test đầu-cuối mới kiểm thêm bằng `caplog` ở mức DEBUG: nội dung câu hỏi và câu trả lời không xuất hiện trong log.
+
+**B. Luồng đầu-cuối qua HTTP** (`backend/tests/test_e2e_week3.py`, 9 test)
+
+Mỗi test dùng app riêng và transaction riêng, rollback sau khi chạy. LLM là FakeLLM; câu hỏi placement là bộ thật `placement_v1.json`.
+
+1. Đăng ký → đăng nhập → tạo phiên → gửi 2 tin → lịch sử đúng thứ tự, đúng chủ.
+   - Tiêu đề phiên lấy từ tin đầu.
+   - System prompt chứa trình độ A1 của hồ sơ; lượt thứ hai gửi kèm lịch sử.
+   - Phản hồi không có `model_id` hay token; log không chứa nội dung tin.
+2. Người dùng B đọc, ghi, hoặc đoán phiên của A → 404 `chat_session_not_found`, giống hệt phiên không tồn tại. Không có tin nào được ghi thêm.
+3. Giới hạn:
+   - Tin thứ 7 trong phút → 429 `chat_rate_limited`, có `Retry-After` từ 1 đến 60 giây. Tin này không được lưu và LLM không bị gọi.
+   - Đăng nhập sai 5 lần → lần thứ 6, kể cả đúng mật khẩu, nhận 429 `auth_rate_limited` kèm `Retry-After`.
+4. Placement:
+   - `start` → `get`: không có khóa đáp án nào trong câu hỏi.
+   - Nộp 12/30 câu đúng → A2 (đúng ranh giới 40%), có review 30 câu và disclaimer.
+   - Nộp lại → 409 `placement_already_submitted`.
+   - Làm lượt thứ hai, đúng 30/30 → B1. Áp dụng lượt cũ → 409 `placement_superseded`, hồ sơ vẫn A1. Áp dụng lượt mới → hồ sơ B1, phiên chat mới mang trình độ B1.
+   - Người dùng B không xem và không nộp được lượt của A → 404 `placement_not_found`.
+5. Lỗi LLM giả lập (timeout, rate limit, content blocked):
+
+   | Lỗi | HTTP | Mã lỗi |
+   |---|---|---|
+   | Timeout | 504 | `llm_timeout` |
+   | Rate limit | 429 | `llm_rate_limited`, `Retry-After: 17` |
+   | Content blocked | 422 | `llm_content_blocked` |
+
+   - Thông điệp nội bộ cài sẵn (tên host, project, mã SAFETY, tên model) không lộ ra phản hồi.
+   - Lượt lỗi được lưu `status='error'` với đúng `error_code`.
+   - Lượt tiếp theo trả 200 và không gửi lại lượt lỗi cho LLM.
+
+Làm hỏng có chủ đích (khôi phục xong đều xác nhận bằng `cmp`, `git status` sạch):
+
+| Chỗ làm hỏng | Kết quả trên file e2e |
+|---|---|
+| Bỏ điều kiện `user_id` khi tìm phiên chat | 1 failed |
+| Thêm `correct_answer` vào câu hỏi khi đang làm bài (schema + route) | 1 failed |
+| Ngưỡng A2: 40 → 41 | 1 failed |
+| Lưu lượt lỗi với `status="ok"` | 3 failed |
+
+Lần thử đầu của mục thêm `correct_answer` **không áp dụng được**: mẫu chuỗi trùng 2 chỗ nên script từ chối. Vì vậy chỉ route bị sửa, Pydantic bỏ qua trường lạ và test vẫn xanh, đúng vì không có gì bị lộ. Chạy lại với mẫu chuỗi duy nhất thì test đỏ.
+
+**C. Smoke test thật với Gemini** (người dùng cho phép 2 lời gọi; đã dùng đúng 2; mỗi ca không thử lại, không model dự phòng; key không xuất hiện trong output)
+
+- Ca `text`: lời gọi **thành công**: model thực tế `gemini-3.5-flash-lite`, 4881 ms, token vào/ra 42/93, `attempts=1`, câu trả lời tiếng Việt về a/an có ví dụ "an hour".
+  - pytest vẫn báo **failed**, nhưng lỗi nằm ở bước *in* câu trả lời: `UnicodeEncodeError`, vì console Git Bash dùng cp1252 không in được tiếng Việt. Lỗi không đến từ API.
+  - Không gọi lại để tiết kiệm hạn mức. README thêm `$env:PYTHONIOENCODING = "utf-8"` vào hướng dẫn smoke.
+- Ca `structured` (có `PYTHONIOENCODING=utf-8`): Google trả **HTTP 503 UNAVAILABLE** (quá tải phía nhà cung cấp).
+  - Backend chuẩn hóa đúng thành `LLMProviderError` (`llm_provider_error`).
+  - Theo lựa chọn của người dùng, không dùng lời gọi thứ 3. Structured output đã chạy thành công ở Buổi 2 (xem mục Buổi 2 ở trên).
+
+**D. Bản sao sạch theo README** (người dùng cho phép phương án dùng chung PostgreSQL)
+
+- Chép đúng các file sẽ commit (`git ls-files -co --exclude-standard`, không có `.env`, `.venv`, `node_modules`, `dist`) sang thư mục tạm trong scratchpad.
+- `.env` tạm tạo từ `.env.example`:
+  - user và mật khẩu DB lấy từ `.env` thật;
+  - `POSTGRES_DB` = **DB test**, thay cho "DB chính" để không chạm DB chính thật;
+  - `JWT_SECRET` sinh mới;
+  - `LLM_PROVIDER=fake`, không có key Gemini.
+- Các bước:
+
+  | Bước README | Kết quả |
+  |---|---|
+  | 1: `py -3.13 -m venv`, `pip install -r backend/requirements-dev.txt` | exit 0 (Python 3.13.11) |
+  | 3: `docker compose up` | **Bỏ qua**: dùng chung container đang chạy (trùng cổng 5432). `docker-compose.yml`/`docker/` không đổi từ commit 836a645 và đã chạy được trên bản sao sạch ở Tuần 2 (cổng 5433). |
+  | 4: `alembic upgrade head`, `alembic -x db=test upgrade head`, `alembic current` | `dfd85f565969 (head)` |
+  | 4: `load_placement.py --target main --dry-run` | 30 câu, không ghi |
+  | 5: `uvicorn` (cổng 8011 vì 8000 đang bận) | `/health` → `{"status":"ok"}`, `/docs` → 200 |
+  | 6: `npm ci` | 0 vulnerabilities |
+  | 6: `npm test` | 13/13 |
+  | 6: `npm run build` | pass |
+  | 7: `pytest` (đặt `POSTGRES_DB` thành tên DB không tồn tại để chắc chắn không chạm DB chính) | **370 passed, 1 skipped** |
+- Thư mục tạm đã xóa, vì `.env` tạm chứa mật khẩu DB.
+- DB test sau khi chạy: 0 user, 0 tin nhắn, 0 câu hỏi, 0 lượt placement.
+- DB chính chỉ đọc số dòng: 1 user, 20 tin nhắn, 30 câu hỏi, 1 lượt placement, là dữ liệu từ lần người dùng tự thử trên trình duyệt.
+- README không có lệnh sai. Các điểm đã sửa trong README:
+  - dòng trạng thái lỗi thời ("chat và placement chưa có");
+  - thiếu yêu cầu phiên bản Node cho `npm test`;
+  - thiếu `PYTHONIOENCODING` cho smoke test;
+  - mục Kiểm thử chưa có `npm test` và test đầu-cuối.
+
+**E. Tài liệu**
+
+- README: dòng trạng thái, **Node ≥ 22.18** cho `npm test`, smoke test, mục Kiểm thử, bảng Cấu trúc.
+  - Mốc 22.18 theo tài liệu phát hành Node: chạy trực tiếp `.ts` không cần cờ từ 23.6 và được đưa về 22.18. Claude chỉ kiểm chứng trên **24.15**.
+- `docs/ARCHITECTURE.md`:
+  - mục mới "Luồng chat với gia sư AI (Tuần 3) và điểm nối RAG (Tuần 4)", gồm 7 bước của `send_message` và chỗ chèn bước truy xuất giữa bước chuẩn bị prompt và bước gọi LLM (chưa cài đặt gì);
+  - phần frontend cập nhật `npm test` và khóa đổi phiên.
+- `.env.example`: đối chiếu với `Settings`, đủ tên biến, không cần sửa.
+  - `GEMINI_*` được đọc riêng trong `app/llm/gemini.py`.
+  - `EMBEDDING_MODEL` và `QDRANT_URL` để dành cho Tuần 4.
+  - `APP_NAME` là hằng nội bộ, không cần cấu hình.
+
+### Người dùng tự báo
+
+- Ảnh chụp trang chat ở chế độ `fake`: tin và trả lời hiện đúng thứ tự, có 2 thông báo, có bộ đếm `0/2000` (đã ghi ở Buổi 6).
+- 9 mục thử trên trình duyệt trong `WEEK3_ACCEPTANCE.md`: **chưa có báo cáo**.
+
+### Chưa kiểm chứng
+
+- Toàn bộ thao tác trên trình duyệt (9 mục trong `WEEK3_ACCEPTANCE.md`).
+- Structured output thật ở Buổi 7 (Google trả 503); lần gần nhất chạy được là Buổi 2.
+- Chất lượng câu trả lời thật **theo trình độ** (A1 so với B1): chưa đánh giá có hệ thống; để dành cho Tuần 7.
+- `npm test` trên Node 22.18–23.x (chỉ chạy trên 24.15).
+- Bước `docker compose up` trên bản sao sạch ở Buổi 7 (lý do ở mục D).

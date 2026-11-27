@@ -2,7 +2,7 @@
 
 Hệ thống hỗ trợ học tiếng Anh A1–B1 cho người Việt, dùng Retrieval-Augmented Generation (BM25 + BGE-M3 + RRF), Gemini Flash và cá nhân hóa học tập. Đồ án tốt nghiệp Khoa học máy tính.
 
-**Trạng thái:** Tuần 3 (đang làm) — đã có đăng ký, đăng nhập, hồ sơ học tập (Tuần 2) và lớp LLM với nhà cung cấp Gemini; chat và placement chưa có. Kế hoạch: [`docs/PROJECT_MASTER_PLAN.md`](docs/PROJECT_MASTER_PLAN.md).
+**Trạng thái:** Tuần 3 (nghiệm thu: [`docs/WEEK3_ACCEPTANCE.md`](docs/WEEK3_ACCEPTANCE.md)) — đăng ký, đăng nhập, hồ sơ học tập (Tuần 2); gia sư AI chat qua Gemini (chưa dùng tài liệu tham khảo — RAG là Tuần 4), giới hạn tần suất, bài kiểm tra đầu vào (placement) và giao diện tương ứng. Kế hoạch: [`docs/PROJECT_MASTER_PLAN.md`](docs/PROJECT_MASTER_PLAN.md).
 
 Hướng dẫn dưới đây viết cho **Windows + PowerShell**, chạy từ thư mục gốc dự án trừ khi ghi khác. Làm lần lượt từ bước 1 đến bước 7.
 
@@ -11,7 +11,7 @@ Hướng dẫn dưới đây viết cho **Windows + PowerShell**, chạy từ th
 | Công cụ | Phiên bản đã kiểm chứng | Kiểm tra |
 | --- | --- | --- |
 | Python | **3.13** (3.13.11) | `py -0p` |
-| Node.js + npm | Node 24 (v24.15.0), npm 11 | `node --version` |
+| Node.js + npm | Node 24 (v24.15.0), npm 11. **`npm test` cần Node ≥ 22.18** (chạy trực tiếp file `.ts` không cần cờ; Node 23.6+ cũng được) | `node --version` |
 | Docker Desktop (WSL 2) | Docker 29.9, Compose v5.7 | `docker compose version` |
 | Git | 2.x | `git --version` |
 
@@ -142,8 +142,9 @@ Mặc định `LLM_PROVIDER=fake`: không gọi mạng. Để dùng Gemini thậ
 
    ```powershell
    $env:RUN_LLM_SMOKE = "1"; $env:LLM_SMOKE_CASE = "text"   # hoặc "structured"
+   $env:PYTHONIOENCODING = "utf-8"   # để in được câu trả lời tiếng Việt khi chuyển hướng/ghi ra file
    pytest backend/tests/test_llm_smoke.py -s
-   Remove-Item Env:RUN_LLM_SMOKE, Env:LLM_SMOKE_CASE
+   Remove-Item Env:RUN_LLM_SMOKE, Env:LLM_SMOKE_CASE, Env:PYTHONIOENCODING
    ```
 
 Lưu ý gói miễn phí: Google có thể dùng nội dung gửi lên để cải thiện sản phẩm và người đánh giá có thể đọc nội dung đó; không gửi thông tin cá nhân. Chi tiết và nguồn: `docs/ENVIRONMENT_CHECK.md` (mục điều khoản dữ liệu). Hạn mức thật xem trong AI Studio (tài liệu không công bố con số cố định).
@@ -169,14 +170,25 @@ Giao diện tiếng Việt: đăng ký → đăng nhập → hồ sơ (chọn tr
 
 **Bật Gemini thật:** đặt `LLM_PROVIDER=gemini` (cùng các dòng ở mục "Bật LLM thật"), khởi động lại backend, rồi **tạo cuộc trò chuyện mới** (để lịch sử không chứa câu trả lời giả).
 
+**Kiểm thử logic giao diện** (không cần backend, không thêm thư viện — dùng `node:test` có sẵn; Node 24 chạy trực tiếp file `.ts`):
+
+```powershell
+cd frontend
+npm test                           # = node --test tests/*.test.ts
+```
+
+Các test nằm trong `frontend/tests/` và kiểm các hàm thuần ở `src/lib/` (đọc `Retry-After`, định dạng thời gian chờ, mã lỗi, gộp lượt chat đã thử lại, chọn phiên, lượt placement mới nhất…). Giao diện React (bấm, gõ, bố cục) **không** được test tự động — cần thử trên trình duyệt.
+
 ## 7. Kiểm thử
 
 ```powershell
 pytest                                     # cần DB đang chạy và DB test đã migrate (bước 3–4)
 python scripts/validate_dataset.py         # dataset ngữ pháp
 python scripts/validate_evaluation.py      # bộ đánh giá placement/RAG
-cd frontend; npm run build; cd ..          # kiểm tra TypeScript + build production
+cd frontend; npm test; npm run build; cd ..   # logic giao diện (Node ≥ 22.18) + TypeScript/build
 ```
+
+- `backend/tests/test_e2e_week3.py`: luồng đầu-cuối qua HTTP (đăng ký → chat → lịch sử; chặn truy cập phiên/lượt của người khác; giới hạn chat và đăng nhập; placement start → nộp → áp dụng; lỗi LLM giả lập).
 
 - Test API chạy trên **DB test**, mỗi test tự rollback: không đụng dữ liệu thật.
 - Nếu PostgreSQL chưa chạy, các test cần DB được **bỏ qua** (skipped) thay vì treo; nếu DB test chưa migrate, pytest báo lỗi kèm lệnh cần chạy.
@@ -200,7 +212,8 @@ cd frontend; npm run build; cd ..          # kiểm tra TypeScript + build produ
 | --- | --- |
 | `backend/app/` | FastAPI: `core/` (cấu hình, bảo mật, lỗi), `db/`, `models/`, `schemas/`, `services/`, `api/` |
 | `backend/alembic/` | Migration cơ sở dữ liệu |
-| `backend/tests/` | pytest (API, ràng buộc DB, dataset) |
+| `backend/tests/` | pytest (API, ràng buộc DB, dataset, luồng đầu-cuối) |
+| `frontend/tests/` | `npm test`: logic thuần của giao diện (`node:test`) |
 | `frontend/` | Vite + React + TypeScript + Tailwind |
 | `languages/` | Cấu hình ngôn ngữ và trình độ (`en.yaml`) |
 | `data/` | Dataset ngữ pháp, bộ đánh giá; `data/archive/` là bản gốc không sửa |

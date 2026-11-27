@@ -56,8 +56,9 @@ export function PlacementPage() {
     })()
   }, [refreshSummaries, showAttempt])
 
-  async function start() {
-    setBusy(true); setError(''); setNotice(''); setAppliedLevel('')
+  /** `keepNotice`: thông báo hiển thị cùng bài mới (ví dụ bộ câu hỏi vừa đổi); mặc định xóa thông báo cũ. */
+  async function start(keepNotice = '') {
+    setBusy(true); setError(''); setNotice(keepNotice); setAppliedLevel('')
     try {
       const started = await api.startPlacement()
       setAttempt(started)
@@ -93,8 +94,7 @@ export function PlacementPage() {
         await showAttempt(attempt.attempt_id)
       } else if (code === 'placement_questions_changed') {
         // Bộ câu hỏi đổi: máy chủ thay lượt dở bằng lượt mới khi gọi lại POST /placement/attempts.
-        setNotice(`${message} Đã tạo bài mới, các lựa chọn trước đó chưa được lưu.`)
-        await start()
+        await start(`${message} Đã tạo bài mới, các lựa chọn trước đó chưa được lưu.`)
       } else {
         setError(message)
       }
@@ -146,7 +146,7 @@ export function PlacementPage() {
           bạn tự quyết định có cập nhật hồ sơ hay không. Chấm điểm tự động trên máy chủ, không dùng AI.
           {resuming && ' Các lựa chọn chưa nộp không được lưu, bạn sẽ làm lại từ đầu với cùng bộ câu hỏi.'}
         </p>
-        <button type="button" className="primary-button mt-6" onClick={start} disabled={busy}>
+        <button type="button" className="primary-button mt-6" onClick={() => start()} disabled={busy}>
           {busy ? 'Đang chuẩn bị…' : resuming ? 'Tiếp tục bài đang làm' : 'Bắt đầu'}
         </button>
       </section>
@@ -209,7 +209,7 @@ export function PlacementPage() {
         {!appliedLevel && result.applied_at && <p className="mt-4 text-sm text-white/80">Bạn đã dùng trình độ này cho hồ sơ.</p>}
         <div className="mt-5 flex flex-wrap gap-3">
           {applicable && <button type="button" className="primary-button bg-white text-[#234d40] hover:bg-[#edf5ef]" onClick={apply} disabled={busy}>{busy ? 'Đang cập nhật…' : 'Dùng trình độ này'}</button>}
-          <button type="button" className="secondary-button border-white/40 bg-transparent text-white hover:bg-white/10" onClick={start} disabled={busy}><RotateCcw size={15} /> Làm lại bài kiểm tra</button>
+          <button type="button" className="secondary-button border-white/40 bg-transparent text-white hover:bg-white/10" onClick={() => start()} disabled={busy}><RotateCcw size={15} /> Làm lại bài kiểm tra</button>
         </div>
         {!isLatest && <p className="mt-3 text-xs text-white/70">Đây là kết quả cũ; chỉ kết quả mới nhất mới dùng để cập nhật hồ sơ.</p>}
       </section>
@@ -246,7 +246,7 @@ export function PlacementPage() {
     </div>
   }
 
-  return <div className="mx-auto max-w-3xl">{header}{messages}<button type="button" className="primary-button" onClick={start}>Bắt đầu</button></div>
+  return <div className="mx-auto max-w-3xl">{header}{messages}<button type="button" className="primary-button" onClick={() => start()}>Bắt đầu</button></div>
 }
 
 function History({ summaries, current, onView }: { summaries: PlacementAttemptSummary[]; current: string | null; onView: (id: string) => void }) {

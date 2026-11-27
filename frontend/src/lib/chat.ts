@@ -44,3 +44,15 @@ export function pickSession(sessions: readonly { session_id: string }[], preferr
 export function charCount(length: number, max: number): { label: string; over: boolean } {
   return { label: `${length}/${max}`, over: length > max }
 }
+
+/**
+ * Kết quả của một yêu cầu gắn với phiên `requestSessionId` (gửi tin, tải lịch sử) chỉ được áp dụng vào
+ * khung chat khi phiên đó VẪN đang được chọn; nếu người dùng đã chuyển phiên, kết quả đến muộn bị bỏ qua
+ * để tin của phiên này không lẫn sang phiên khác.
+ */
+export function isForCurrentSession(requestSessionId: string | null, currentSessionId: string | null): boolean {
+  return requestSessionId !== null && requestSessionId === currentSessionId
+}
+
+/** Lý do khóa nút đổi phiên/tạo phiên mới khi đang chờ trả lời (dùng cho title/aria). */
+export const SESSION_SWITCH_LOCKED_REASON = 'Đang chờ gia sư trả lời — đổi cuộc trò chuyện sau khi có câu trả lời.'

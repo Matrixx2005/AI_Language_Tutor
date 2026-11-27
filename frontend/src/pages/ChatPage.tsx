@@ -5,7 +5,7 @@ import { FormMessage } from '../components/FormMessage'
 import { Loading } from '../components/Loading'
 import { useCountdown } from '../hooks/useCountdown'
 import { canRetry, isLimitCode, isLlmCode, messageForCode } from '../lib/apiErrors'
-import { charCount, collapseRetriedTurns, pickSession, precedingUserContent } from '../lib/chat'
+import { SESSION_SWITCH_LOCKED_REASON, charCount, collapseRetriedTurns, isForCurrentSession, pickSession, precedingUserContent } from '../lib/chat'
 import { formatWait, formatWaitApprox } from '../lib/time'
 import type { ChatMessage, ChatSession } from '../types'
 
@@ -29,7 +29,16 @@ function toUiError(caught: unknown): UiError {
 export function ChatPage() {
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [sessionsState, setSessionsState] = useState<LoadState>('loading')
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedId, setSelectedIdState] = useState<string | null>(null)
+  /**
+   * Phiên đang chọn, cập nhật ĐỒNG BỘ cùng state: các yêu cầu bất đồng bộ (gửi tin, tải lịch sử) so với
+   * ref này khi có kết quả, vì giá trị `selectedId` trong closure có thể đã cũ.
+   */
+  const selectedIdRef = useRef<string | null>(null)
+  const setSelectedId = useCallback((id: string | null) => {
+    selectedIdRef.current = id
+    setSelectedIdState(id)
+  }, [])
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [messagesState, setMessagesState] = useState<LoadState>('ready')
   const [pending, setPending] = useState<Pending | null>(null)
@@ -59,16 +68,19 @@ export function ChatPage() {
   const loadMessages = useCallback(async (sessionId: string) => {
     setMessagesState('loading')
     try {
-      setMessages(await api.listChatMessages(sessionId))
+      const list = await api.listChatMessages(sessionId)
+      // Lịch sử của phiên khác về muộn (người dùng đã chuyển phiên): bỏ qua.
+      if (!isForCurrentSession(sessionId, selectedIdRef.current)) return
+      setMessages(list)
       setMessagesState('ready')
     } catch {
-      setMessagesState('error')
+      if (isForCurrentSession(sessionId, selectedIdRef.current)) setMessagesState('error')
     }
   }, [])
 
   useEffect(() => {
     loadSessions(null).then((id) => setSelectedId(id))
-  }, [loadSessions])
+  }, [loadSessions, setSelectedId])
 
   useEffect(() => {
     if (selectedId && selectedId === createdWhileSendingRef.current) {
@@ -119,6 +131,12 @@ export function ChatPage() {
         setSelectedId(sessionId)
       }
       const turn = await api.sendChatMessage(sessionId, trimmed)
+      if (!isForCurrentSession(sessionId, selectedIdRef.current)) {
+        // Người dùng đã sang phiên khác (nút đổi phiên bị khóa khi đang gửi, đây là lớp chặn thứ hai):
+        // tin đã lưu ở máy chủ, sẽ hiện khi mở lại phiên đó; chỉ làm mới danh sách phiên.
+        loadSessions(selectedIdRef.current)
+        return
+      }
       // Lượt lỗi vừa được thử lại thành công: tải lại lịch sử để máy chủ là nguồn sự thật.
       if (retryOfMessageId) await loadMessages(sessionId)
       else setMessages((list) => [...list, turn.user_message, turn.assistant_message])
@@ -127,10 +145,12 @@ export function ChatPage() {
     } catch (caught) {
       const error = toUiError(caught)
       const retryAfter = caught instanceof ApiRequestError ? caught.retryAfterSeconds : undefined
+      // Giới hạn tần suất áp dụng cho cả tài khoản, nên đếm ngược luôn bật kể cả khi đã đổi phiên.
+      const current = isForCurrentSession(sessionId, selectedIdRef.current)
       if (isLlmCode(error.code) || error.code === 'internal_error') {
         // Máy chủ ĐÃ lưu tin người dùng + dòng trợ lý status="error": hiển thị theo lịch sử máy chủ.
-        if (sessionId) await loadMessages(sessionId)
-        setPending(null)
+        if (sessionId) await loadMessages(sessionId) // tự bỏ qua nếu không còn là phiên đang chọn
+        if (current) setPending(null)
         if (error.code === 'llm_rate_limited' || error.code === 'llm_quota_exhausted') {
           countdown.start(retryAfter ?? FALLBACK_WAIT_SECONDS)
         }
@@ -138,15 +158,15 @@ export function ChatPage() {
         // Bị từ chối trước khi lưu: giữ tin để "Thử lại" sau khi hết giờ chờ.
         setLimitError(error)
         countdown.start(retryAfter ?? FALLBACK_WAIT_SECONDS)
-        setPending({ content: trimmed, state: 'failed', error })
+        if (current) setPending({ content: trimmed, state: 'failed', error })
       } else if (!canRetry(error.code)) {
         // Phải sửa nội dung (quá dài, sai định dạng...): trả nội dung về ô nhập.
-        setPending(null)
+        if (current) setPending(null)
         setText(trimmed)
         setComposerError(error.message)
       } else {
         if (error.code === 'chat_session_not_found') loadSessions(null).then(setSelectedId)
-        setPending({ content: trimmed, state: 'failed', error })
+        if (current) setPending({ content: trimmed, state: 'failed', error })
       }
     } finally {
       setRetryingMessageId(null)
@@ -198,9 +218,11 @@ export function ChatPage() {
 
     <div className="grid gap-5 lg:grid-cols-[17rem_1fr]">
       <aside className={`${showSessions ? 'block' : 'hidden'} rounded-[1.5rem] bg-white p-4 lg:block`} aria-label="Danh sách cuộc trò chuyện">
-        <button type="button" className="primary-button w-full gap-2" onClick={newSession} disabled={creating}>
+        <button type="button" className="primary-button w-full gap-2" onClick={newSession} disabled={creating || sending}
+          title={sending ? SESSION_SWITCH_LOCKED_REASON : undefined} aria-describedby={sending ? 'session-lock-hint' : undefined}>
           <MessageSquarePlus size={17} /> {creating ? 'Đang tạo…' : 'Cuộc trò chuyện mới'}
         </button>
+        {sending && <p id="session-lock-hint" className="mt-2 text-xs text-[#74867e]">{SESSION_SWITCH_LOCKED_REASON}</p>}
         <div className="mt-4">
           {sessionsState === 'loading' && <Loading label="Đang tải cuộc trò chuyện…" />}
           {sessionsState === 'error' && <div className="space-y-2"><FormMessage>Không tải được danh sách cuộc trò chuyện.</FormMessage><button type="button" className="secondary-button w-full" onClick={() => loadSessions(selectedId)}>Thử lại</button></div>}
@@ -209,7 +231,10 @@ export function ChatPage() {
             {sessions.map((s) => <li key={s.session_id}>
               <button type="button" onClick={() => { setSelectedId(s.session_id); setShowSessions(false) }}
                 aria-current={s.session_id === selectedId ? 'true' : undefined}
-                className={`w-full rounded-xl px-3 py-2.5 text-left text-sm transition ${s.session_id === selectedId ? 'bg-[#edf5ef] font-semibold text-[#28765c]' : 'hover:bg-[#f5f7f2]'}`}>
+                disabled={sending && s.session_id !== selectedId}
+                title={sending && s.session_id !== selectedId ? SESSION_SWITCH_LOCKED_REASON : undefined}
+                aria-describedby={sending ? 'session-lock-hint' : undefined}
+                className={`w-full rounded-xl px-3 py-2.5 text-left text-sm transition ${s.session_id === selectedId ? 'bg-[#edf5ef] font-semibold text-[#28765c]' : 'hover:bg-[#f5f7f2] disabled:hover:bg-transparent'}`}>
                 <span className="block truncate">{s.title || 'Cuộc trò chuyện mới'}</span>
                 <span className="block text-xs font-normal text-[#87958f]">{new Date(s.updated_at).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })}</span>
               </button>
