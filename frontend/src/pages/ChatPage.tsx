@@ -7,6 +7,7 @@ import { useCountdown } from '../hooks/useCountdown'
 import { canRetry, isLimitCode, isLlmCode, messageForCode } from '../lib/apiErrors'
 import { SESSION_SWITCH_LOCKED_REASON, charCount, collapseRetriedTurns, isForCurrentSession, pickSession, precedingUserContent } from '../lib/chat'
 import { hasNoValidCitation, orderSources, ragModeLabel, resolveMode, showNoSourceNotice } from '../lib/rag'
+import { parseRichText, type Inline } from '../lib/richText'
 import { formatWait, formatWaitApprox } from '../lib/time'
 import type { ChatMessage, ChatSession, RagConfig, RagMode } from '../types'
 
@@ -332,13 +333,24 @@ function MessageBubble({ message, onRetry }: { message: ChatMessage; onRetry?: (
   }
   return <div className="flex">
     <div className="max-w-[85%] space-y-1.5">
-      {/* Văn bản thuần: React tự escape; không render HTML/markdown. */}
-      <p className="whitespace-pre-wrap break-words rounded-2xl rounded-bl-md bg-[#f1f5f1] px-4 py-2.5 text-sm text-[#19342d]">{message.content}</p>
+      <RichText text={message.content} />
       {message.truncated && <p className="text-xs text-[#8a6d2f]">Câu trả lời có thể bị cắt, hãy hỏi tiếp để xem phần còn lại.</p>}
       {message.rag_fallback && <p className="text-xs text-[#8a6d2f]">Không truy xuất được tài liệu lúc này nên câu trả lời không dùng tài liệu (không có nguồn).</p>}
       {hasNoValidCitation(message.sources) && <p className="text-xs text-[#8a6d2f]">Câu trả lời không trích dẫn tài liệu nào bên dưới — hãy kiểm tra lại.</p>}
       {message.sources && message.sources.length > 0 && <SourceList sources={message.sources} />}
     </div>
+  </div>
+}
+
+/** Câu trả lời của gia sư: đoạn, danh sách, chữ đậm — dựng bằng phần tử React (không HTML, không thư viện). */
+function RichText({ text }: { text: string }) {
+  const inline = (parts: Inline[]) => parts.map((p, i) => p.bold ? <strong key={i}>{p.text}</strong> : <span key={i}>{p.text}</span>)
+  return <div className="space-y-2 break-words rounded-2xl rounded-bl-md bg-[#f1f5f1] px-4 py-2.5 text-sm leading-relaxed text-[#19342d]">
+    {parseRichText(text).map((block, i) => block.kind === 'list'
+      ? (block.ordered
+        ? <ol key={i} className="list-decimal space-y-1 pl-5">{block.items.map((item, j) => <li key={j}>{inline(item)}</li>)}</ol>
+        : <ul key={i} className="list-disc space-y-1 pl-5">{block.items.map((item, j) => <li key={j}>{inline(item)}</li>)}</ul>)
+      : <p key={i}>{block.lines.map((line, j) => <span key={j} className="block">{inline(line)}</span>)}</p>)}
   </div>
 }
 

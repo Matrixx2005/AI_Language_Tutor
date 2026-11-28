@@ -33,7 +33,39 @@ Riêng phần duyệt nội dung corpus là việc của người, đang **CHƯA
 | Alembic trên DB chính (người dùng đã cho phép) | `upgrade` lên `a4c9e2f17b30`, `check` không lệch |
 | Làm hỏng có chủ đích (6 chỗ) | RRF `k+rank` → `k*rank`: 3 failed · BM25 bỏ lọc ngôn ngữ: 1 · dense bỏ lọc ngôn ngữ: 1 · không loại trích dẫn ngoài tập: 4 · đảo dấu IDF: 5 · chat không hạ cấp khi truy xuất lỗi: 1. Khôi phục, `cmp` đều khớp |
 
-## Thử trên trình duyệt (người dùng tự thử) — CHƯA KIỂM CHỨNG
+## Người dùng tự báo (2026-11-28)
+
+- Đã thử giao diện RAG trên trình duyệt theo hướng dẫn (vòng A với fake, vòng B với Gemini): **đạt**.
+- Hỏi câu không có trong tài liệu: AI trả lời là bài học chưa có chủ đề này, **không bịa**.
+- Phản hồi cần sửa:
+  1. Câu trả lời còn sơ sài.
+  2. Nhiều dấu `*` (Markdown) hiện nguyên văn.
+
+  → Đã xử lý ở mục "Hoàn thiện sau phản hồi" bên dưới.
+
+## Hoàn thiện sau phản hồi (Claude đã chạy, 2026-11-28)
+
+- **Prompt** `tutor.md` và `tutor_rag.md`:
+  - Cấm Markdown, chỉ viết văn bản thuần; danh sách dùng "- ".
+  - Câu trả lời ngữ pháp theo khung: Quy tắc → Cấu trúc → Ví dụ (vẫn **tối đa 3**, giữ quyết định của Tuần 3, có bản dịch trong ngoặc tròn) → Lỗi thường gặp → Tự kiểm tra. Độ sâu điều chỉnh theo trình độ.
+  - Ở chế độ RAG: Quy tắc, Cấu trúc và Lỗi thường gặp phải lấy từ tài liệu và có trích dẫn; câu ví dụ do AI tự đặt thì không cần trích dẫn.
+- **Giao diện:** `lib/richText.ts` là hàm thuần, dựng phần tử React, **không dùng HTML** và không thêm thư viện.
+  - `**đậm**` thành chữ đậm; dấu `*` và `` ` `` lẻ bị bỏ.
+  - Đầu dòng `-`, `*`, `•`, `1.` thành danh sách; nhãn như "Quy tắc:" được in đậm.
+  - Áp dụng cả cho tin nhắn cũ đã lưu.
+  - Có 4 test mới; `npm test` 21/21; build đạt.
+- **Gemini thật** (2 lời gọi, tổng tuần 4/10): `RUN_RAG_SMOKE_LLM=1`, trước khi đổi chữ "ngoặc vuông" thành "ngoặc tròn":
+
+  | Chế độ | Số ký tự | Dấu `*` | Nhãn | Trích dẫn |
+  |---|---|---|---|---|
+  | hybrid | 742 | **0** | đủ 5 | [1] đúng bài articles |
+  | dense | 568 | **0** | đủ 5 | [1] đúng bài passive |
+
+  Trước đó, câu trả lời có `**...**`.
+- Bản dịch ví dụ từng nằm trong `[...]`, dễ nhầm với trích dẫn. Prompt đã đổi sang ngoặc tròn; **chưa gọi lại Gemini sau thay đổi chữ này**.
+- `pytest` 400 passed, 5 skipped (có thêm 2 test prompt).
+
+## Thử trên trình duyệt (người dùng tự thử)
 
 Chuẩn bị:
 - Đặt `RAG_MODE=hybrid` trong `.env` (hoặc để mặc định rồi chọn chế độ trên giao diện).

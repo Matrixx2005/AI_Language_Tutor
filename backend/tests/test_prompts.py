@@ -38,3 +38,16 @@ def test_user_text_with_braces_is_not_interpreted():
     # Giá trị chứa {{...}} không bị thay tiếp (chỉ thay một lượt).
     prompt = render_prompt("en", "tutor", level_code="{{level_name}}", level_name="X")
     assert "{{level_name}} (X)" in prompt
+
+
+@pytest.mark.parametrize("name", ["tutor", "tutor_rag"])
+def test_prompts_require_plain_text_and_structured_answer(name):
+    """Giao diện hiển thị văn bản thuần: prompt cấm Markdown (dấu * hiện nguyên văn) và yêu cầu khung trả lời."""
+    from app.core.prompts import render_prompt
+
+    extra = {"context": "<<<TAI_LIEU>>>\n<<<HET_TAI_LIEU>>>"} if name == "tutor_rag" else {}
+    prompt = render_prompt("en", name, level_code="A1", level_name="Sơ cấp", **extra)
+    assert "PLAIN TEXT only" in prompt and "no asterisks (*)" in prompt and "Use simple Markdown" not in prompt
+    for label in ("Quy tắc:", "Cấu trúc:", "Ví dụ:", "Lỗi thường gặp:", "Tự kiểm tra:"):
+        assert label in prompt
+    assert "at most three examples" in prompt  # giữ giới hạn đã chốt ở Tuần 3

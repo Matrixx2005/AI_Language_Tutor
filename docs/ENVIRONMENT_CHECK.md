@@ -689,3 +689,18 @@ Bảng nghiệm thu: `docs/WEEK4_ACCEPTANCE.md`. Số đo: `experiments/README.m
 - Chất lượng ngữ pháp của 18 bài mới và của từ khóa: **CHƯA DUYỆT**, cần người kiểm.
 - Chất lượng câu trả lời RAG thật ngoài 2 câu smoke: chưa đánh giá có hệ thống (faithfulness, độ đúng của trích dẫn) — để dành cho Tuần 7.
 - Hạ cấp khi dừng Qdrant thật: mới kiểm bằng test (retriever ném lỗi), chưa dừng container thật trong lúc chat.
+
+### Tuần 4 — hoàn thiện sau phản hồi (2026-11-28)
+
+- **Người dùng tự báo:**
+  - Thử giao diện RAG đạt.
+  - Câu ngoài tài liệu được trả lời là "chưa có", không bịa.
+  - Câu trả lời sơ sài và còn dấu `*`.
+- **Claude đã chạy:**
+  - Prompt cấm Markdown và thêm khung trả lời 5 phần; giữ giới hạn 3 ví dụ.
+  - Thêm `frontend/src/lib/richText.ts` (định dạng không dùng HTML) kèm 4 test.
+  - Gemini thật 2 lời gọi (tổng 4/10): hybrid 742 ký tự, dense 568 ký tự; cả hai 0 dấu `*`, đủ 5 nhãn, trích dẫn [1] đúng bài.
+  - `pytest` 400 passed, 5 skipped; `npm test` 21/21; build đạt.
+- **Chưa kiểm chứng:**
+  - Giao diện mới (chữ đậm, danh sách) trên trình duyệt.
+  - Câu trả lời thật sau khi đổi chữ "ngoặc tròn" trong prompt.
