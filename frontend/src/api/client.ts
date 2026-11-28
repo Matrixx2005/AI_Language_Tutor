@@ -9,6 +9,8 @@ import type {
   PlacementAttemptSummary,
   Profile,
   ProfileUpdate,
+  RagConfig,
+  RagMode,
 } from '../types'
 
 const TOKEN_KEY = 'alt_access_token'
@@ -116,10 +118,15 @@ class ApiClient {
     return this.request<ChatMessage[]>(`/chat/sessions/${encodeURIComponent(sessionId)}/messages`)
   }
 
-  sendChatMessage(sessionId: string, content: string) {
+  /** `ragMode` bỏ trống = chế độ mặc định của máy chủ (RAG_MODE). */
+  sendChatMessage(sessionId: string, content: string, ragMode?: RagMode) {
     return this.request<ChatTurn>(`/chat/sessions/${encodeURIComponent(sessionId)}/messages`, {
-      method: 'POST', body: JSON.stringify({ content }),
+      method: 'POST', body: JSON.stringify(ragMode ? { content, rag_mode: ragMode } : { content }),
     })
+  }
+
+  getRagConfig() {
+    return this.request<RagConfig>('/chat/rag-config')
   }
 
   // ---------- Placement ----------

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import Literal
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -76,6 +77,31 @@ class Settings(BaseSettings):
     # Số proxy tin cậy đứng trước app. 0 = KHÔNG tin X-Forwarded-For (dễ giả mạo), chỉ dùng IP kết nối.
     # Chỉ đặt > 0 khi triển khai sau reverse proxy mà mình kiểm soát (Tuần 8).
     trusted_proxy_count: int = Field(default=0, ge=0, le=5)
+
+    # RAG (Tuần 4). Mặc định llm_only: bật dense/hybrid khi đã có Qdrant + index + model.
+    rag_mode: Literal["llm_only", "dense", "hybrid"] = "llm_only"
+    rag_top_k: int = Field(default=3, ge=1, le=10)
+    rag_rrf_k: int = Field(default=60, ge=1, le=1000)  # hằng số k trong RRF
+    rag_candidates: int = Field(default=20, ge=1, le=200)  # top-N mỗi nhánh trước khi hợp nhất RRF
+    rag_index_keywords_vi: bool = False  # index_text có thêm keywords_vi (quyết định theo số đo dev)
+    rag_filter_level: bool = False  # lọc theo trình độ: mặc định TẮT (đánh giá công bằng)
+    embedding_model: str = "BAAI/bge-m3"
+    embedding_model_revision: str = "5617a9f61b028005a4858fdac845db406aefb181"
+    embedding_cache_dir: str = "models/hf"  # tương đối với thư mục gốc dự án; /models/ đã nằm trong .gitignore
+    qdrant_url: str = "http://127.0.0.1:6333"
+    qdrant_timeout_seconds: int = Field(default=5, ge=1, le=60)
+
+    @field_validator("qdrant_url")
+    @classmethod
+    def _qdrant_ipv4(cls, value: str) -> str:
+        # Như PostgreSQL: trên Windows "localhost" thử IPv6 ::1 trước, Docker chỉ mở IPv4 → mỗi lời gọi
+        # chậm ~2 giây (đo được 2024 ms so với 5 ms). Đổi sang 127.0.0.1.
+        return value.replace("://localhost:", "://127.0.0.1:").replace("://localhost/", "://127.0.0.1/")
+
+    @property
+    def embedding_cache_path(self) -> Path:
+        path = Path(self.embedding_cache_dir)
+        return path if path.is_absolute() else PROJECT_ROOT / path
 
     @field_validator("user_timezone")
     @classmethod

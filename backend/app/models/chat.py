@@ -62,7 +62,15 @@ class ChatMessageRow(Base):
     language_code: Mapped[str] = mapped_column(String(CODE_LENGTH), server_default="en")
     role: Mapped[str] = mapped_column(String(16))
     content: Mapped[str] = mapped_column(Text, server_default="")
-    citations: Mapped[Any | None] = mapped_column(JSONB)  # RAG (Tuần 4); Tuần 3 luôn NULL
+    # RAG (Tuần 4) — chỉ có ý nghĩa ở dòng trợ lý:
+    # citations: {"valid": [n...], "invalid": [n...]} — số trích dẫn hợp lệ / bị loại vì ngoài tập truy xuất.
+    citations: Mapped[Any | None] = mapped_column(JSONB)
+    # Chế độ THỰC SỰ dùng cho lượt này (llm_only khi hạ cấp); NULL với dòng người dùng và dữ liệu Tuần 3.
+    rag_mode: Mapped[str | None] = mapped_column(String(16))
+    # Tài liệu đã truy xuất: [{n, document_id, title, level, rank, score, text, cited}]. NULL khi llm_only.
+    sources: Mapped[Any | None] = mapped_column(JSONB)
+    # True khi người dùng chọn RAG nhưng hạ tầng truy xuất lỗi → trả lời bằng llm_only.
+    rag_fallback: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
     status: Mapped[str] = mapped_column(String(16), server_default="ok")
     error_code: Mapped[str | None] = mapped_column(String(64))
     model_id: Mapped[str | None] = mapped_column(String(100))

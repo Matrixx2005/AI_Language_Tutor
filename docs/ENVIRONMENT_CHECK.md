@@ -604,3 +604,88 @@ Lần thử đầu của mục thêm `correct_answer` **không áp dụng đư�
 - Chất lượng câu trả lời thật **theo trình độ** (A1 so với B1): chưa đánh giá có hệ thống; để dành cho Tuần 7.
 - `npm test` trên Node 22.18–23.x (chỉ chạy trên 24.15).
 - Bước `docker compose up` trên bản sao sạch ở Buổi 7 (lý do ở mục D).
+
+## Tuần 4 — RAG (2026-11-27 → 2026-11-28)
+
+Người dùng đồng ý tất cả các mục của Bước 0: commit Tuần 3, cài dependency, tải BGE-M3, Qdrant, migration DB chính, tối đa 10 lời gọi Gemini, commit Tuần 4. Không sửa `.env`.
+
+Bảng nghiệm thu: `docs/WEEK4_ACCEPTANCE.md`. Số đo: `experiments/README.md`.
+
+### Claude đã chạy
+
+- **Bước 0:**
+  - Commit Tuần 3: `87780c5`.
+  - `pip install --dry-run` trên Python 3.13.11 phân giải được 35 gói, tải khoảng 225 MB (đo bằng HEAD): `torch 2.15.0+cpu` (127 MB), `sentence-transformers 6.3.0`, `qdrant-client 1.20.0`.
+  - Qdrant ổn định mới nhất là v1.20.2 (GitHub release 2026-11-16; image khoảng 74 MB).
+  - BGE-M3 (MIT, revision `5617a9f…`): khoảng 2,30 GB nếu bỏ `onnx/`.
+  - Máy: ổ C còn 29 GB, ổ F còn 296 GB → cache model đặt ở `F:\AI_Language_Tutor\models\hf`.
+- **Cài đặt:**
+  - Đã cài 3 gói vào `.venv`; `pip check` không lỗi. Phiên bản ghim trong `backend/requirements.txt`, có dòng `--extra-index-url` của PyTorch CPU.
+  - Tải model mất 41 giây, chiếm 2,2 GB trong `models/hf` (Git bỏ qua).
+  - Qdrant: `docker pull qdrant/qdrant:v1.20.2`, thêm service vào compose (chỉ mở `127.0.0.1:6333`, volume `qdrantdata`, healthcheck `/readyz` qua bash `/dev/tcp`, tắt telemetry). Trạng thái healthy.
+- **Bước 1 — BGE-M3 trên CPU, 3 lần đo** (`experiments/bge_m3_cpu_benchmark.json`):
+
+  | Chỉ số | Kết quả |
+  |---|---|
+  | Nhúng 1 truy vấn p95 | 109,8 / 66,4 / 63,8 ms |
+  | Nhúng 1 truy vấn p50 | 82,1 / 60,7 / 59,1 ms |
+  | RAM đỉnh | 2,07–2,08 GB |
+  | Nhúng 45 văn bản | 10,5–12,3 s |
+  | Tải model | 10–14 s |
+  | Vector | 1024 chiều |
+
+  → **Cổng đạt** (ngưỡng: p95 2000 ms, RAM 6 GB).
+  - Lần đo đầu báo RAM = 0 do script khai báo sai kiểu handle 64-bit. Đã sửa và đo lại cả 3 lần.
+- **Bước 2 — corpus:**
+  - Thêm 18 bài nháp: A1 thêm 6, A2 thêm 5, B1 thêm 7 → tổng 33 bài, 11/11/11. Bài mới dài nhất 118 từ.
+  - `git diff` chỉ có dòng thêm (216 dòng): 15 bài cũ giữ nguyên từng byte.
+  - Từ khóa tiếng Việt để trong file riêng `keywords_vi_v1.json` (CHƯA DUYỆT).
+  - Validator mới kiểm quy ước id, số từ ≤ 160, nội dung gần trùng (Jaccard ≥ 0,6) và file từ khóa: 33 bài, 0 lỗi; có thêm 2 test.
+  - Dữ liệu đánh giá và split không đổi (`git diff data/evaluation` rỗng).
+- **Bước 3–4:**
+  - `backend/app/retrieval/` (types, tokenizer, corpus/chunker, bm25, rrf, embedder, dense, hybrid, service, citations).
+  - Khối `retrieval` trong `languages/en.yaml`; prompt `prompts/en/tutor_rag.md`.
+  - Migration `a4c9e2f17b30` thêm `rag_mode`, `sources`, `rag_fallback` vào `chat_messages` (dùng lại cột `citations` đã có).
+    - DB test: upgrade → check → downgrade → upgrade → check, đều đạt.
+    - **DB chính: upgrade** (được phép), sau đó `check` không lệch.
+  - API: trường `rag_mode` tùy chọn, `GET /chat/rag-config`, `sources` trong tin nhắn.
+  - Giao diện: ô chọn chế độ, khung nguồn có `<details>`, các ghi chú hạ cấp và không trích dẫn. `lib/rag.ts` có 4 test.
+- **Lỗi thật đã tìm và sửa:**
+  - Chỉ số truy xuất đúng nhưng mỗi truy vấn dense mất khoảng 2,2 giây.
+  - Đo từng phần: nhúng 111 ms, mỗi lời gọi Qdrant khoảng 2 giây. Nguyên nhân: `.env` có `QDRANT_URL=http://localhost:6333`, và Windows thử IPv6 trước.
+  - Code nay tự đổi `localhost` thành `127.0.0.1` (không sửa `.env`). Sau khi sửa: p50 khoảng 240 ms.
+- **Nạp index:** `scripts/index_corpus.py --keywords both` → `lessons_en` và `lessons_kwvi_en`, mỗi collection thêm 33 chunk. Chạy lại: "không đổi 33", tức là idempotent.
+- **Bước 5 — đánh giá trên dev:**
+  - `--split test` bị **từ chối**.
+  - Có 2 lần chạy với cùng cấu hình. Lần 1 có độ trễ sai do lỗi localhost nói trên; lần 2 có độ trễ đúng; chỉ số truy xuất hai lần giống hệt. Cả hai được ghi trong `retrieval_runs.jsonl`.
+  - Kết quả (index_text gốc): dense R@1/3/5 = 0,75/0,95/1,00, MRR 0,863; hybrid 0,80/1,00/1,00, MRR 0,883; BM25 MRR 0,666.
+  - Thêm keywords_vi: dense MRR 0,938, nhưng hybrid R@3 giảm xuống 0,90. **Không bật**: có nguy cơ rò rỉ do cùng tác giả với truy vấn dev.
+  - Không chỉnh siêu tham số nào.
+- **Test:** thêm `test_retrieval.py` (17 test) và `test_chat_rag.py` (9 test).
+  - `pytest` không mạng, không key: **398 passed, 5 skipped**; skipped đều là smoke, mặc định tắt.
+  - `npm test` 17/17; `npm run build` đạt.
+- **Làm hỏng có chủ đích (6 chỗ, khôi phục xong đều `cmp` khớp):**
+
+  | Chỗ làm hỏng | Kết quả |
+  |---|---|
+  | RRF `k+rank` → `k*rank` | 3 failed |
+  | BM25 bỏ lọc ngôn ngữ | 1 failed |
+  | Dense bỏ lọc ngôn ngữ | 1 failed |
+  | Không loại trích dẫn ngoài tập truy xuất | 4 failed |
+  | Đảo dấu IDF | 5 failed |
+  | Chat không hạ cấp khi truy xuất lỗi | 1 failed |
+- **Smoke test có tài nguyên thật** (Qdrant thật, BGE-M3 thật):
+  - `RUN_RAG_SMOKE=1`: truy xuất 2/2 đạt.
+  - `RUN_RAG_SMOKE_LLM=1`: chat qua API trên DB test với **2 lời gọi Gemini** (tổng tuần 2/10). Hybrid và dense đều 200, nguồn [1] đúng bài (articles, passive), `has_citations=true`, không hạ cấp. Câu trả lời tiếng Việt có trích dẫn `[1]`.
+- **Quét secret:** key Gemini, JWT secret, mật khẩu DB đều 0 lần trong file sẽ commit, `dist` và lịch sử Git; 0 chuỗi `AIza…`; `.env` không được Git theo dõi. Log RAG chỉ ghi metadata.
+
+### Người dùng tự báo
+
+- Chưa có báo cáo cho Tuần 4.
+
+### Chưa kiểm chứng
+
+- Thao tác trên trình duyệt: ô chọn chế độ, khung nguồn, ghi chú hạ cấp khi dừng Qdrant, màn hình 360px.
+- Chất lượng ngữ pháp của 18 bài mới và của từ khóa: **CHƯA DUYỆT**, cần người kiểm.
+- Chất lượng câu trả lời RAG thật ngoài 2 câu smoke: chưa đánh giá có hệ thống (faithfulness, độ đúng của trích dẫn) — để dành cho Tuần 7.
+- Hạ cấp khi dừng Qdrant thật: mới kiểm bằng test (retriever ném lỗi), chưa dừng container thật trong lúc chat.

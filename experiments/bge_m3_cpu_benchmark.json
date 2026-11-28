@@ -1,0 +1,68 @@
+{
+  "measured_at": "2026-11-27T14:33:32+00:00",
+  "model": "BAAI/bge-m3",
+  "revision": "5617a9f61b028005a4858fdac845db406aefb181",
+  "device": "cpu",
+  "machine": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel",
+    "cpu_count": 22
+  },
+  "versions": {
+    "python": "3.13.11",
+    "torch": "2.15.0+cpu",
+    "sentence_transformers": "6.3.0"
+  },
+  "notes": "45 văn bản = 15 bài hiện có × 3 (đo trước khi mở rộng corpus). Truy vấn: 20 truy vấn DEV (bộ dev chỉ có 20), mỗi truy vấn nhúng riêng sau 1 lần warm-up. Thời gian tải đọc từ cache cục bộ (lần 1 có thể chậm hơn vì cache ổ đĩa của hệ điều hành).",
+  "thresholds": {
+    "query_ms_p95_max": 2000,
+    "peak_rss_gb_max": 6
+  },
+  "runs": [
+    {
+      "load_seconds": 12.32,
+      "peak_rss_gb": 2.07,
+      "batch_texts": 45,
+      "batch_seconds": 12.31,
+      "query_count": 20,
+      "query_ms_p50": 82.1,
+      "query_ms_p95": 109.8,
+      "query_ms_max": 117.1,
+      "vector_dim": 1024,
+      "torch_threads": 16
+    },
+    {
+      "load_seconds": 14.08,
+      "peak_rss_gb": 2.08,
+      "batch_texts": 45,
+      "batch_seconds": 10.87,
+      "query_count": 20,
+      "query_ms_p50": 60.7,
+      "query_ms_p95": 66.4,
+      "query_ms_max": 67.1,
+      "vector_dim": 1024,
+      "torch_threads": 16
+    },
+    {
+      "load_seconds": 10.04,
+      "peak_rss_gb": 2.07,
+      "batch_texts": 45,
+      "batch_seconds": 10.54,
+      "query_count": 20,
+      "query_ms_p50": 59.1,
+      "query_ms_p95": 63.8,
+      "query_ms_max": 65.7,
+      "vector_dim": 1024,
+      "torch_threads": 16
+    }
+  ],
+  "summary": {
+    "query_ms_p50_median": 60.7,
+    "query_ms_p95_worst": 109.8,
+    "peak_rss_gb_worst": 2.08,
+    "batch_seconds_median": 10.87,
+    "load_seconds_median": 12.32,
+    "vector_dim": 1024
+  },
+  "gate_passed": true
+}

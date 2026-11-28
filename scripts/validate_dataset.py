@@ -3,11 +3,17 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATASET = ROOT / "data" / "processed" / "grammar_lessons_v1.json"
+DEFAULT_KEYWORDS = ROOT / "data" / "processed" / "keywords_vi_v1.json"
+# Quy ước Tuần 4: gram-<language_code>-<level viết thường>-<slug>-<số 3 chữ số>, ví dụ gram-en-a1-be-001.
+ID_PATTERN = re.compile(r"^gram-(?P<lang>[a-z]{2,3})-(?P<level>[a-z]\d)-[a-z0-9]+(?:-[a-z0-9]+)*-\d{3}$")
+MAX_CONTENT_WORDS = 160  # bài ngắn (~150 từ): 1 bài = 1 chunk
+NEAR_DUPLICATE_JACCARD = 0.6  # trùng ≥ 60% tập từ giữa hai bài → báo lỗi
 REQUIRED_FIELDS = {
     "document_id",
     "title",
@@ -90,6 +96,51 @@ def validate_records(records: object) -> list[str]:
             else:
                 seen_content[content_key] = index
 
+    errors.extend(validate_conventions([r for r in records if isinstance(r, dict)]))
+    return errors
+
+
+def _words(text: str) -> set[str]:
+    return set(re.findall(r"[a-z']+", text.casefold()))
+
+
+def validate_conventions(records: list[dict]) -> list[str]:
+    """Quy ước id, độ dài nội dung và nội dung gần trùng (trùng hoàn toàn đã kiểm ở trên)."""
+    errors: list[str] = []
+    for r in records:
+        did = r.get("document_id")
+        if not isinstance(did, str):
+            continue
+        m = ID_PATTERN.match(did)
+        if not m:
+            errors.append(f"{did}: document_id không theo quy ước gram-<lang>-<level>-<slug>-<NNN>")
+        elif m["lang"] != r.get("language_code") or m["level"] != str(r.get("level", "")).casefold():
+            errors.append(f"{did}: document_id không khớp language_code/level của bài")
+        content = r.get("content")
+        if isinstance(content, str) and len(content.split()) > MAX_CONTENT_WORDS:
+            errors.append(f"{did}: nội dung dài {len(content.split())} từ (> {MAX_CONTENT_WORDS})")
+    bags = [(r.get("document_id"), _words(r["content"])) for r in records if isinstance(r.get("content"), str)]
+    for i, (a, wa) in enumerate(bags):
+        for b, wb in bags[i + 1:]:
+            if wa and wb and len(wa & wb) / len(wa | wb) >= NEAR_DUPLICATE_JACCARD:
+                errors.append(f"{a} và {b}: nội dung gần trùng (Jaccard ≥ {NEAR_DUPLICATE_JACCARD})")
+    return errors
+
+
+def validate_keywords(payload: object, document_ids: set[str]) -> list[str]:
+    """File từ khóa tiếng Việt (tùy chọn): mỗi bài một danh sách chuỗi không rỗng, không id lạ."""
+    if not isinstance(payload, dict) or not isinstance(payload.get("keywords"), dict):
+        return ["keywords file: cần object có khóa 'keywords'"]
+    errors = []
+    keywords = payload["keywords"]
+    for did, words in keywords.items():
+        if did not in document_ids:
+            errors.append(f"keywords: id lạ {did!r}")
+        if not isinstance(words, list) or not words or not all(isinstance(w, str) and w.strip() for w in words):
+            errors.append(f"keywords: {did} cần danh sách chuỗi không rỗng")
+    missing = sorted(document_ids - set(keywords))
+    if missing:
+        errors.append(f"keywords: thiếu {len(missing)} bài: {', '.join(missing[:5])}")
     return errors
 
 
@@ -114,9 +165,14 @@ def main() -> int:
         default=DEFAULT_DATASET,
         help=f"dataset path (default: {DEFAULT_DATASET})",
     )
+    parser.add_argument("--keywords", type=Path, default=DEFAULT_KEYWORDS, help="file từ khóa tiếng Việt (bỏ qua nếu không có)")
     args = parser.parse_args()
 
     errors, record_count = validate_file(args.input)
+    if not errors and args.keywords.exists():
+        records = json.loads(args.input.read_text(encoding="utf-8"))
+        errors = validate_keywords(json.loads(args.keywords.read_text(encoding="utf-8")),
+                                   {r["document_id"] for r in records})
     if errors:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)

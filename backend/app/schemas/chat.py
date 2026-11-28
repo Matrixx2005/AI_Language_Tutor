@@ -3,7 +3,7 @@ from __future__ import annotations
 import unicodedata
 import uuid
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
@@ -33,6 +33,8 @@ class ChatMessageCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     content: MessageText
+    # Chế độ trả lời cho riêng tin này; bỏ trống = RAG_MODE của máy chủ. Giá trị lạ → 422.
+    rag_mode: Literal["llm_only", "dense", "hybrid"] | None = None
 
     @field_validator("content", mode="before")
     @classmethod
@@ -50,6 +52,19 @@ class ChatMessageCreate(BaseModel):
         return value
 
 
+class SourceRead(BaseModel):
+    """Tài liệu đã truy xuất cho một câu trả lời RAG; `n` là số dùng trong trích dẫn [n]."""
+
+    n: int
+    document_id: str
+    title: str
+    level: str
+    rank: int
+    score: float
+    text: str
+    cited: bool
+
+
 class ChatMessageRead(BaseModel):
     """Không trả model/token/độ trễ cho frontend (chi tiết nội bộ, chỉ lưu DB)."""
 
@@ -62,9 +77,23 @@ class ChatMessageRead(BaseModel):
     error_code: str | None
     truncated: bool
     created_at: datetime
+    rag_mode: str | None = None  # chế độ THỰC SỰ dùng (llm_only khi hạ cấp); None ở dòng người dùng
+    rag_fallback: bool = False
+    sources: list[SourceRead] | None = None
+    citations: dict[str, Any] | None = Field(default=None, exclude=True)
+
+    @property
+    def invalid_citations(self) -> list[int]:
+        return list((self.citations or {}).get("invalid", []))
 
 
 class ChatTurnRead(BaseModel):
     user_message: ChatMessageRead
     assistant_message: ChatMessageRead
-    has_citations: bool = Field(default=False, description="Tuần 3 chưa có RAG: luôn false")
+    has_citations: bool = Field(default=False, description="Câu trả lời có ít nhất một trích dẫn [n] hợp lệ")
+
+
+class RagConfigRead(BaseModel):
+    default_mode: str
+    modes: list[str]
+    top_k: int

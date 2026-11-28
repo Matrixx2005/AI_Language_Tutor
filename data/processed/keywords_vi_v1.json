@@ -1,0 +1,180 @@
+{
+  "version": "keywords-vi-v1",
+  "status": "CHƯA DUYỆT",
+  "note": "Từ khóa tiếng Việt mở rộng phía tài liệu; dùng khi RAG_INDEX_KEYWORDS_VI=true.",
+  "keywords": {
+    "gram-en-a1-be-001": [
+      "động từ to be",
+      "am is are",
+      "chia động từ be theo chủ ngữ",
+      "câu phủ định và nghi vấn với be"
+    ],
+    "gram-en-a1-present-simple-002": [
+      "thì hiện tại đơn",
+      "thói quen",
+      "chia động từ ngôi thứ ba số ít",
+      "trợ động từ do does"
+    ],
+    "gram-en-a1-articles-003": [
+      "mạo từ",
+      "a an the",
+      "mạo từ bất định",
+      "mạo từ xác định"
+    ],
+    "gram-en-a1-plurals-004": [
+      "danh từ số nhiều",
+      "thêm s es",
+      "danh từ bất quy tắc số nhiều"
+    ],
+    "gram-en-a1-there-be-005": [
+      "cấu trúc there is there are",
+      "có cái gì ở đâu",
+      "sự tồn tại"
+    ],
+    "gram-en-a2-past-simple-006": [
+      "thì quá khứ đơn",
+      "động từ quá khứ",
+      "động từ bất quy tắc",
+      "thêm ed"
+    ],
+    "gram-en-a2-present-continuous-007": [
+      "thì hiện tại tiếp diễn",
+      "đang làm gì",
+      "be cộng v-ing"
+    ],
+    "gram-en-a2-count-noncount-008": [
+      "danh từ đếm được",
+      "danh từ không đếm được",
+      "much many some any"
+    ],
+    "gram-en-a2-comparatives-009": [
+      "so sánh hơn",
+      "tính từ so sánh hơn",
+      "er than",
+      "more than"
+    ],
+    "gram-en-a2-going-to-010": [
+      "tương lai gần",
+      "be going to",
+      "dự định kế hoạch"
+    ],
+    "gram-en-a2-present-perfect-011": [
+      "thì hiện tại hoàn thành",
+      "have has cộng quá khứ phân từ",
+      "kinh nghiệm",
+      "ever never"
+    ],
+    "gram-en-b1-present-perfect-past-012": [
+      "phân biệt hiện tại hoàn thành và quá khứ đơn",
+      "for since",
+      "thời điểm xác định trong quá khứ"
+    ],
+    "gram-en-b1-modals-013": [
+      "động từ khuyết thiếu",
+      "must have to should",
+      "sự bắt buộc lời khuyên"
+    ],
+    "gram-en-b1-first-conditional-014": [
+      "câu điều kiện loại 1",
+      "điều kiện có thể xảy ra ở tương lai",
+      "if cộng hiện tại đơn will"
+    ],
+    "gram-en-b1-relative-clauses-015": [
+      "mệnh đề quan hệ",
+      "đại từ quan hệ",
+      "who which that where"
+    ],
+    "gram-en-a1-prepositions-time-016": [
+      "giới từ chỉ thời gian",
+      "in on at với thời gian",
+      "ngày tháng năm giờ"
+    ],
+    "gram-en-a1-prepositions-place-017": [
+      "giới từ chỉ nơi chốn",
+      "in on at với địa điểm",
+      "vị trí đồ vật"
+    ],
+    "gram-en-a1-possessives-018": [
+      "tính từ sở hữu",
+      "sở hữu cách 's",
+      "của ai"
+    ],
+    "gram-en-a1-can-ability-019": [
+      "can chỉ khả năng",
+      "có thể làm gì",
+      "can't could"
+    ],
+    "gram-en-a1-demonstratives-020": [
+      "đại từ chỉ định",
+      "this that these those",
+      "gần xa số ít số nhiều"
+    ],
+    "gram-en-a1-frequency-adverbs-021": [
+      "trạng từ chỉ tần suất",
+      "always usually sometimes never",
+      "vị trí trạng từ tần suất"
+    ],
+    "gram-en-a2-superlatives-022": [
+      "so sánh nhất",
+      "the est",
+      "the most"
+    ],
+    "gram-en-a2-past-continuous-023": [
+      "thì quá khứ tiếp diễn",
+      "was were cộng v-ing",
+      "hành động đang xảy ra trong quá khứ",
+      "when while"
+    ],
+    "gram-en-a2-will-future-024": [
+      "thì tương lai đơn",
+      "will",
+      "dự đoán quyết định tức thời lời hứa"
+    ],
+    "gram-en-a2-verb-patterns-025": [
+      "danh động từ và động từ nguyên mẫu",
+      "v-ing hay to v",
+      "động từ theo sau"
+    ],
+    "gram-en-a2-adverbs-manner-026": [
+      "trạng từ chỉ cách thức",
+      "thêm ly",
+      "tính từ và trạng từ"
+    ],
+    "gram-en-b1-second-conditional-027": [
+      "câu điều kiện loại 2",
+      "điều kiện không có thật ở hiện tại",
+      "if I were you"
+    ],
+    "gram-en-b1-passive-voice-028": [
+      "câu bị động",
+      "be cộng quá khứ phân từ",
+      "bị động thì hiện tại đơn quá khứ đơn"
+    ],
+    "gram-en-b1-reported-speech-029": [
+      "câu tường thuật",
+      "lời nói gián tiếp",
+      "lùi thì",
+      "say tell"
+    ],
+    "gram-en-b1-used-to-030": [
+      "used to",
+      "thói quen trong quá khứ",
+      "đã từng"
+    ],
+    "gram-en-b1-past-perfect-031": [
+      "thì quá khứ hoàn thành",
+      "had cộng quá khứ phân từ",
+      "hành động xảy ra trước một hành động quá khứ"
+    ],
+    "gram-en-b1-too-enough-032": [
+      "too và enough",
+      "quá đến nỗi",
+      "đủ để"
+    ],
+    "gram-en-b1-zero-conditional-033": [
+      "câu điều kiện loại 0",
+      "sự thật hiển nhiên",
+      "if when cộng hiện tại đơn"
+    ]
+  }
+}

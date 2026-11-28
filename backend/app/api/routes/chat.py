@@ -3,8 +3,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, status
 
-from app.api.deps import LLM, CurrentUser, DbSession, Limits
-from app.schemas.chat import ChatMessageCreate, ChatMessageRead, ChatSessionRead, ChatTurnRead
+from app.api.deps import LLM, CurrentUser, DbSession, Limits, RetrieverFor
+from app.core.config import get_settings
+from app.retrieval.service import RAG_MODES
+from app.schemas.chat import ChatMessageCreate, ChatMessageRead, ChatSessionRead, ChatTurnRead, RagConfigRead
 from app.services import chat as chat_service
 
 # Mọi route đều lọc theo người dùng hiện tại; phiên của người khác → 404 (không phải 403).
@@ -14,6 +16,13 @@ MESSAGE_EXAMPLES = {
     "a_an": {"summary": "Hỏi về a/an", "value": {"content": "Khi nào dùng 'a' và khi nào dùng 'an'?"}},
     "thi": {"summary": "Hỏi về thì", "value": {"content": "Present perfect khác past simple thế nào?"}},
 }
+
+
+@router.get("/rag-config", response_model=RagConfigRead)
+def rag_config(user: CurrentUser) -> RagConfigRead:
+    """Chế độ trả lời mặc định của máy chủ và các chế độ được chọn (để giao diện hiển thị)."""
+    settings = get_settings()
+    return RagConfigRead(default_mode=settings.rag_mode, modes=list(RAG_MODES), top_k=settings.rag_top_k)
 
 
 @router.post("/sessions", status_code=status.HTTP_201_CREATED, response_model=ChatSessionRead)
@@ -42,11 +51,16 @@ def send_message(
     db: DbSession,
     llm: LLM,
     limits: Limits,
+    retriever_for: RetrieverFor,
 ) -> ChatTurnRead:
     """Gửi tin và nhận trả lời (không streaming). Khi AI lỗi: tin của bạn vẫn được lưu, API trả mã lỗi
     ổn định (`llm_timeout`, `llm_rate_limited`, ...) và lịch sử có một dòng trả lời `status='error'`."""
-    user_row, assistant_row = chat_service.send_message(db, llm, user, session_id, data.content, limits)
+    user_row, assistant_row = chat_service.send_message(
+        db, llm, user, session_id, data.content, limits, rag_mode=data.rag_mode, retriever_for=retriever_for
+    )
+    assistant = ChatMessageRead.model_validate(assistant_row)
     return ChatTurnRead(
         user_message=ChatMessageRead.model_validate(user_row),
-        assistant_message=ChatMessageRead.model_validate(assistant_row),
+        assistant_message=assistant,
+        has_citations=any(s.cited for s in assistant.sources or []),
     )

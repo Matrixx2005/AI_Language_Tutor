@@ -50,6 +50,30 @@ export interface ChatMessage {
   error_code: string | null
   truncated: boolean
   created_at: string
+  /** Chế độ THỰC SỰ dùng cho câu trả lời (llm_only khi hạ cấp); null ở tin người dùng / dữ liệu cũ. */
+  rag_mode?: RagMode | null
+  rag_fallback?: boolean
+  sources?: ChatSource[] | null
+}
+
+export type RagMode = 'llm_only' | 'dense' | 'hybrid'
+
+/** Tài liệu đã truy xuất (khớp SourceRead); `n` là số dùng trong trích dẫn [n]. */
+export interface ChatSource {
+  n: number
+  document_id: string
+  title: string
+  level: string
+  rank: number
+  score: number
+  text: string
+  cited: boolean
+}
+
+export interface RagConfig {
+  default_mode: RagMode
+  modes: RagMode[]
+  top_k: number
 }
 
 export interface ChatTurn {

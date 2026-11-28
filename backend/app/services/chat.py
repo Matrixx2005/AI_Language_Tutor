@@ -8,6 +8,7 @@ Log chỉ ghi metadata (độ dài, độ trễ, token, mã lỗi) — không gh
 from __future__ import annotations
 
 import logging
+import re
 import uuid
 
 from sqlalchemy import and_, func, or_, select
@@ -30,6 +31,8 @@ from app.llm.errors import LLMError
 from app.llm.service import LLMService
 from app.llm.types import ChatMessage, LLMRequest, LLMResult
 from app.models import ChatMessageRow, ChatSession, User
+from app.retrieval.citations import check_citations, format_context
+from app.retrieval.types import RetrievalError, RetrievedDoc
 from app.services.chat_history import StoredMessage, build_history
 
 logger = logging.getLogger("app.chat")
@@ -124,11 +127,25 @@ def _recent_messages(db: Session, session_id: uuid.UUID) -> list[StoredMessage]:
     return [StoredMessage(role, content, status) for role, content, status in reversed(rows)]
 
 
-def _system_prompt(language_code: str, level_code: str) -> str:
+def _system_prompt(language_code: str, level_code: str, docs: list[RetrievedDoc] | None = None) -> str:
     language = get_language_config(language_code)
     level = next((lv for lv in language.levels if lv.code == level_code), None)
     level_name = level.display_name_vi if level else level_code
-    return render_prompt(language_code, "tutor", level_code=level_code, level_name=level_name)
+    if docs is None:
+        return render_prompt(language_code, "tutor", level_code=level_code, level_name=level_name)
+    # Ngữ cảnh truy xuất là DỮ LIỆU trong khối phân cách; nội dung người dùng vẫn chỉ ở danh sách tin.
+    return render_prompt(language_code, "tutor_rag", level_code=level_code, level_name=level_name,
+                         context=format_context(docs))
+
+
+_CITATION_MARK = re.compile(r"\s?\[\d{1,2}(?:\s*,\s*\d{1,2})*\](?!\()")
+
+
+def _strip_history_citations(history: tuple[ChatMessage, ...]) -> tuple[ChatMessage, ...]:
+    """[n] ở các lượt trước trỏ tới ngữ cảnh CŨ: bỏ khi gửi lại cho LLM để không bị dùng nhầm số."""
+    return tuple(
+        ChatMessage(m.role, _CITATION_MARK.sub("", m.content)) if m.role == "assistant" else m for m in history
+    )
 
 
 def send_message(
@@ -138,6 +155,9 @@ def send_message(
     session_id: uuid.UUID,
     content: str,
     limits: AppLimits | None = None,
+    *,
+    rag_mode: str | None = None,
+    retriever_for=None,
 ) -> tuple[ChatMessageRow, ChatMessageRow]:
     """Thứ tự kiểm tra (Buổi 4): chủ sở hữu (404) → độ dài (422) → đồng thời (409) → giới hạn
     phút/ngày theo người dùng → ngưỡng toàn hệ thống → lưu tin → gọi LLM.
@@ -148,8 +168,9 @@ def send_message(
         raise AppError(
             422, "message_too_long", f"Tin nhắn dài tối đa {settings.chat_max_message_chars} ký tự."
         )
+    rag = _RagRequest(rag_mode or settings.rag_mode, retriever_for)
     if limits is None:
-        return _process_turn(db, llm, user, chat, content, settings, None)
+        return _process_turn(db, llm, user, chat, content, settings, None, rag)
 
     user_key = str(user.user_id)
     if not limits.chat_in_flight.acquire(user_key, settings.chat_max_concurrent_per_user):
@@ -157,7 +178,7 @@ def send_message(
         raise AppError(409, "chat_busy", "Gia sư AI đang trả lời tin trước của bạn. Vui lòng đợi.")
     try:  # khóa "đang xử lý" LUÔN được nhả, kể cả khi bị từ chối, LLM lỗi hay exception lạ
         _enforce_limits(db, user, limits, settings, consumes_quota=_consumes_quota(llm))
-        return _process_turn(db, llm, user, chat, content, settings, limits)
+        return _process_turn(db, llm, user, chat, content, settings, limits, rag)
     finally:
         limits.chat_in_flight.release(user_key)
 
@@ -242,14 +263,36 @@ def _all_messages_today(db: Session, start, end) -> int:
     return max(0, (sent or 0) - (fake or 0))
 
 
-def _process_turn(db: Session, llm: LLMService, user: User, chat: ChatSession, content: str, settings, limits):
+class _RagRequest:
+    """Chế độ trả lời của một lượt + cách lấy retriever (route truyền vào; test thay bằng bản in-memory)."""
+
+    def __init__(self, mode: str, retriever_for):
+        self.mode = mode
+        self.retriever_for = retriever_for
+
+
+def _retrieve(rag: _RagRequest, query: str, language_code: str, level_code: str, settings) -> list[RetrievedDoc]:
+    if rag.retriever_for is None:
+        raise RetrievalError("Chưa cấu hình truy xuất")
+    try:
+        retriever = rag.retriever_for(rag.mode)
+    except RetrievalError:
+        raise
+    except Exception as exc:  # không dựng được retriever (thiếu gói, cấu hình sai...)
+        raise RetrievalError(f"Không dựng được retriever ({type(exc).__name__})") from exc
+    level = level_code if settings.rag_filter_level else None
+    return retriever.search(query, language_code, settings.rag_top_k, level)
+
+
+def _process_turn(db: Session, llm: LLMService, user: User, chat: ChatSession, content: str, settings, limits,
+                  rag: _RagRequest | None = None):
+    rag = rag or _RagRequest("llm_only", None)
     # 0) Đọc trước mọi giá trị cần dùng vào biến cục bộ: sau commit không được chạm DB khi chờ LLM.
     fake_prefix = "" if _consumes_quota(llm) else FAKE_MODEL_PREFIX
     chat_id = chat.session_id
     language_code = chat.language_code
-    history = build_history(_recent_messages(db, chat_id), settings.chat_history_turns)
+    history = _strip_history_citations(build_history(_recent_messages(db, chat_id), settings.chat_history_turns))
     level_code = user.profile.current_level_code if user.profile else (chat.level_code or "")
-    system_prompt = _system_prompt(language_code, level_code)
 
     # 1) Lưu tin người dùng và commit TRƯỚC khi gọi LLM. KHÔNG refresh ở đây: refresh mở transaction
     #    mới và giữ kết nối DB suốt thời gian chờ LLM (có thể tới LLM_TIMEOUT_SECONDS).
@@ -258,6 +301,18 @@ def _process_turn(db: Session, llm: LLMService, user: User, chat: ChatSession, c
     if chat.title is None:
         chat.title = " ".join(content.split())[:TITLE_LENGTH]
     db.commit()
+
+    # 1b) Truy xuất (RAG) — sau commit, không có transaction nào mở. Lỗi hạ tầng (Qdrant, model, chưa có
+    #     index) → hạ cấp về llm_only, đánh dấu rag_fallback để giao diện báo người dùng; chat không chết.
+    effective_mode, fallback, docs = "llm_only", False, []
+    if rag.mode != "llm_only":
+        try:
+            docs = _retrieve(rag, content, language_code, level_code, settings)
+            effective_mode = rag.mode
+        except RetrievalError as exc:
+            fallback = True
+            logger.warning("chat rag_fallback session=%s mode=%s reason=%s", chat_id, rag.mode, exc)
+    system_prompt = _system_prompt(language_code, level_code, docs if effective_mode != "llm_only" else None)
 
     # 2) Gọi LLM khi không có transaction nào mở. Nội dung người dùng chỉ nằm trong danh sách tin
     #    nhắn, không bao giờ được ghép vào system prompt.
@@ -270,7 +325,8 @@ def _process_turn(db: Session, llm: LLMService, user: User, chat: ChatSession, c
             # Nhà cung cấp đã báo giới hạn: tạm khóa toàn hệ thống để request kế tiếp bị từ chối sớm
             # bằng `service_busy` thay vì tiếp tục đập vào API (theo phút ≤ 60s; hết hạn mức ngày lâu hơn).
             limits.llm_cooldown.block(cooldown)
-        _save_error_turn(db, chat, chat_id, language_code, error.code, model_id=fake_prefix or None)
+        _save_error_turn(db, chat, chat_id, language_code, error.code, model_id=fake_prefix or None,
+                         rag_mode=effective_mode, rag_fallback=fallback)
         logger.warning(
             "chat llm_error session=%s code=%s history_messages=%d message_chars=%d",
             chat_id, error.code, len(history), len(content),
@@ -279,19 +335,36 @@ def _process_turn(db: Session, llm: LLMService, user: User, chat: ChatSession, c
     except Exception as exc:
         # Lỗi ngoài dự kiến (lỗi lập trình, provider ném lỗi lạ): giữ lịch sử nhất quán rồi ném lại để
         # trả 500 theo định dạng lỗi chung. Chỉ log tên lớp lỗi: thông điệp có thể chứa nội dung.
-        _save_error_turn(db, chat, chat_id, language_code, INTERNAL_ERROR, model_id=fake_prefix or None)
+        _save_error_turn(db, chat, chat_id, language_code, INTERNAL_ERROR, model_id=fake_prefix or None,
+                         rag_mode=effective_mode, rag_fallback=fallback)
         logger.error(
             "chat internal_error session=%s exc_type=%s history_messages=%d message_chars=%d",
             chat_id, type(exc).__name__, len(history), len(content),
         )
         raise
 
-    # 3) Lưu trả lời kèm metadata (model, token, độ trễ, bị cắt).
+    # 3) Kiểm tra trích dẫn: chỉ [n] thuộc tập đã truy xuất được giữ; [n] khác bị xóa và ghi lại.
+    answer, sources, citations = result.text, None, None
+    if effective_mode != "llm_only":
+        check = check_citations(result.text, len(docs))
+        answer = check.text
+        citations = {"valid": list(check.valid), "invalid": list(check.invalid)}
+        sources = [
+            {"n": n, "document_id": d.document_id, "title": d.title, "level": d.level, "rank": d.rank,
+             "score": d.score, "text": d.text, "cited": n in check.valid}
+            for n, d in enumerate(docs, start=1)
+        ]
+
+    # 4) Lưu trả lời kèm metadata (model, token, độ trễ, bị cắt, chế độ RAG, nguồn).
     assistant_row = ChatMessageRow(
         session_id=chat_id,
         language_code=language_code,
         role="assistant",
-        content=result.text,
+        content=answer,
+        rag_mode=effective_mode,
+        rag_fallback=fallback,
+        sources=sources,
+        citations=citations,
         model_id=f"{fake_prefix}{result.model}",  # `fake:` = câu trả lời giả lập, không tốn hạn mức
         input_tokens=result.input_tokens,
         output_tokens=result.output_tokens,
@@ -305,20 +378,24 @@ def _process_turn(db: Session, llm: LLMService, user: User, chat: ChatSession, c
     db.refresh(assistant_row)
     logger.info(
         "chat ok session=%s history_messages=%d message_chars=%d reply_chars=%d latency_ms=%d "
-        "in_tokens=%s out_tokens=%s truncated=%s",
+        "in_tokens=%s out_tokens=%s truncated=%s rag_mode=%s rag_fallback=%s sources=%d "
+        "citations_valid=%d citations_invalid=%d",
         chat_id, len(history), len(content), len(result.text), result.latency_ms,
-        result.input_tokens, result.output_tokens, result.truncated,
+        result.input_tokens, result.output_tokens, result.truncated, effective_mode, fallback, len(docs),
+        len(citations["valid"]) if citations else 0, len(citations["invalid"]) if citations else 0,
     )
     return user_row, assistant_row
 
 
 def _save_error_turn(
-    db: Session, chat: ChatSession, chat_id: uuid.UUID, language_code: str, code: str, *, model_id: str | None = None
+    db: Session, chat: ChatSession, chat_id: uuid.UUID, language_code: str, code: str, *, model_id: str | None = None,
+    rag_mode: str | None = None, rag_fallback: bool = False,
 ) -> None:
     db.add(
         ChatMessageRow(
             session_id=chat_id, language_code=language_code, role="assistant",
             content="", status="error", error_code=code, model_id=model_id,
+            rag_mode=rag_mode, rag_fallback=rag_fallback,
         )
     )
     chat.updated_at = _now_marker()

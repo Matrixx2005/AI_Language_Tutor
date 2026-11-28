@@ -2,7 +2,7 @@
 
 Hệ thống hỗ trợ học tiếng Anh A1–B1 cho người Việt, dùng Retrieval-Augmented Generation (BM25 + BGE-M3 + RRF), Gemini Flash và cá nhân hóa học tập. Đồ án tốt nghiệp Khoa học máy tính.
 
-**Trạng thái:** Tuần 3 (nghiệm thu: [`docs/WEEK3_ACCEPTANCE.md`](docs/WEEK3_ACCEPTANCE.md)) — đăng ký, đăng nhập, hồ sơ học tập (Tuần 2); gia sư AI chat qua Gemini (chưa dùng tài liệu tham khảo — RAG là Tuần 4), giới hạn tần suất, bài kiểm tra đầu vào (placement) và giao diện tương ứng. Kế hoạch: [`docs/PROJECT_MASTER_PLAN.md`](docs/PROJECT_MASTER_PLAN.md).
+**Trạng thái:** Tuần 4 — RAG: chat có ba chế độ `llm_only` / `dense` (BGE-M3 + Qdrant) / `hybrid` (BM25 + dense + RRF), trích dẫn nguồn [n] đã kiểm tra, số đo truy xuất thật trên dev (`experiments/README.md`). Nghiệm thu: [`docs/WEEK4_ACCEPTANCE.md`](docs/WEEK4_ACCEPTANCE.md), [`docs/WEEK3_ACCEPTANCE.md`](docs/WEEK3_ACCEPTANCE.md). Kế hoạch: [`docs/PROJECT_MASTER_PLAN.md`](docs/PROJECT_MASTER_PLAN.md).
 
 Hướng dẫn dưới đây viết cho **Windows + PowerShell**, chạy từ thư mục gốc dự án trừ khi ghi khác. Làm lần lượt từ bước 1 đến bước 7.
 
@@ -79,8 +79,8 @@ Frontend (tùy chọn): `frontend/.env.example` có `VITE_API_BASE_URL` (mặc �
 ## 3. PostgreSQL (Docker)
 
 ```powershell
-docker compose up -d --wait        # lần đầu tải image postgres:18-alpine (~100 MB)
-docker compose ps                  # postgres: Up ... (healthy)
+docker compose up -d --wait        # PostgreSQL + Qdrant; lần đầu tải image postgres:18-alpine (~100 MB) và qdrant/qdrant:v1.20.2 (~74 MB)
+docker compose ps                  # postgres và qdrant: Up ... (healthy)
 ```
 
 - Lần khởi tạo đầu tiên tự tạo cả DB chính và DB test (`docker/postgres/init/`).
@@ -95,7 +95,7 @@ Chạy từ thư mục `backend/`:
 cd backend
 alembic upgrade head               # DB chính
 alembic -x db=test upgrade head    # DB test (cần cho pytest)
-alembic current                    # → dfd85f565969 (head)
+alembic current                    # → a4c9e2f17b30 (head)
 cd ..
 ```
 
@@ -148,6 +148,38 @@ Mặc định `LLM_PROVIDER=fake`: không gọi mạng. Để dùng Gemini thậ
    ```
 
 Lưu ý gói miễn phí: Google có thể dùng nội dung gửi lên để cải thiện sản phẩm và người đánh giá có thể đọc nội dung đó; không gửi thông tin cá nhân. Chi tiết và nguồn: `docs/ENVIRONMENT_CHECK.md` (mục điều khoản dữ liệu). Hạn mức thật xem trong AI Studio (tài liệu không công bố con số cố định).
+
+### RAG — truy xuất bài ngữ pháp (Tuần 4)
+
+Chạy được trên **CPU** (không cần CUDA). Đã đo trên Core Ultra 7 155H: nhúng 1 truy vấn khoảng 60–110 ms, RAM khoảng 2,1 GB.
+
+1. **Gói Python:** đã có trong `backend/requirements.txt` (torch bản CPU từ index riêng của PyTorch, sentence-transformers, qdrant-client). Bước 1 đã cài; tải khoảng 225 MB.
+2. **Qdrant:** service `qdrant` trong `docker-compose.yml`, image ghim `v1.20.2`, chỉ mở `127.0.0.1:6333`, volume `qdrantdata`. Bước 3 đã khởi động; kiểm tra bằng http://127.0.0.1:6333/ (trả về `"version":"1.20.2"`).
+3. **Tải model BGE-M3** (khoảng 2,3 GB, ghim revision, bỏ thư mục `onnx/`) vào `models/hf`. Thư mục này đã nằm trong `.gitignore`; đổi chỗ bằng `EMBEDDING_CACHE_DIR`.
+
+   ```powershell
+   python -c "from huggingface_hub import snapshot_download; snapshot_download('BAAI/bge-m3', revision='5617a9f61b028005a4858fdac845db406aefb181', cache_dir='models/hf', ignore_patterns=['onnx/*', 'imgs/*'])"
+   ```
+
+4. **Nạp index** (idempotent: chạy lại chỉ nhúng lại bài đã đổi; đổi model thì thêm `--recreate`):
+
+   ```powershell
+   python scripts/index_corpus.py                  # theo RAG_INDEX_KEYWORDS_VI; --keywords both để nạp cả hai cấu hình
+   ```
+
+5. **Bật RAG:** đặt `RAG_MODE=hybrid` (hoặc `dense`) trong `.env` rồi khởi động lại backend. Không đặt thì mặc định là `llm_only`. Trên giao diện chat vẫn chọn được chế độ cho từng tin.
+   - Nếu Qdrant, model hoặc index lỗi, chat **không chết**: câu trả lời chuyển sang `llm_only` và có ghi chú "Không truy xuất được tài liệu".
+   - Lần hỏi RAG đầu tiên sau khi khởi động mất khoảng 10–15 giây để tải model.
+6. **Đánh giá truy xuất** (chỉ dev split; test split bị từ chối nếu không có cờ riêng):
+
+   ```powershell
+   python scripts/eval_retrieval.py --keywords both --note "lý do chạy"   # kết quả lưu vào experiments/
+   python scripts/bench_bge_m3.py --runs 3                               # đo BGE-M3 trên CPU
+   ```
+
+7. **Smoke test có tài nguyên thật** (mặc định bỏ qua): `$env:RUN_RAG_SMOKE = "1"` để chạy phần truy xuất thật; thêm `$env:RUN_RAG_SMOKE_LLM = "1"` để gọi Gemini thật (2 lời gọi).
+
+Biến môi trường mới (đều có mặc định): `RAG_MODE`, `RAG_TOP_K`, `RAG_RRF_K`, `RAG_CANDIDATES`, `RAG_INDEX_KEYWORDS_VI`, `RAG_FILTER_LEVEL`, `EMBEDDING_MODEL_REVISION`, `EMBEDDING_CACHE_DIR`, `QDRANT_TIMEOUT_SECONDS`. Ý nghĩa của từng biến xem trong `.env.example`.
 
 ## 6. Frontend
 
@@ -212,7 +244,9 @@ cd frontend; npm test; npm run build; cd ..   # logic giao diện (Node ≥ 22.1
 | --- | --- |
 | `backend/app/` | FastAPI: `core/` (cấu hình, bảo mật, lỗi), `db/`, `models/`, `schemas/`, `services/`, `api/` |
 | `backend/alembic/` | Migration cơ sở dữ liệu |
-| `backend/tests/` | pytest (API, ràng buộc DB, dataset, luồng đầu-cuối) |
+| `backend/app/retrieval/` | RAG: tokenizer, BM25, dense (Qdrant), RRF, hybrid, chunker, kiểm tra trích dẫn |
+| `backend/tests/` | pytest (API, ràng buộc DB, dataset, luồng đầu-cuối, truy xuất) |
+| `experiments/` | Số đo thật: BGE-M3 trên CPU, Recall@K/MRR trên dev |
 | `frontend/tests/` | `npm test`: logic thuần của giao diện (`node:test`) |
 | `frontend/` | Vite + React + TypeScript + Tailwind |
 | `languages/` | Cấu hình ngôn ngữ và trình độ (`en.yaml`) |

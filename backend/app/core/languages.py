@@ -35,12 +35,31 @@ class PlacementConfig:
 
 
 @dataclass(frozen=True)
+class TokenizerConfig:
+    unicode_form: str = "NFKC"
+    lowercase: bool = True
+    strip_diacritics: bool = False
+    min_token_length: int = 1
+    stopwords: frozenset[str] = frozenset()
+
+
+@dataclass(frozen=True)
+class RetrievalConfig:
+    """Khối `retrieval` trong languages/<code>.yaml (Tuần 4). Đường dẫn tính từ thư mục gốc dự án."""
+
+    corpus_file: str
+    keywords_file: str | None = None
+    tokenizer: TokenizerConfig = TokenizerConfig()
+
+
+@dataclass(frozen=True)
 class LanguageConfig:
     language_code: str
     display_name: str
     display_name_vi: str
     levels: tuple[LevelConfig, ...]
     placement: PlacementConfig | None = None
+    retrieval: RetrievalConfig | None = None
 
     @property
     def level_codes(self) -> tuple[str, ...]:
@@ -85,6 +104,29 @@ def get_language_config(language_code: str) -> LanguageConfig:
         display_name_vi=data.get("display_name_vi", display_name),
         levels=levels,
         placement=_parse_placement(data.get("placement"), tuple(level.code for level in levels), path.name),
+        retrieval=_parse_retrieval(data.get("retrieval"), path.name),
+    )
+
+
+def _parse_retrieval(raw, filename: str) -> RetrievalConfig | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, dict) or not isinstance(raw.get("corpus_file"), str):
+        raise UnknownLanguageError(f"File {filename}: retrieval cần corpus_file")
+    tok = raw.get("tokenizer") or {}
+    form = tok.get("unicode_form", "NFKC")
+    if form not in {"NFC", "NFKC", "NFD", "NFKD"}:
+        raise UnknownLanguageError(f"File {filename}: unicode_form không hợp lệ")
+    return RetrievalConfig(
+        corpus_file=raw["corpus_file"],
+        keywords_file=raw.get("keywords_file"),
+        tokenizer=TokenizerConfig(
+            unicode_form=form,
+            lowercase=bool(tok.get("lowercase", True)),
+            strip_diacritics=bool(tok.get("strip_diacritics", False)),
+            min_token_length=int(tok.get("min_token_length", 1)),
+            stopwords=frozenset(str(w) for w in tok.get("stopwords", [])),
+        ),
     )
 
 

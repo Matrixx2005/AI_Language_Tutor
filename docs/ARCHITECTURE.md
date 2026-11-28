@@ -77,9 +77,9 @@ Không có API nghiệp vụ, migration, tích hợp Gemini, tải model/dataset
 | Đăng ký trùng email trả 409 → có thể dò email đã đăng ký | Trải nghiệm người dùng rõ ràng; chống dò triệt để cần email xác nhận | Tuần 8 |
 | ~~Chưa giới hạn số lần đăng nhập sai (brute force)~~ | **Đã xử lý ở Tuần 3, Buổi 4** (theo email và IP, trong bộ nhớ) — xem mục bên dưới | Tuần 8: chuyển sang Redis nếu chạy nhiều tiến trình |
 
-## Luồng chat với gia sư AI (Tuần 3) và điểm nối RAG (Tuần 4)
+## Luồng chat với gia sư AI (Tuần 3–4)
 
-Baseline Tuần 3 là **LLM-only** (`chat_sessions.retrieval_mode = 'llm_only'`): chưa truy xuất tài liệu, chưa có citation; giao diện luôn ghi "AI không dẫn nguồn".
+Ba chế độ trả lời: `llm_only` (Tuần 3), `dense`, `hybrid` (Tuần 4). Chế độ chọn theo từng tin (`rag_mode` trong body, đã kiểm tra hợp lệ) hoặc lấy `RAG_MODE` của máy chủ; áp dụng cùng giới hạn tần suất.
 
 `POST /api/v1/chat/sessions/{id}/messages` (`app/api/routes/chat.py` → `app/services/chat.py::send_message`):
 
@@ -88,15 +88,43 @@ Baseline Tuần 3 là **LLM-only** (`chat_sessions.retrieval_mode = 'llm_only'`)
 3. **Giới hạn** (chi tiết ở mục dưới): đồng thời → phút → ngày → toàn hệ thống. Bị chặn: không lưu, không gọi LLM, trả `Retry-After`.
 4. **Chuẩn bị** (`_process_turn`): đọc lịch sử gần nhất (`chat_history.build_history`: tối đa `CHAT_HISTORY_TURNS` lượt, bỏ lượt lỗi), dựng system prompt từ `prompts/<language_code>/tutor.md` với trình độ **hiện tại trong hồ sơ** (`level_code`, `level_name`). Nội dung người dùng chỉ nằm trong danh sách tin vai `user`, không ghép vào system prompt.
 5. **Lưu tin người dùng và commit** trước khi gọi LLM (không giữ kết nối DB trong lúc chờ).
+5b. **Truy xuất** (khi chế độ là `dense`/`hybrid`; không có transaction DB nào mở): lấy `RAG_TOP_K` tài liệu cùng `language_code` → system prompt dùng `prompts/<code>/tutor_rag.md` với khối ngữ cảnh đánh số. Lỗi hạ tầng → hạ cấp `llm_only`, `rag_fallback=true`.
 6. **Gọi LLM** qua `LLMService` (`app/llm/service.py`): timeout, thử lại lỗi tạm thời có backoff, model dự phòng, chuẩn hóa lỗi thành 7 mã `llm_*`. Nhà cung cấp: `GeminiProvider` hoặc `FakeLLM` (`LLM_PROVIDER`).
-7. **Lưu trả lời** kèm metadata (model, token, độ trễ, `truncated`); lỗi → lưu dòng trợ lý `status='error'` + `error_code`, trả lỗi theo định dạng chung `{"error": {"code", "message"}}` (không lộ thông điệp nội bộ của nhà cung cấp). Log chỉ ghi metadata (độ dài, độ trễ, token, mã lỗi), không ghi nội dung.
+7. **Kiểm tra trích dẫn rồi lưu trả lời** kèm metadata (model, token, độ trễ, `truncated`, `rag_mode`, `sources`, `citations`, `rag_fallback`); lỗi → lưu dòng trợ lý `status='error'` + `error_code`, trả lỗi theo định dạng chung `{"error": {"code", "message"}}` (không lộ thông điệp nội bộ của nhà cung cấp). Log chỉ ghi metadata (độ dài, độ trễ, token, mã lỗi), không ghi nội dung.
 
-**Điểm nối RAG cho Tuần 4 (chưa cài đặt gì):** chèn bước truy xuất giữa bước 4 và bước 6 trong `_process_turn`:
+## RAG (Tuần 4)
 
-- Đầu vào sẵn có: `language_code`, `level_code` (lọc tài liệu theo ngôn ngữ và trình độ), `content` (truy vấn), lịch sử.
-- Ngữ cảnh truy xuất đi vào **phần riêng của prompt** (khối tài liệu có mã nguồn, tách khỏi tin người dùng để giữ nguyên nguyên tắc chống prompt injection), qua template prompt riêng (ví dụ `prompts/<code>/tutor_rag.md`) thay cho dòng "không có tài liệu tham khảo" của `tutor.md`.
-- Ghi `retrieval_mode` của phiên (`llm_only` / `bm25` / `dense` / `hybrid`, xem mục "Các chế độ đánh giá") và citation của từng câu trả lời; giao diện bỏ lưu ý "không dẫn nguồn" khi có citation.
-- Các phần còn lại (giới hạn, lưu tin, xử lý lỗi, log metadata) giữ nguyên.
+Mã nguồn: `backend/app/retrieval/`. Không có mã nào hardcode tiếng Anh hay CEFR: corpus, file từ khóa và tokenizer lấy từ khối `retrieval` trong `languages/<code>.yaml`.
+
+- **Corpus và chunk:** đọc `corpus_file` của ngôn ngữ. Mặc định 1 bài = 1 chunk (bài ≤ 160 từ, có validator kiểm). `chunk_text` tách theo câu khi bài dài hơn `max_words`.
+  - `index_text` = title + topic + content. Khi `RAG_INDEX_KEYWORDS_VI=true` thì thêm `keywords_vi`; mặc định **tắt** (lý do ở `experiments/README.md`).
+  - Cùng một `index_text` được dùng cho cả dense và BM25.
+- **Dense** (`dense.py`): BGE-M3 (`sentence-transformers`, CPU, chuẩn hóa L2, cosine) trong Qdrant.
+  - Mỗi ngôn ngữ một collection `lessons_<code>`; cấu hình có từ khóa dùng `lessons_kwvi_<code>`.
+  - Collection `index_meta` lưu model, revision, số chiều và hash từng chunk.
+  - `scripts/index_corpus.py` idempotent: chỉ nhúng lại chunk đổi hash và xóa chunk đã bỏ. Khi model khác thì từ chối, phải chạy lại với `--recreate`.
+  - Model là singleton, tải lười (có khóa). Route chat là hàm đồng bộ nên FastAPI chạy nó trong thread pool, không chặn event loop.
+- **BM25** (`bm25.py`): Okapi BM25 tự viết (k1 = 1,5; b = 0,75; IDF = ln((N − df + 0,5)/(df + 0,5) + 1)), index trong bộ nhớ theo ngôn ngữ.
+  - Tokenizer (`tokenizer.py`): chuẩn hóa Unicode, chữ thường, bỏ dấu tiếng Việt (`đ` → `d`), bỏ từ dừng theo YAML.
+- **Hybrid** (`hybrid.py`, `rrf.py`): mỗi nhánh lấy `RAG_CANDIDATES` ứng viên (mặc định 20), hợp nhất bằng RRF: `Σ 1/(k + rank)` với `RAG_RRF_K` (mặc định 60).
+  - Chỉ dùng thứ hạng, không dùng điểm gốc. Khi hòa điểm, ưu tiên thứ hạng tốt nhất, sau đó theo id.
+- **Bộ lọc:** `language_code` **bắt buộc** ở mọi nhánh (lọc trong truy vấn Qdrant và trong BM25). Lọc theo trình độ là tùy chọn (`RAG_FILTER_LEVEL`), mặc định tắt.
+- **Prompt** (`prompts/<code>/tutor_rag.md`): các đoạn `[1]`, `[2]`… nằm giữa `<<<TAI_LIEU>>>` và `<<<HET_TAI_LIEU>>>`.
+  - Nếu chuỗi phân cách xuất hiện trong nội dung thì bị xóa, để không đóng khối sớm.
+  - Prompt nói rõ ngữ cảnh là **dữ liệu, không phải chỉ dẫn**; chỉ dùng ngữ cảnh cho kiến thức ngữ pháp; nếu không đủ thì nói rõ; trích dẫn bằng `[n]`.
+  - Câu hỏi người dùng vẫn chỉ nằm trong danh sách tin nhắn.
+- **Trích dẫn** (`citations.py::check_citations`, hàm thuần):
+  - Chỉ giữ `[n]` với 1 ≤ n ≤ số tài liệu đã truy xuất.
+  - `[n]` khác bị xóa khỏi câu trả lời và ghi vào `citations.invalid`. Hệ thống không hiển thị nguồn không có thật.
+  - `sources` lưu `{n, document_id, title, level, rank, score, text, cited}`.
+  - Khi gửi lịch sử cho LLM, `[n]` của các lượt cũ bị xóa vì chúng trỏ tới ngữ cảnh cũ.
+- **Hạ cấp:**
+  - Trong chat: Qdrant không kết nối, model không tải được, chưa có index hoặc index khác model đều được chuẩn hóa thành `RetrievalError`. Câu trả lời chuyển sang `llm_only`, đặt `rag_fallback=true`, giao diện báo "Không truy xuất được tài liệu".
+  - Trong `scripts/eval_retrieval.py`: **không hạ cấp**, dừng với lỗi để tránh số liệu sai.
+- **Giao diện:** ô chọn "Chế độ trả lời" cho từng tin; danh sách nguồn dưới câu trả lời (tên bài, trình độ, `<details>` để xem đoạn đã dùng).
+  - Lưu ý "không dẫn nguồn" chỉ hiện ở `llm_only`. Ở các chế độ khác có ghi chú khi bị hạ cấp, và khi câu trả lời RAG không trích dẫn gì.
+- **Log:** chỉ ghi metadata (`rag_mode`, `rag_fallback`, số nguồn, số trích dẫn hợp lệ/không hợp lệ); không ghi câu hỏi, câu trả lời hay ngữ cảnh.
+- **Số đo** (dev, `experiments/README.md`): hybrid R@3 = 1,00, MRR 0,883, p95 359 ms; dense R@3 = 0,95, MRR 0,863, p95 316 ms. BGE-M3 trên CPU: p95 nhúng truy vấn ≤ 110 ms, RAM 2,1 GB.
 
 ## Giới hạn tần suất và chống lạm dụng (Tuần 3, Buổi 4)
 

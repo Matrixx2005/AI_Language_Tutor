@@ -1,4 +1,8 @@
 """Fixture dùng chung. Test DB chạy trên POSTGRES_TEST_DB, không bao giờ chạm DB chính."""
+import os
+
+# Test mặc định không bao giờ tải model nhúng hay gọi Qdrant thật, kể cả khi .env đặt RAG_MODE khác.
+os.environ["RAG_MODE"] = "llm_only"
 from collections.abc import Iterator
 
 import pytest

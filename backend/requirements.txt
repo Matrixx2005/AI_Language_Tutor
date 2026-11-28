@@ -17,3 +17,10 @@ google-genai==3.6.1
 httpx2==2.16.2
 # Dữ liệu múi giờ IANA cho zoneinfo (Windows không có sẵn); USER_TIMEZONE dùng trực tiếp.
 tzdata==2026.6
+# RAG (Tuần 4). torch bản CPU lấy từ index riêng của PyTorch (máy không có CUDA):
+#   pip install -r backend/requirements.txt  (dòng --extra-index-url dưới đây tự áp dụng)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.15.0+cpu
+sentence-transformers==6.3.0
+qdrant-client==1.20.0
+numpy==2.5.5

@@ -58,4 +58,15 @@ def get_llm() -> LLMService:
 
 
 LLM = Annotated[LLMService, Depends(get_llm)]
+
+
+def get_retriever_for():
+    """Hàm mode → Retriever. Dựng LƯỜI (model/Qdrant chỉ tải khi thật sự dùng RAG). Test thay qua
+    dependency_overrides bằng bản dùng Qdrant :memory: và bộ nhúng giả."""
+    from app.retrieval.service import build_retriever
+
+    return build_retriever
+
+
+RetrieverFor = Annotated[object, Depends(get_retriever_for)]
 Limits = Annotated[AppLimits, Depends(get_limits)]

@@ -6,8 +6,9 @@ import { Loading } from '../components/Loading'
 import { useCountdown } from '../hooks/useCountdown'
 import { canRetry, isLimitCode, isLlmCode, messageForCode } from '../lib/apiErrors'
 import { SESSION_SWITCH_LOCKED_REASON, charCount, collapseRetriedTurns, isForCurrentSession, pickSession, precedingUserContent } from '../lib/chat'
+import { hasNoValidCitation, orderSources, ragModeLabel, resolveMode, showNoSourceNotice } from '../lib/rag'
 import { formatWait, formatWaitApprox } from '../lib/time'
-import type { ChatMessage, ChatSession } from '../types'
+import type { ChatMessage, ChatSession, RagConfig, RagMode } from '../types'
 
 /** Mặc định hiển thị; máy chủ (CHAT_MAX_MESSAGE_CHARS) mới là nơi quyết định và báo message_too_long. */
 const MAX_CHARS = 2000
@@ -48,6 +49,9 @@ export function ChatPage() {
   const [limitError, setLimitError] = useState<UiError | null>(null)
   const [showSessions, setShowSessions] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [ragConfig, setRagConfig] = useState<RagConfig | null>(null)
+  /** '' = theo chế độ mặc định của máy chủ. */
+  const [ragMode, setRagMode] = useState<RagMode | ''>('')
   const countdown = useCountdown()
   const endRef = useRef<HTMLDivElement>(null)
   /** Phiên vừa được tạo NGAY trong lúc gửi tin: không xóa tin đang chờ, không tải lại lịch sử rỗng. */
@@ -81,6 +85,11 @@ export function ChatPage() {
   useEffect(() => {
     loadSessions(null).then((id) => setSelectedId(id))
   }, [loadSessions, setSelectedId])
+
+  useEffect(() => {
+    // Không tải được cấu hình thì vẫn chat được (theo mặc định máy chủ); chỉ không biết trước chế độ.
+    api.getRagConfig().then(setRagConfig).catch(() => setRagConfig(null))
+  }, [])
 
   useEffect(() => {
     if (selectedId && selectedId === createdWhileSendingRef.current) {
@@ -130,7 +139,7 @@ export function ChatPage() {
         setSessions((list) => [created, ...list])
         setSelectedId(sessionId)
       }
-      const turn = await api.sendChatMessage(sessionId, trimmed)
+      const turn = await api.sendChatMessage(sessionId, trimmed, ragMode || undefined)
       if (!isForCurrentSession(sessionId, selectedIdRef.current)) {
         // Người dùng đã sang phiên khác (nút đổi phiên bị khóa khi đang gửi, đây là lớp chặn thứ hai):
         // tin đã lưu ở máy chủ, sẽ hiện khi mở lại phiên đó; chỉ làm mới danh sách phiên.
@@ -196,6 +205,7 @@ export function ChatPage() {
   const sendBlocked = sending || waiting || !text.trim()
   const blockedReason = sending ? 'Đang chờ gia sư trả lời…' : waiting ? `Đợi ${waitText}` : ''
   const counter = charCount(text.length, MAX_CHARS)
+  const activeMode = resolveMode(ragMode, ragConfig?.default_mode ?? null)
 
   // Ẩn lượt lỗi đã được thử lại; khi đang thử lại một lượt lỗi, tạm ẩn lượt đó để không hiện hai lần.
   const visible = collapseRetriedTurns(messages).filter((_, index, list) => {
@@ -245,7 +255,9 @@ export function ChatPage() {
 
       <section className="flex min-h-[32rem] flex-col rounded-[1.5rem] bg-white" aria-label="Khung chat">
         <div className="space-y-1.5 border-b border-[#eef2ee] px-4 py-3 text-xs text-[#5f736b] sm:px-6">
-          <p className="flex items-start gap-2"><Info size={14} className="mt-0.5 shrink-0" />AI không dẫn nguồn ở phiên bản này (chưa dùng tài liệu tham khảo). Hãy kiểm tra lại kiến thức quan trọng.</p>
+          {showNoSourceNotice(activeMode)
+            ? <p className="flex items-start gap-2"><Info size={14} className="mt-0.5 shrink-0" />Chế độ "Chỉ AI": câu trả lời không dẫn nguồn (không dùng tài liệu). Hãy kiểm tra lại kiến thức quan trọng.</p>
+            : <p className="flex items-start gap-2"><Info size={14} className="mt-0.5 shrink-0" />Câu trả lời dựa trên các bài ngữ pháp của ứng dụng (bản nháp, chưa được giáo viên duyệt); nguồn hiện dưới mỗi câu trả lời.</p>}
           <p className="flex items-start gap-2"><ShieldAlert size={14} className="mt-0.5 shrink-0" />Nội dung chat được gửi tới Google Gemini. Với gói miễn phí, Google có thể dùng nội dung để cải thiện sản phẩm và người đánh giá có thể đọc — không nhập thông tin cá nhân.</p>
         </div>
 
@@ -280,9 +292,19 @@ export function ChatPage() {
           <textarea id="chat-input" className="field-input min-h-24 resize-y" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={onKeyDown}
             placeholder="Ví dụ: Khi nào dùng present perfect?" aria-describedby="chat-hint" />
           <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-            <p id="chat-hint" className="text-xs text-[#87958f]">
-              Enter để gửi, Shift+Enter để xuống dòng · <span className={counter.over ? 'font-semibold text-[#a14f3d]' : ''}>{counter.label} ký tự</span>
-            </p>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <p id="chat-hint" className="text-xs text-[#87958f]">
+                Enter để gửi, Shift+Enter để xuống dòng · <span className={counter.over ? 'font-semibold text-[#a14f3d]' : ''}>{counter.label} ký tự</span>
+              </p>
+              <label className="flex items-center gap-1.5 text-xs text-[#5f736b]">
+                Chế độ trả lời
+                <select value={ragMode} onChange={(e) => setRagMode(e.target.value as RagMode | '')}
+                  className="max-w-[14rem] rounded-lg border border-[#dfe7e0] bg-white px-2 py-1 text-xs text-[#19342d]">
+                  <option value="">Mặc định ({ragModeLabel(ragConfig?.default_mode)})</option>
+                  {(ragConfig?.modes ?? ['llm_only', 'dense', 'hybrid']).map((m) => <option key={m} value={m}>{ragModeLabel(m)}</option>)}
+                </select>
+              </label>
+            </div>
             <div className="flex items-center gap-3">
               {blockedReason && <span className="text-xs text-[#74867e]" aria-live="polite">{blockedReason}</span>}
               <button className="primary-button gap-2" disabled={sendBlocked} title={blockedReason || undefined}><Send size={16} /> Gửi</button>
@@ -313,6 +335,26 @@ function MessageBubble({ message, onRetry }: { message: ChatMessage; onRetry?: (
       {/* Văn bản thuần: React tự escape; không render HTML/markdown. */}
       <p className="whitespace-pre-wrap break-words rounded-2xl rounded-bl-md bg-[#f1f5f1] px-4 py-2.5 text-sm text-[#19342d]">{message.content}</p>
       {message.truncated && <p className="text-xs text-[#8a6d2f]">Câu trả lời có thể bị cắt, hãy hỏi tiếp để xem phần còn lại.</p>}
+      {message.rag_fallback && <p className="text-xs text-[#8a6d2f]">Không truy xuất được tài liệu lúc này nên câu trả lời không dùng tài liệu (không có nguồn).</p>}
+      {hasNoValidCitation(message.sources) && <p className="text-xs text-[#8a6d2f]">Câu trả lời không trích dẫn tài liệu nào bên dưới — hãy kiểm tra lại.</p>}
+      {message.sources && message.sources.length > 0 && <SourceList sources={message.sources} />}
     </div>
+  </div>
+}
+
+function SourceList({ sources }: { sources: NonNullable<ChatMessage['sources']> }) {
+  return <div className="rounded-xl border border-[#e3e9e2] bg-white px-3 py-2 text-xs text-[#304b42]">
+    <p className="mb-1 font-semibold">Nguồn (bài ngữ pháp của ứng dụng)</p>
+    <ul className="space-y-1">
+      {orderSources(sources).map((s) => <li key={s.n}>
+        <details>
+          <summary className="cursor-pointer">
+            <span className="font-semibold">[{s.n}]</span> {s.title} · {s.level}{s.cited ? '' : ' · (không được trích dẫn)'}
+          </summary>
+          {/* Văn bản thuần: React tự escape. */}
+          <p className="mt-1 whitespace-pre-wrap rounded-lg bg-[#f5f7f2] p-2 text-[#19342d]">{s.text}</p>
+        </details>
+      </li>)}
+    </ul>
   </div>
 }
