@@ -1,0 +1,43 @@
+{
+  "started_at": "2026-11-28T15:28:28+00:00",
+  "target": "main",
+  "provider": "gemini",
+  "dry_run": false,
+  "lessons": 33,
+  "drafts": 132,
+  "inserted_validated": 99,
+  "inserted_rejected": 33,
+  "skipped_existing": 0,
+  "duplicates_in_run": 0,
+  "reject_reasons": {
+    "missing_accepted_answers": 15,
+    "independent_check_mismatch": 9,
+    "cloze_not_exactly_one_blank": 1,
+    "empty_field": 1,
+    "answer_leaked_in_prompt": 3,
+    "not_exactly_one_error": 3,
+    "reorder_tokens_mismatch": 1,
+    "mcq_not_exactly_one_correct": 1
+  },
+  "independent": {
+    "match": 73,
+    "mismatch": 9
+  },
+  "by_type": {
+    "mcq:validated": 25,
+    "cloze:validated": 18,
+    "error_correction:validated": 21,
+    "reorder:rejected": 18,
+    "reorder:validated": 9,
+    "translate_vi_en:validated": 26,
+    "cloze:rejected": 8,
+    "error_correction:rejected": 6,
+    "mcq:rejected": 1
+  },
+  "stopped": null,
+  "llm_errors": [],
+  "calls": {
+    "generate": "[exercise_generate_gemini] lời gọi thật: 15, dùng cache: 18",
+    "check": "[exercise_check_gemini] lời gọi thật: 17, dùng cache: 0"
+  }
+}

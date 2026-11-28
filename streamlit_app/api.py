@@ -102,3 +102,39 @@ class ApiClient:
 
     def apply(self, attempt_id: str):
         return self._request("POST", f"/placement/attempts/{attempt_id}/apply")
+
+
+def _exercise_methods():
+    """Bài tập (Tuần 5B) — gắn vào ApiClient."""
+
+    def next_exercise(self, topic: str | None = None, exercise_type: str | None = None):
+        params = {k: v for k, v in {"topic": topic, "type": exercise_type}.items() if v}
+        return self._request("GET", "/exercises/next", params=params)
+
+    def exercise(self, exercise_id: str):
+        return self._request("GET", f"/exercises/{exercise_id}")
+
+    def submit_exercise(self, exercise_id: str, text: str):
+        return self._request("POST", f"/exercises/{exercise_id}/attempts", json={"answer": {"text": text}})
+
+    def regrade(self, attempt_id: str):
+        return self._request("POST", f"/exercises/attempts/{attempt_id}/regrade")
+
+    def exercise_history(self):
+        return self._request("GET", "/exercises/history")
+
+    def error_summary(self):
+        return self._request("GET", "/errors/summary")
+
+    def admin_queue(self, review_status: str | None = None):
+        return self._request("GET", "/exercises/admin/queue", params={"review_status": review_status} if review_status else None)
+
+    def admin_review(self, exercise_id: str, decision: str, reviewer: str, edits: dict | None = None):
+        return self._request("POST", f"/exercises/admin/{exercise_id}/review",
+                             json={"decision": decision, "reviewer": reviewer, "edits": edits})
+
+    for fn in (next_exercise, exercise, submit_exercise, regrade, exercise_history, error_summary, admin_queue, admin_review):
+        setattr(ApiClient, fn.__name__, fn)
+
+
+_exercise_methods()

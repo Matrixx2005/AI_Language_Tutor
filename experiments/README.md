@@ -179,3 +179,131 @@ Nhận xét:
 
 - **`RAG_MODE=hybrid`**, keywords_vi **tắt**. Với `RAG_TOP_K=3`, chỉ số quan trọng nhất là R@3, và hybrid đạt R@3 = 1,00 trên dev.
 - Mặc định trong code vẫn là `llm_only`, để một bản sao mới chạy được khi chưa có Qdrant hoặc model. Người dùng tự đặt `RAG_MODE` trong `.env`, hoặc chọn chế độ ngay trên giao diện.
+
+## 4. Tuần 5B — B1: cải tiến truy xuất
+
+### Quy tắc quyết định (ghi TRƯỚC khi chạy, 2026-11-28)
+
+Một cải tiến (viết lại truy vấn, ngưỡng tin cậy) chỉ được **bật mặc định** khi thỏa **cả ba** điều kiện, đo trên DEV v2 so với cấu hình gốc cùng phương pháp:
+1. Paired bootstrap 95% (1000 lần, seed 20261128) của hiệu số **Recall@3 hoặc MRR@10** có **cận dưới > 0**.
+2. Chỉ số còn lại không giảm quá **0,02** (theo giá trị điểm).
+3. Độ trễ p95 (đã tính thời gian rewrite) tăng không quá **2 giây**.
+
+Nếu không thỏa, cải tiến giữ **tắt** và được ghi là "chưa đủ bằng chứng".
+- Không chọn cấu hình theo từng truy vấn.
+- Chỉ dùng DEV; test split không được chạy.
+- Mọi cấu hình đã thử, kể cả thất bại, đều được ghi vào `retrieval_runs.jsonl`.
+
+Ngưỡng tin cậy (`RAG_MIN_CONFIDENCE`): đặc trưng và ngưỡng được chọn bằng cross-validation phân tầng 5-fold **trên dev**. Ngưỡng chỉ được bật mặc định khi khoảng tin cậy 95% của recall từ chối (trên nhóm `expected=none`) có cận dưới > 0,5 **và** tỷ lệ từ chối nhầm truy vấn có đáp án ≤ 0,10. Nếu không, giữ tắt.
+
+### Kết quả B1 (`b1_dev_20261128T154030Z.json`; DEV v2: 71 truy vấn có đáp án + 7 `expected=none`)
+
+**Viết lại truy vấn:**
+- Gemini `gemini-3.5-flash-lite`, gộp 10 câu/lời gọi.
+- Lần chạy cuối dùng 8 lời gọi, cả 78/78 truy vấn viết lại hợp lệ.
+- `bm25` = BM25 nhận thêm câu đã viết lại; `both` = BM25 nhận câu gốc + câu viết lại, dense nhận câu viết lại.
+
+| Cấu hình | R@1 | R@3 | R@5 | MRR@10 | p95 truy xuất (ms) | p95 có tính rewrite (ms) |
+| --- | --- | --- | --- | --- | --- | --- |
+| BM25 gốc | 0,578 | 0,662 | 0,704 | 0,629 | 0,1 | 0,1 |
+| BM25 + rewrite | 0,930 | 1,000 | 1,000 | 0,962 | 0,2 | 2425 |
+| Dense gốc | 0,747 | 0,915 | 0,986 | 0,843 | 338 | 338 |
+| Dense + rewrite (cả hai) | 0,915 | 0,986 | 1,000 | 0,949 | 313 | 2695 |
+| Hybrid gốc | 0,732 | 0,901 | 0,944 | 0,821 | 93 | 93 |
+| Hybrid + rewrite chỉ cho BM25 | 0,930 | 1,000 | 1,000 | 0,962 | 95 | 2502 |
+| Hybrid + rewrite (cả hai) | 0,958 | 1,000 | 1,000 | 0,979 | 83 | 2493 |
+
+**Áp quy tắc quyết định** (paired bootstrap 1000 lần, so với cấu hình gốc cùng phương pháp):
+
+| Cấu hình | ΔR@3 [CI 95%] | ΔMRR [CI 95%] | (i) | (ii) | (iii) p95 tăng ≤ 2 s | Bật? |
+| --- | --- | --- | --- | --- | --- | --- |
+| Dense + rewrite | +0,070 [0,000; 0,155] | +0,106 [0,044; 0,168] | đạt (MRR) | đạt | **không** (+2,36 s) | **Không** |
+| Hybrid + rewrite chỉ BM25 | +0,099 [0,042; 0,183] | +0,141 [0,072; 0,210] | đạt | đạt | **không** (+2,41 s) | **Không** |
+| Hybrid + rewrite cả hai | +0,099 [0,042; 0,183] | +0,158 [0,083; 0,233] | đạt | đạt | **không** (+2,40 s) | **Không** |
+
+**Kết luận trung thực:**
+- Viết lại truy vấn cải thiện chất lượng truy xuất rõ rệt và có ý nghĩa thống kê. Cải thiện lớn nhất ở truy vấn tiếng Việt và BM25.
+- Nhưng mỗi lời gọi rewrite mất **1,5–2,4 s** (8 lời gọi, mỗi lời gọi gộp 10 câu), nên p95 tăng khoảng 2,4 s, vượt ngưỡng 2 s đã ghi trước.
+- Vì vậy `RAG_QUERY_REWRITE` **giữ tắt mặc định**: chất lượng đủ bằng chứng, nhưng không đạt điều kiện độ trễ.
+- Lời gọi 1 câu (dùng trong chat) có thể nhanh hơn lời gọi gộp 10 câu, nhưng **chưa đo**. Tôi không đổi quy tắc sau khi thấy số liệu.
+- Người dùng có thể tự bật `RAG_QUERY_REWRITE=true` nếu chấp nhận thêm khoảng 2 s và 1 lời gọi Gemini cho mỗi tin.
+
+**Các lần chạy đã ghi** (`retrieval_runs.jsonl`):
+- Lần B1 đầu (`b1_dev_20261128T153805Z.json`) có **độ trễ rewrite sai**: tính cả thời gian chờ giới hạn tần suất 7,5 s và chia cho lô.
+- Đã sửa cách đo và chạy lại (8 lời gọi mới, vì cache cũ không lưu thời gian).
+- Chỉ số chất lượng của hai lần gần giống nhau. Có khác chút ít vì đầu ra rewrite của LLM không hoàn toàn tất định: dense + rewrite cho MRR 0,979 ở lần 1 và 0,949 ở lần 2.
+
+**Tín hiệu "không tìm thấy"** (AUC phân biệt nhóm có đáp án với nhóm `expected=none`; chỉ 7 truy vấn none, mẫu **rất nhỏ**):
+
+| Đặc trưng | AUC |
+| --- | --- |
+| Điểm dense hạng 1 | 0,745 |
+| Khoảng cách hạng 1–2 (dense) | 0,759 |
+| Điểm BM25 chuẩn hóa | 0,613 |
+| Điểm RRF hạng 1 (hybrid) | 0,572 |
+
+Ngưỡng trên điểm dense hạng 1, chọn bằng cross-validation phân tầng 5-fold (các fold chọn ngưỡng khoảng 0,569–0,579):
+
+| Chỉ số | Giá trị | CI 95% |
+|---|---|---|
+| Recall từ chối nhóm none | 0,857 (6/7) | [0,50; 1,00] |
+| Precision | 0,143 | |
+| **Từ chối nhầm câu có đáp án** | **0,507** (36/71) | [0,39; 0,63] |
+
+→ **Không đạt** quy tắc (cần từ chối nhầm ≤ 0,10). `RAG_MIN_CONFIDENCE` giữ **tắt**. Cần thêm truy vấn none và một đặc trưng tốt hơn trước khi dùng.
+
+## 5. Tuần 5B — B7: chất lượng bài tập và bộ chấm
+
+**Ngân hàng bài tập** (`exercises_*.json`; Gemini sinh, prompt v1 rồi v1.1):
+
+| Chỉ số | Giá trị |
+|---|---|
+| Tổng số bài | 160 |
+| **Validated** | **119** (tỷ lệ qua 74,4%) |
+| Rejected (vẫn lưu kèm lý do) | 41 |
+| Bài validated mỗi bài học | 3–6; cả 33/33 bài học có ≥ 3 |
+| Số từ trung bình / tối đa | 7,6 / 14 |
+
+| Dạng bài | Validated / tổng | Tỷ lệ qua |
+|---|---|---|
+| mcq | 31/33 | 94% |
+| cloze | 21/29 | 72% |
+| error_correction | 24/33 | 73% |
+| **reorder** | **10/32** | **31%** |
+| translate_vi_en | 33/33 | 100% |
+
+| Cấp | Validated / tổng |
+|---|---|
+| A1 | 44/56 |
+| A2 | 39/52 |
+| B1 | 36/52 |
+
+- **Lý do loại:**
+
+  | Lý do | Số bài |
+  |---|---|
+  | `missing_accepted_answers` | 20 (chủ yếu dạng reorder: Gemini bỏ trống đáp án) |
+  | `independent_check_mismatch` | 10 |
+  | `answer_leaked_in_prompt` | 4 |
+  | `not_exactly_one_error` | 4 |
+  | Lý do khác | mỗi loại 1 |
+
+- **Sửa prompt 1 lần, có ghi lại:** v1.1 bắt buộc trường `accepted`, dùng cho vòng bù (8 lời gọi). Lỗi thiếu đáp án vẫn còn 5/24 trong vòng bù.
+- **Kiểm tra độc lập:** 96 bài được kiểm tra, **khớp 89,6%**. Đây là chỉ số chất lượng, không phải đảm bảo đúng.
+- **Trùng lặp:** bị chặn bằng `content_hash`; trong lần chạy không phát hiện bài trùng.
+- **Duyệt bởi người:** 0/160. Mẫu 40 bài nằm ở `docs/EXERCISE_REVIEW.md`, chờ duyệt.
+
+**Bộ chấm LLM** (`grader_eval_*.json`, 38 mục cần LLM trong `grading_v1.json`; nhãn do Claude soạn, **chưa duyệt bởi người**, mẫu nhỏ):
+
+| Chỉ số | Giá trị | CI 95% |
+|---|---|---|
+| Chính xác 3 mức (đúng / đúng một phần / sai) | 0,737 | [0,61; 0,87] |
+| Chính xác hai mức (đúng / không đúng) | **0,974** | [0,92; 1,00] |
+| **Chấp nhận nhầm** (câu sai bị chấm đúng) | **0,000** (0/26) | |
+| Từ chối nhầm (câu đúng bị chấm không đúng) | 0,083 (1/12) | [0; 0,25] |
+| Đồng thuận loại lỗi | 0,833 | [0,67; 0,96] |
+| Prompt injection cần LLM chấm | 2/2 bị chấm "incorrect" | |
+
+- 3 ca injection còn lại không cần LLM: bộ chấm quy tắc đã chấm "incorrect".
+- Lệch chủ yếu là câu nhãn "incorrect" bị chấm "partially" (9 ca). Bộ chấm khoan dung ở mức trung gian, nhưng không chấp nhận nhầm câu sai.
+- **Bộ chấm quy tắc:** khớp 100% với 48 nhãn rõ ràng của `grading_v1` (test tất định `test_taxonomy_grading.py`).

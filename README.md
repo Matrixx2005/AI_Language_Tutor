@@ -204,6 +204,43 @@ Chạy được trên **CPU** (không cần CUDA). Đã đo trên Core Ultra 7 1
 
 Biến môi trường mới (đều có mặc định): `RAG_MODE`, `RAG_TOP_K`, `RAG_RRF_K`, `RAG_CANDIDATES`, `RAG_INDEX_KEYWORDS_VI`, `RAG_FILTER_LEVEL`, `EMBEDDING_MODEL_REVISION`, `EMBEDDING_CACHE_DIR`, `QDRANT_TIMEOUT_SECONDS`. Ý nghĩa của từng biến xem trong `.env.example`.
 
+### Bài tập và chấm bài (Tuần 5B)
+
+**API** (cần đăng nhập; mọi lỗi trả theo mã ổn định):
+
+| API | Mô tả |
+| --- | --- |
+| `GET /api/v1/exercises/next?topic=&type=` | Bài tiếp theo, **không** kèm đáp án |
+| `GET /api/v1/exercises/{id}` | Xem một bài, **không** kèm đáp án |
+| `POST /api/v1/exercises/{id}/attempts` | Nộp bài `{"answer": {"text": "..."}}`. Trả kết quả chấm, cùng đáp án, giải thích và bài học nguồn |
+| `POST /api/v1/exercises/attempts/{attempt_id}/regrade` | Chấm lại bài đang `pending` (khi lần chấm bằng AI trước đó bị lỗi) |
+| `GET /api/v1/exercises/history` | Lịch sử bài làm |
+| `GET /api/v1/errors/summary` | Tổng hợp lỗi 30 ngày |
+
+```powershell
+python scripts/generate_exercises.py --dry-run                     # số lời gọi Gemini dự kiến (không gọi API)
+python scripts/generate_exercises.py --max-calls 40                # sinh + kiểm tra + kiểm tra độc lập → DB chính
+python scripts/generate_exercises.py --top-up --max-calls 10       # vòng bù cho bài học có < 3 bài validated
+python scripts/generate_exercises.py --provider fake --target test # chạy thử luồng, không mạng
+python scripts/eval_exercises.py                                   # thống kê → experiments/exercises_*.json + docs/EXERCISE_REVIEW.md
+python scripts/eval_grader.py --dry-run                            # đánh giá bộ chấm LLM trên data/evaluation/grading_v1.json
+python scripts/eval_b1.py --dry-run                                # B1: viết lại truy vấn + tín hiệu "không tìm thấy" (chỉ dev)
+python scripts/validate_taxonomy_grading.py                        # kiểm tra taxonomy + grading_v1
+python scripts/coverage_audit.py                                   # đối chiếu với CEFR-J → docs/COVERAGE_AUDIT.md
+```
+
+**Tải CEFR-J** (cho `coverage_audit.py`; file không được commit). Nguồn: Tono Laboratory, TUFS; điều khoản: miễn phí, phải trích dẫn.
+
+```powershell
+curl -o data/external/cefrj/cefrj-grammar-profile-20180315.csv https://raw.githubusercontent.com/openlanguageprofiles/olp-en-cefrj/master/cefrj-grammar-profile-20180315.csv
+```
+
+**Duyệt bài tập:** đặt `EXERCISE_ADMIN_ENABLED=true` (backend) và `STREAMLIT_ACCESS_CODE` (console), rồi mở trang Streamlit "Duyệt bài tập". Hoặc ghi kết quả duyệt vào `docs/EXERCISE_REVIEW.md`.
+
+Biến mới (đều có mặc định): `RAG_QUERY_REWRITE`, `RAG_MIN_CONFIDENCE`, `EXERCISE_SUBMIT_PER_MINUTE`, `EXERCISE_SUBMIT_PER_DAY`, `EXERCISE_ADMIN_ENABLED`, `EXERCISE_INDEPENDENT_CHECK`.
+
+**Smoke test bài tập với Gemini thật** (mặc định bỏ qua; tốn 2 lời gọi): `$env:RUN_EXERCISE_SMOKE = "1"; pytest backend/tests/test_exercise_smoke.py -s`.
+
 ## 6. Frontend
 
 Mở terminal thứ hai:

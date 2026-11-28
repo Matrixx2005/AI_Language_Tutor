@@ -89,7 +89,21 @@ class Settings(BaseSettings):
     embedding_model_revision: str = "5617a9f61b028005a4858fdac845db406aefb181"
     embedding_cache_dir: str = "models/hf"  # tương đối với thư mục gốc dự án; /models/ đã nằm trong .gitignore
     qdrant_url: str = "http://127.0.0.1:6333"
+    # Tuần 5B — chỉ bật mặc định khi thỏa quy tắc quyết định trong experiments/README.md (B1).
+    rag_query_rewrite: bool = False  # viết lại truy vấn sang từ khóa tiếng Anh bằng LLM trước khi truy xuất
+    rag_min_confidence: float | None = Field(default=None, ge=0, le=1)  # ngưỡng điểm dense hạng 1; None = tắt
+    # Bài tập (Tuần 5B)
+    exercise_submit_per_minute: int = Field(default=10, ge=0, le=1000)
+    exercise_submit_per_day: int = Field(default=200, ge=0, le=100_000)
+    exercise_admin_enabled: bool = False  # bật API duyệt bài tập (chỉ dùng trong console)
+    exercise_independent_check: bool = True  # script sinh: LLM giải bài không kèm đáp án để đối chiếu
     qdrant_timeout_seconds: int = Field(default=5, ge=1, le=60)
+
+    @field_validator("rag_min_confidence", mode="before")
+    @classmethod
+    def _empty_means_off(cls, value: object) -> object:
+        # .env.example để "RAG_MIN_CONFIDENCE=" (trống) = tắt; chuỗi rỗng không được làm backend không khởi động.
+        return None if isinstance(value, str) and not value.strip() else value
 
     @field_validator("qdrant_url")
     @classmethod

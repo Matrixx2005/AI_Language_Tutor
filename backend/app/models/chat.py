@@ -71,6 +71,8 @@ class ChatMessageRow(Base):
     sources: Mapped[Any | None] = mapped_column(JSONB)
     # True khi người dùng chọn RAG nhưng hạ tầng truy xuất lỗi → trả lời bằng llm_only.
     rag_fallback: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    # True khi RAG_MIN_CONFIDENCE bật và tài liệu truy xuất không đủ tin cậy → trả lời "không thấy trong bài học" (Tuần 5B).
+    rag_low_confidence: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
     status: Mapped[str] = mapped_column(String(16), server_default="ok")
     error_code: Mapped[str | None] = mapped_column(String(64))
     model_id: Mapped[str | None] = mapped_column(String(100))

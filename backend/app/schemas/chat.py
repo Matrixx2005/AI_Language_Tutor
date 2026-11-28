@@ -79,6 +79,7 @@ class ChatMessageRead(BaseModel):
     created_at: datetime
     rag_mode: str | None = None  # chế độ THỰC SỰ dùng (llm_only khi hạ cấp); None ở dòng người dùng
     rag_fallback: bool = False
+    rag_low_confidence: bool = False  # B1: tài liệu không đủ tin cậy → trả lời "không thấy trong bài học"
     sources: list[SourceRead] | None = None
     citations: dict[str, Any] | None = Field(default=None, exclude=True)
 

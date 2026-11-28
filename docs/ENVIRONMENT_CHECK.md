@@ -760,3 +760,60 @@ Bảng nghiệm thu: `docs/WEEK5A_ACCEPTANCE.md`.
 - Thao tác Streamlit trên trình duyệt thật: hiển thị, đếm ngược, cổng mã khi chia sẻ qua cloudflared.
 - 79 truy vấn mới và nhóm none: **CHƯA DUYỆT BỞI NGƯỜI**; chưa có 30 truy vấn do người viết.
 - Ngưỡng từ chối cho nhóm none: mới đo, chưa đặt.
+
+## Tuần 5B — Bài tập, chấm bài, phân tích lỗi, cải tiến truy xuất (2026-11-28)
+
+Người dùng cho phép: migration DB chính; tối đa 250 lời gọi Gemini; tải CEFR-J; commit (không push). Không sửa `.env`.
+
+Bảng nghiệm thu: `docs/WEEK5B_ACCEPTANCE.md`. Số đo: `experiments/README.md` mục 4–5.
+
+### Claude đã chạy
+
+- **Commit riêng trước:** `d524de9` (start/stop scripts).
+- **CEFR-J:** tải CSV (72 272 byte) vào `data/external/` (Git bỏ qua). `coverage_audit.py` → `docs/COVERAGE_AUDIT.md`: 106/136 mục A1–B1 khớp, 30 mục chưa phủ. Ánh xạ bằng luật từ khóa, gần đúng.
+- **Migration `f5bf4a121058`:** thêm bảng `exercises`, `exercise_attempts`, `error_events` và cột `chat_messages.rag_low_confidence`.
+  - DB test: upgrade → check → downgrade → upgrade → check, đều đạt.
+  - **DB chính: upgrade + check**, không lệch.
+- **Mã nguồn:**
+  - Danh mục lỗi và cấu hình bài tập trong YAML.
+  - Gói `app/exercises/` (chuẩn hóa, bộ kiểm tra, chấm, phân tích).
+  - Các service bài tập; API `/exercises/*` và `/errors/summary`.
+  - `app/retrieval/rewrite.py` và `confidence.py`; tùy chọn mới trong chat.
+  - 5 prompt mới; script ngân sách LLM, sinh bài, đánh giá; 4 trang Streamlit.
+- **Lỗi thật đã gặp và sửa:**
+  - Script sinh bài dừng khi Gemini trả JSON sai schema ở 1 bài học → bắt lỗi theo từng bài học. Giữ nguyên schema để không mất cache của 18 lời gọi trước.
+  - Đo độ trễ rewrite sai (tính cả thời gian chờ giới hạn tần suất) → sửa cách đo, chạy lại và ghi lại cả hai lần.
+  - `RAG_MIN_CONFIDENCE=` (trống) làm backend không khởi động → chuỗi rỗng nay được hiểu là "tắt" (có test).
+  - Luật lộ đáp án mcq tách từ sai ("an:") → sửa.
+  - Phát hiện qua làm hỏng code: test không phủ trường hợp đáp án mcq xuất hiện hai lần → bổ sung test.
+- **Kết quả chính:**
+  - 119 bài validated / 160.
+  - B1: rewrite không bật (p95 +2,4 s); ngưỡng tin cậy không bật (từ chối nhầm 51%).
+  - Bộ chấm LLM: chính xác hai mức 0,974, chấp nhận nhầm 0.
+  - Smoke test: 2/2.
+- **Làm hỏng có chủ đích (8 chỗ, khôi phục xong đều `cmp` khớp):**
+
+  | Chỗ làm hỏng | Kết quả |
+  |---|---|
+  | Lộ answer_key trong GET | 1 failed |
+  | Bỏ owner check | 1 failed |
+  | Đúng 1 đáp án mcq | lần đầu **0 failed** → thêm test → 1 failed |
+  | error_type ngoài taxonomy | 3 failed |
+  | Bỏ xóa dấu phân cách trong prompt chấm | 1 failed |
+  | Đảo dấu hiệu số paired bootstrap | 1 failed |
+  | AUC đảo chiều | 1 failed |
+  | Không kẹp điểm theo verdict | 2 failed |
+- **Kiểm tra cuối:**
+  - `pytest` không mạng, không key: **517 passed, 7 skipped**; `npm test` 21/21; build đạt.
+  - Validator dataset, eval v1 và v2, taxonomy + grading đều đạt; `alembic check` không lệch trên cả hai DB.
+- **Gemini:** **119 lời gọi thật** (bảng trong `WEEK5B_ACCEPTANCE.md`).
+
+### Người dùng tự báo
+
+- Chưa có báo cáo cho Tuần 5B.
+
+### Chưa kiểm chứng
+
+- 4 trang Streamlit mới trên trình duyệt.
+- Chưa người nào duyệt: bài tập (0/160), taxonomy, nhãn `grading_v1`, 79 truy vấn v2.
+- Độ trễ rewrite với lời gọi 1 câu (dùng trong chat): chưa đo.

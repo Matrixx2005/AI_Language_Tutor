@@ -36,6 +36,10 @@ pages = [
     st.Page("pages/4_retrieval_lab.py", title="Retrieval Lab", icon="🔎"),
     st.Page("pages/5_thi_nghiem.py", title="Thí nghiệm", icon="📊"),
     st.Page("pages/6_corpus.py", title="Corpus", icon="📚"),
+    st.Page("pages/8_bai_tap.py", title="Bài tập", icon="✏️"),
+    st.Page("pages/9_loi_cua_toi.py", title="Lỗi của tôi", icon="📉"),
+    st.Page("pages/10_duyet_bai_tap.py", title="Duyệt bài tập", icon="✅"),
+    st.Page("pages/11_chat_luong_bai_tap.py", title="Chất lượng bài tập", icon="🧪"),
     st.Page("pages/7_he_thong.py", title="Hệ thống", icon="⚙️"),
 ]
 with st.sidebar:

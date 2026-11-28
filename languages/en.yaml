@@ -40,3 +40,119 @@ retrieval:
     # Từ chức năng rất phổ biến (Anh + Việt không dấu) — IDF thấp, bỏ để giảm nhiễu.
     stopwords: [the, a, an, and, or, to, of, in, on, at, is, are, be, it, this, that, for, with, i, you,
                 la, va, cua, co, khong, thi, nhu, the, nao, gi, cho, voi, mot, nhung, cac, khi, de, duoc]
+
+# Tuần 5B. Danh mục lỗi phổ biến của người Việt học tiếng Anh A1–B1. status: CHƯA DUYỆT (người duyệt ghi ở docs/ERROR_TAXONOMY.md).
+# topics: document_id bài học liên quan trong corpus (validator kiểm tra tồn tại). "other" là mã dự phòng bắt buộc.
+error_taxonomy:
+  status: CHƯA DUYỆT
+  types:
+    - id: article
+      name_vi: Mạo từ a/an/the thiếu hoặc thừa
+      description_vi: Bỏ mạo từ trước danh từ đếm được số ít, chọn sai a/an, dùng the không cần thiết.
+      topics: [gram-en-a1-articles-003]
+      example: {wrong: "She is teacher.", right: "She is a teacher."}
+    - id: plural_countable
+      name_vi: Số nhiều và danh từ không đếm được
+      description_vi: Quên -s/-es số nhiều, thêm -s cho danh từ không đếm được, dùng sai much/many.
+      topics: [gram-en-a1-plurals-004, gram-en-a2-count-noncount-008]
+      example: {wrong: "I have two book.", right: "I have two books."}
+    - id: subject_verb_agreement
+      name_vi: Hòa hợp chủ ngữ – động từ
+      description_vi: Quên -s/-es ở ngôi thứ ba số ít, chia be sai với chủ ngữ.
+      topics: [gram-en-a1-present-simple-002, gram-en-a1-be-001]
+      example: {wrong: "He work in a bank.", right: "He works in a bank."}
+    - id: tense_form
+      name_vi: Thì và dạng động từ
+      description_vi: Chọn sai thì, dùng sai dạng quá khứ/quá khứ phân từ, sai V-ing.
+      topics: [gram-en-a2-past-simple-006, gram-en-a2-present-continuous-007, gram-en-a2-present-perfect-011, gram-en-b1-present-perfect-past-012, gram-en-a2-past-continuous-023, gram-en-b1-past-perfect-031]
+      example: {wrong: "I have seen him yesterday.", right: "I saw him yesterday."}
+    - id: missing_be_auxiliary
+      name_vi: Thiếu động từ be / trợ động từ
+      description_vi: Bỏ be trước tính từ hoặc V-ing, thiếu do/does/did trong câu hỏi và phủ định.
+      topics: [gram-en-a1-be-001, gram-en-a1-present-simple-002]
+      example: {wrong: "She very happy.", right: "She is very happy."}
+    - id: preposition
+      name_vi: Giới từ
+      description_vi: Chọn sai in/on/at cho thời gian, nơi chốn; thêm hoặc thiếu giới từ.
+      topics: [gram-en-a1-prepositions-time-016, gram-en-a1-prepositions-place-017]
+      example: {wrong: "I was born on 2005.", right: "I was born in 2005."}
+    - id: word_order
+      name_vi: Trật tự từ
+      description_vi: Sai vị trí trạng từ, tính từ, chủ ngữ – trợ động từ trong câu hỏi.
+      topics: [gram-en-a1-frequency-adverbs-021, gram-en-a2-adverbs-manner-026]
+      example: {wrong: "I go always to school by bus.", right: "I always go to school by bus."}
+    - id: comparison
+      name_vi: So sánh hơn / so sánh nhất
+      description_vi: Dùng cả more và -er, quên than/the, dạng bất quy tắc sai.
+      topics: [gram-en-a2-comparatives-009, gram-en-a2-superlatives-022]
+      example: {wrong: "She is more taller than me.", right: "She is taller than me."}
+    - id: pronoun_possessive
+      name_vi: Đại từ và sở hữu
+      description_vi: Nhầm he/she/his/her, dùng sai 's, nhầm this/these.
+      topics: [gram-en-a1-possessives-018, gram-en-a1-demonstratives-020]
+      example: {wrong: "My mother loves his job.", right: "My mother loves her job."}
+    - id: modal_verb
+      name_vi: Động từ khuyết thiếu
+      description_vi: Thêm to hoặc -s sau can/must/should, dùng sai must/have to.
+      topics: [gram-en-b1-modals-013, gram-en-a1-can-ability-019]
+      example: {wrong: "She can to swim.", right: "She can swim."}
+    - id: conditional
+      name_vi: Câu điều kiện
+      description_vi: Dùng will trong mệnh đề if, chia sai thì trong câu điều kiện loại 0/1/2.
+      topics: [gram-en-b1-first-conditional-014, gram-en-b1-second-conditional-027, gram-en-b1-zero-conditional-033]
+      example: {wrong: "If it will rain, we stay home.", right: "If it rains, we will stay home."}
+    - id: passive
+      name_vi: Câu bị động
+      description_vi: Thiếu be, dùng sai quá khứ phân từ trong câu bị động.
+      topics: [gram-en-b1-passive-voice-028]
+      example: {wrong: "The house was build in 1990.", right: "The house was built in 1990."}
+    - id: verb_pattern
+      name_vi: Dạng động từ theo sau (V-ing / to V)
+      description_vi: Chọn sai V-ing hay to V sau một động từ hoặc giới từ.
+      topics: [gram-en-a2-verb-patterns-025]
+      example: {wrong: "I enjoy to read.", right: "I enjoy reading."}
+    - id: linking_clause
+      name_vi: Từ nối, mệnh đề quan hệ, câu tường thuật
+      description_vi: Dùng sai who/which/that, thiếu từ nối, sai lùi thì khi tường thuật.
+      topics: [gram-en-b1-relative-clauses-015, gram-en-b1-reported-speech-029]
+      example: {wrong: "The man which lives here is my uncle.", right: "The man who lives here is my uncle."}
+    - id: quantity_degree
+      name_vi: Lượng từ và mức độ (too/enough, there is/are)
+      description_vi: Sai vị trí too/enough, chia sai there is/there are.
+      topics: [gram-en-b1-too-enough-032, gram-en-a1-there-be-005]
+      example: {wrong: "He is enough old to drive.", right: "He is old enough to drive."}
+    - id: future_form
+      name_vi: Cách diễn đạt tương lai
+      description_vi: Nhầm will / be going to, thêm to sau will.
+      topics: [gram-en-a2-will-future-024, gram-en-a2-going-to-010, gram-en-b1-used-to-030]
+      example: {wrong: "I will to call you.", right: "I will call you."}
+    - id: spelling_capitalization
+      name_vi: Chính tả và viết hoa
+      description_vi: Sai chính tả, quên viết hoa đầu câu, tên riêng, I.
+      topics: []
+      example: {wrong: "i live in hanoi.", right: "I live in Hanoi."}
+    - id: word_choice_literal
+      name_vi: Chọn từ / dịch từng chữ từ tiếng Việt
+      description_vi: Dịch sát từng chữ tiếng Việt, collocation sai (ví dụ "open the light").
+      topics: []
+      example: {wrong: "Please open the light.", right: "Please turn on the light."}
+    - id: other
+      name_vi: Lỗi khác
+      description_vi: Lỗi không thuộc các loại trên (mã dự phòng khi LLM trả loại lạ).
+      topics: []
+      example: {wrong: "-", right: "-"}
+
+exercises:
+  types: [mcq, cloze, error_correction, reorder, translate_vi_en]
+  # Độ khó theo trình độ: số từ tối đa của câu trong đề.
+  max_words_by_level: {A1: 12, A2: 16, B1: 22}
+  max_prompt_chars: 300
+  max_explanation_chars: 600
+  # Lọc nội dung không phù hợp trong đề (so khớp từ nguyên vẹn, không phân biệt hoa thường).
+  blocked_keywords: [kill, gun, drug, sex, porn, suicide, beer, alcohol, gamble]
+  normalization:
+    unicode_form: NFC
+    lowercase: true
+    apostrophes: ["’", "‘", "`", "´"]
+    quotes: ["“", "”"]
+    strip_final_punctuation: true

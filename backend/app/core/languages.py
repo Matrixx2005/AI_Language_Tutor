@@ -53,6 +53,35 @@ class RetrievalConfig:
 
 
 @dataclass(frozen=True)
+class ErrorType:
+    id: str
+    name_vi: str
+    description_vi: str
+    topics: tuple[str, ...]
+    example_wrong: str
+    example_right: str
+
+
+@dataclass(frozen=True)
+class NormalizationConfig:
+    unicode_form: str = "NFC"
+    lowercase: bool = True
+    apostrophes: tuple[str, ...] = ()
+    quotes: tuple[str, ...] = ()
+    strip_final_punctuation: bool = True
+
+
+@dataclass(frozen=True)
+class ExerciseConfig:
+    types: tuple[str, ...]
+    max_words_by_level: dict
+    max_prompt_chars: int = 300
+    max_explanation_chars: int = 600
+    blocked_keywords: tuple[str, ...] = ()
+    normalization: NormalizationConfig = NormalizationConfig()
+
+
+@dataclass(frozen=True)
 class LanguageConfig:
     language_code: str
     display_name: str
@@ -60,6 +89,16 @@ class LanguageConfig:
     levels: tuple[LevelConfig, ...]
     placement: PlacementConfig | None = None
     retrieval: RetrievalConfig | None = None
+    error_taxonomy: tuple[ErrorType, ...] = ()
+    exercises: ExerciseConfig | None = None
+
+    @property
+    def error_type_ids(self) -> tuple[str, ...]:
+        return tuple(t.id for t in self.error_taxonomy)
+
+    def normalize_error_type(self, value: object) -> str:
+        """Mã lỗi (thường do LLM trả) phải thuộc taxonomy; nếu không → "other"."""
+        return value if isinstance(value, str) and value in self.error_type_ids else "other"
 
     @property
     def level_codes(self) -> tuple[str, ...]:
@@ -105,6 +144,46 @@ def get_language_config(language_code: str) -> LanguageConfig:
         levels=levels,
         placement=_parse_placement(data.get("placement"), tuple(level.code for level in levels), path.name),
         retrieval=_parse_retrieval(data.get("retrieval"), path.name),
+        error_taxonomy=_parse_taxonomy(data.get("error_taxonomy"), path.name),
+        exercises=_parse_exercises(data.get("exercises"), tuple(level.code for level in levels), path.name),
+    )
+
+
+def _parse_taxonomy(raw, filename: str) -> tuple[ErrorType, ...]:
+    if raw is None:
+        return ()
+    try:
+        types = tuple(
+            ErrorType(id=t["id"], name_vi=t["name_vi"], description_vi=t.get("description_vi", ""),
+                      topics=tuple(t.get("topics") or ()), example_wrong=t["example"]["wrong"], example_right=t["example"]["right"])
+            for t in raw["types"]
+        )
+    except (KeyError, TypeError) as exc:
+        raise UnknownLanguageError(f"File {filename}: error_taxonomy sai cấu trúc") from exc
+    ids = [t.id for t in types]
+    if len(ids) != len(set(ids)) or "other" not in ids:
+        raise UnknownLanguageError(f"File {filename}: error_taxonomy cần id duy nhất và có 'other'")
+    return types
+
+
+def _parse_exercises(raw, level_codes: tuple[str, ...], filename: str) -> ExerciseConfig | None:
+    if raw is None:
+        return None
+    limits = dict(raw.get("max_words_by_level") or {})
+    if set(limits) != set(level_codes):
+        raise UnknownLanguageError(f"File {filename}: exercises.max_words_by_level phải có đủ mọi trình độ")
+    norm = raw.get("normalization") or {}
+    return ExerciseConfig(
+        types=tuple(raw["types"]),
+        max_words_by_level=limits,
+        max_prompt_chars=int(raw.get("max_prompt_chars", 300)),
+        max_explanation_chars=int(raw.get("max_explanation_chars", 600)),
+        blocked_keywords=tuple(str(w).lower() for w in raw.get("blocked_keywords", [])),
+        normalization=NormalizationConfig(
+            unicode_form=norm.get("unicode_form", "NFC"), lowercase=bool(norm.get("lowercase", True)),
+            apostrophes=tuple(norm.get("apostrophes", [])), quotes=tuple(norm.get("quotes", [])),
+            strip_final_punctuation=bool(norm.get("strip_final_punctuation", True)),
+        ),
     )
 
 

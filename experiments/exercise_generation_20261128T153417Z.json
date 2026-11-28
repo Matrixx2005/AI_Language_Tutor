@@ -1,0 +1,43 @@
+{
+  "started_at": "2026-11-28T15:33:11+00:00",
+  "target": "main",
+  "provider": "gemini",
+  "dry_run": false,
+  "lessons": 6,
+  "drafts": 24,
+  "inserted_validated": 16,
+  "inserted_rejected": 8,
+  "skipped_existing": 0,
+  "duplicates_in_run": 0,
+  "reject_reasons": {
+    "missing_accepted_answers": 5,
+    "not_exactly_one_error": 1,
+    "answer_leaked_in_prompt": 1,
+    "independent_check_mismatch": 1
+  },
+  "independent": {
+    "match": 10,
+    "mismatch": 1
+  },
+  "by_type": {
+    "translate_vi_en:validated": 6,
+    "mcq:validated": 5,
+    "cloze:validated": 3,
+    "error_correction:rejected": 3,
+    "error_correction:validated": 2,
+    "reorder:rejected": 4,
+    "mcq:rejected": 1
+  },
+  "stopped": null,
+  "llm_errors": [
+    {
+      "document_id": "gram-en-a1-prepositions-place-017",
+      "stage": "generate",
+      "code": "llm_content_blocked"
+    }
+  ],
+  "calls": {
+    "generate": "[exercise_generate_gemini] lời gọi thật: 7, dùng cache: 0",
+    "check": "[exercise_check_gemini] lời gọi thật: 3, dùng cache: 0"
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "total": 160,
+  "validated": 119,
+  "rejected": 41,
+  "pass_rate": 0.7438,
+  "by_type": {
+    "cloze": {
+      "total": 29,
+      "validated": 21,
+      "pass_rate": 0.7241
+    },
+    "error_correction": {
+      "total": 33,
+      "validated": 24,
+      "pass_rate": 0.7273
+    },
+    "mcq": {
+      "total": 33,
+      "validated": 31,
+      "pass_rate": 0.9394
+    },
+    "reorder": {
+      "total": 32,
+      "validated": 10,
+      "pass_rate": 0.3125
+    },
+    "translate_vi_en": {
+      "total": 33,
+      "validated": 33,
+      "pass_rate": 1.0
+    }
+  },
+  "by_level": {
+    "A1": {
+      "total": 56,
+      "validated": 44,
+      "pass_rate": 0.7857
+    },
+    "A2": {
+      "total": 52,
+      "validated": 39,
+      "pass_rate": 0.75
+    },
+    "B1": {
+      "total": 52,
+      "validated": 36,
+      "pass_rate": 0.6923
+    }
+  },
+  "reject_reasons": {
+    "missing_accepted_answers": 20,
+    "independent_check_mismatch": 10,
+    "cloze_not_exactly_one_blank": 1,
+    "empty_field": 1,
+    "answer_leaked_in_prompt": 4,
+    "not_exactly_one_error": 4,
+    "reorder_tokens_mismatch": 1,
+    "mcq_not_exactly_one_correct": 1
+  },
+  "independent_checked": 96,
+  "independent_match_rate": 0.8958,
+  "validated_per_lesson": {
+    "min": 3,
+    "max": 6,
+    "lessons_with_ge_3": 33,
+    "lessons_covered": 33
+  },
+  "length_words": {
+    "mean": 7.6,
+    "max": 14
+  },
+  "review_status": {
+    "unreviewed": 160
+  },
+  "note": "Tỷ lệ trùng lặp: bài trùng bị chặn bởi content_hash (không lưu); xem duplicates_in_run/skipped_existing trong exercise_generation_*.json."
+}

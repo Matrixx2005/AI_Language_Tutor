@@ -1,0 +1,28 @@
+{
+  "started_at": "2026-11-28T15:34:32+00:00",
+  "target": "main",
+  "provider": "gemini",
+  "dry_run": false,
+  "lessons": 1,
+  "drafts": 4,
+  "inserted_validated": 4,
+  "inserted_rejected": 0,
+  "skipped_existing": 0,
+  "duplicates_in_run": 0,
+  "reject_reasons": {},
+  "independent": {
+    "match": 3
+  },
+  "by_type": {
+    "error_correction:validated": 1,
+    "reorder:validated": 1,
+    "translate_vi_en:validated": 1,
+    "mcq:validated": 1
+  },
+  "stopped": null,
+  "llm_errors": [],
+  "calls": {
+    "generate": "[exercise_generate_gemini] lời gọi thật: 1, dùng cache: 0",
+    "check": "[exercise_check_gemini] lời gọi thật: 1, dùng cache: 0"
+  }
+}

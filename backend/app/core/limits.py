@@ -50,6 +50,7 @@ class AppLimits:
     settings: Settings
     clock: Clock = time.monotonic
     chat_user_minute: SlidingWindowLimiter = field(init=False)
+    exercise_submit_minute: SlidingWindowLimiter = field(init=False)
     llm_global_minute: SlidingWindowLimiter = field(init=False)
     login_email: SlidingWindowLimiter = field(init=False)
     login_ip: SlidingWindowLimiter = field(init=False)
@@ -60,6 +61,7 @@ class AppLimits:
     def __post_init__(self) -> None:
         s, c = self.settings, self.clock
         self.chat_user_minute = SlidingWindowLimiter(s.chat_user_per_minute, 60, clock=c)
+        self.exercise_submit_minute = SlidingWindowLimiter(s.exercise_submit_per_minute, 60, clock=c)
         self.llm_global_minute = SlidingWindowLimiter(s.llm_global_per_minute, 60, clock=c)
         self.login_email = SlidingWindowLimiter(s.auth_login_fails_per_email, s.auth_login_window_seconds, clock=c)
         self.login_ip = SlidingWindowLimiter(s.auth_login_fails_per_ip, s.auth_login_window_seconds, clock=c)

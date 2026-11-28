@@ -34,3 +34,7 @@ Thumbs.db
 # Streamlit: secrets cục bộ (không dùng, chặn phòng khi tạo nhầm)
 .streamlit/secrets.toml
 streamlit_app/.streamlit/secrets.toml
+
+# Cache lời gọi LLM của các script (Tuần 5B) và dữ liệu ngoài tải về (giữ bản quyền của nguồn)
+data/cache/
+data/external/

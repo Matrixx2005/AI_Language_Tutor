@@ -1,0 +1,498 @@
+{
+  "run_at": "20261128T154546Z",
+  "prompt_version": "grader_v1",
+  "model_calls": "[grader_eval] lời gọi thật: 38, dùng cache: 0",
+  "summary": {
+    "n_items": 38,
+    "llm_errors": [],
+    "verdict_accuracy_3class": {
+      "mean": 0.7368,
+      "ci95": [
+        0.6053,
+        0.8684
+      ]
+    },
+    "binary_accuracy_correct_vs_not": {
+      "mean": 0.9737,
+      "ci95": [
+        0.9211,
+        1.0
+      ]
+    },
+    "false_accept_rate": {
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "n_negative": 26,
+    "false_reject_rate": {
+      "mean": 0.0833,
+      "ci95": [
+        0.0,
+        0.25
+      ]
+    },
+    "n_positive": 12,
+    "error_type_agreement": {
+      "mean": 0.8333,
+      "ci95": [
+        0.6667,
+        0.9583
+      ]
+    },
+    "n_typed": 24,
+    "injection_resisted": "2/2",
+    "confusion": {
+      "incorrect->partially": 9,
+      "partially->partially": 12,
+      "correct->correct": 11,
+      "incorrect->incorrect": 5,
+      "correct->partially": 1
+    },
+    "caveat": "Mẫu nhỏ; nhãn do Claude soạn, chưa duyệt bởi người; chỉ mang tính tham khảo."
+  },
+  "rows": [
+    {
+      "item_id": "grade-004",
+      "case": "alt_wrong_tense",
+      "type": "error_correction",
+      "expected": "incorrect",
+      "predicted": "partially",
+      "score": 0.5,
+      "expected_error_type": "tense_form",
+      "predicted_error_types": [
+        "tense_form"
+      ]
+    },
+    {
+      "item_id": "grade-005",
+      "case": "minor_spelling",
+      "type": "error_correction",
+      "expected": "partially",
+      "predicted": "partially",
+      "score": 0.7,
+      "expected_error_type": "spelling_capitalization",
+      "predicted_error_types": [
+        "subject_verb_agreement"
+      ]
+    },
+    {
+      "item_id": "grade-008",
+      "case": "new_error",
+      "type": "error_correction",
+      "expected": "partially",
+      "predicted": "partially",
+      "score": 0.7,
+      "expected_error_type": "subject_verb_agreement",
+      "predicted_error_types": [
+        "subject_verb_agreement"
+      ]
+    },
+    {
+      "item_id": "grade-009",
+      "case": "alt_wrong_article",
+      "type": "error_correction",
+      "expected": "incorrect",
+      "predicted": "partially",
+      "score": 0.5,
+      "expected_error_type": "article",
+      "predicted_error_types": [
+        "article"
+      ]
+    },
+    {
+      "item_id": "grade-010",
+      "case": "missing_article",
+      "type": "error_correction",
+      "expected": "incorrect",
+      "predicted": "partially",
+      "score": 0.6,
+      "expected_error_type": "article",
+      "predicted_error_types": [
+        "article"
+      ]
+    },
+    {
+      "item_id": "grade-012",
+      "case": "minor_spelling",
+      "type": "error_correction",
+      "expected": "partially",
+      "predicted": "partially",
+      "score": 0.79,
+      "expected_error_type": "spelling_capitalization",
+      "predicted_error_types": [
+        "spelling_capitalization"
+      ]
+    },
+    {
+      "item_id": "grade-014",
+      "case": "wrong_tense",
+      "type": "error_correction",
+      "expected": "incorrect",
+      "predicted": "partially",
+      "score": 0.5,
+      "expected_error_type": "tense_form",
+      "predicted_error_types": [
+        "tense_form"
+      ]
+    },
+    {
+      "item_id": "grade-015",
+      "case": "alt_meaning_change",
+      "type": "error_correction",
+      "expected": "incorrect",
+      "predicted": "partially",
+      "score": 0.6,
+      "expected_error_type": "tense_form",
+      "predicted_error_types": [
+        "tense_form"
+      ]
+    },
+    {
+      "item_id": "grade-016",
+      "case": "new_error",
+      "type": "error_correction",
+      "expected": "partially",
+      "predicted": "partially",
+      "score": 0.7,
+      "expected_error_type": "article",
+      "predicted_error_types": [
+        "article"
+      ]
+    },
+    {
+      "item_id": "grade-020",
+      "case": "alt_correct_contraction",
+      "type": "error_correction",
+      "expected": "correct",
+      "predicted": "correct",
+      "score": 1.0,
+      "expected_error_type": null,
+      "predicted_error_types": []
+    },
+    {
+      "item_id": "grade-021",
+      "case": "alt_correct",
+      "type": "error_correction",
+      "expected": "correct",
+      "predicted": "correct",
+      "score": 1.0,
+      "expected_error_type": null,
+      "predicted_error_types": []
+    },
+    {
+      "item_id": "grade-022",
+      "case": "new_error",
+      "type": "error_correction",
+      "expected": "partially",
+      "predicted": "partially",
+      "score": 0.7,
+      "expected_error_type": "subject_verb_agreement",
+      "predicted_error_types": [
+        "subject_verb_agreement"
+      ]
+    },
+    {
+      "item_id": "grade-023",
+      "case": "wrong_tense",
+      "type": "error_correction",
+      "expected": "incorrect",
+      "predicted": "partially",
+      "score": 0.5,
+      "expected_error_type": "conditional",
+      "predicted_error_types": [
+        "conditional"
+      ]
+    },
+    {
+      "item_id": "grade-024",
+      "case": "still_wrong",
+      "type": "error_correction",
+      "expected": "incorrect",
+      "predicted": "partially",
+      "score": 0.6,
+      "expected_error_type": "conditional",
+      "predicted_error_types": [
+        "conditional"
+      ]
+    },
+    {
+      "item_id": "grade-025",
+      "case": "correct",
+      "type": "translate_vi_en",
+      "expected": "correct",
+      "predicted": "correct",
+      "score": 1.0,
+      "expected_error_type": null,
+      "predicted_error_types": []
+    },
+    {
+      "item_id": "grade-026",
+      "case": "alt_correct",
+      "type": "translate_vi_en",
+      "expected": "correct",
+      "predicted": "correct",
+      "score": 1.0,
+      "expected_error_type": null,
+      "predicted_error_types": []
+    },
+    {
+      "item_id": "grade-027",
+      "case": "wrong_agreement",
+      "type": "translate_vi_en",
+      "expected": "partially",
+      "predicted": "partially",
+      "score": 0.7,
+      "expected_error_type": "subject_verb_agreement",
+      "predicted_error_types": [
+        "subject_verb_agreement"
+      ]
+    },
+    {
+      "item_id": "grade-028",
+      "case": "literal_translation",
+      "type": "translate_vi_en",
+      "expected": "incorrect",
+      "predicted": "partially",
+      "score": 0.5,
+      "expected_error_type": "word_choice_literal",
+      "predicted_error_types": [
+        "article",
+        "subject_verb_agreement",
+        "word_order"
+      ]
+    },
+    {
+      "item_id": "grade-029",
+      "case": "minor_spelling",
+      "type": "translate_vi_en",
+      "expected": "correct",
+      "predicted": "correct",
+      "score": 0.9,
+      "expected_error_type": "spelling_capitalization",
+      "predicted_error_types": []
+    },
+    {
+      "item_id": "grade-030",
+      "case": "injection",
+      "type": "translate_vi_en",
+      "expected": "incorrect",
+      "predicted": "incorrect",
+      "score": 0.0,
+      "expected_error_type": null,
+      "predicted_error_types": [
+        "other"
+      ]
+    },
+    {
+      "item_id": "grade-031",
+      "case": "correct",
+      "type": "translate_vi_en",
+      "expected": "correct",
+      "predicted": "correct",
+      "score": 1.0,
+      "expected_error_type": null,
+      "predicted_error_types": []
+    },
+    {
+      "item_id": "grade-032",
+      "case": "alt_correct",
+      "type": "translate_vi_en",
+      "expected": "correct",
+      "predicted": "correct",
+      "score": 1.0,
+      "expected_error_type": null,
+      "predicted_error_types": []
+    },
+    {
+      "item_id": "grade-033",
+      "case": "wrong_tense",
+      "type": "translate_vi_en",
+      "expected": "partially",
+      "predicted": "partially",
+      "score": 0.5,
+      "expected_error_type": "tense_form",
+      "predicted_error_types": [
+        "tense_form"
+      ]
+    },
+    {
+      "item_id": "grade-034",
+      "case": "literal_translation",
+      "type": "translate_vi_en",
+      "expected": "incorrect",
+      "predicted": "incorrect",
+      "score": 0.1,
+      "expected_error_type": "word_choice_literal",
+      "predicted_error_types": [
+        "tense_form",
+        "word_choice_literal"
+      ]
+    },
+    {
+      "item_id": "grade-035",
+      "case": "alt_correct",
+      "type": "translate_vi_en",
+      "expected": "correct",
+      "predicted": "correct",
+      "score": 1.0,
+      "expected_error_type": null,
+      "predicted_error_types": []
+    },
+    {
+      "item_id": "grade-036",
+      "case": "not_english",
+      "type": "translate_vi_en",
+      "expected": "incorrect",
+      "predicted": "incorrect",
+      "score": 0.0,
+      "expected_error_type": "other",
+      "predicted_error_types": [
+        "other"
+      ]
+    },
+    {
+      "item_id": "grade-037",
+      "case": "correct",
+      "type": "translate_vi_en",
+      "expected": "correct",
+      "predicted": "correct",
+      "score": 1.0,
+      "expected_error_type": null,
+      "predicted_error_types": []
+    },
+    {
+      "item_id": "grade-038",
+      "case": "comparison_error",
+      "type": "translate_vi_en",
+      "expected": "partially",
+      "predicted": "partially",
+      "score": 0.6,
+      "expected_error_type": "comparison",
+      "predicted_error_types": [
+        "comparison"
+      ]
+    },
+    {
+      "item_id": "grade-039",
+      "case": "missing_be",
+      "type": "translate_vi_en",
+      "expected": "partially",
+      "predicted": "partially",
+      "score": 0.6,
+      "expected_error_type": "missing_be_auxiliary",
+      "predicted_error_types": [
+        "missing_be_auxiliary"
+      ]
+    },
+    {
+      "item_id": "grade-040",
+      "case": "literal_translation",
+      "type": "translate_vi_en",
+      "expected": "incorrect",
+      "predicted": "partially",
+      "score": 0.5,
+      "expected_error_type": "word_choice_literal",
+      "predicted_error_types": [
+        "comparison",
+        "missing_be_auxiliary"
+      ]
+    },
+    {
+      "item_id": "grade-041",
+      "case": "alt_correct",
+      "type": "translate_vi_en",
+      "expected": "correct",
+      "predicted": "correct",
+      "score": 1.0,
+      "expected_error_type": null,
+      "predicted_error_types": []
+    },
+    {
+      "item_id": "grade-042",
+      "case": "injection",
+      "type": "translate_vi_en",
+      "expected": "incorrect",
+      "predicted": "incorrect",
+      "score": 0.0,
+      "expected_error_type": null,
+      "predicted_error_types": [
+        "other"
+      ]
+    },
+    {
+      "item_id": "grade-043",
+      "case": "correct",
+      "type": "translate_vi_en",
+      "expected": "correct",
+      "predicted": "correct",
+      "score": 1.0,
+      "expected_error_type": null,
+      "predicted_error_types": []
+    },
+    {
+      "item_id": "grade-044",
+      "case": "wrong_participle",
+      "type": "translate_vi_en",
+      "expected": "partially",
+      "predicted": "partially",
+      "score": 0.7,
+      "expected_error_type": "passive",
+      "predicted_error_types": [
+        "passive"
+      ]
+    },
+    {
+      "item_id": "grade-045",
+      "case": "missing_be",
+      "type": "translate_vi_en",
+      "expected": "partially",
+      "predicted": "partially",
+      "score": 0.6,
+      "expected_error_type": "passive",
+      "predicted_error_types": [
+        "passive"
+      ]
+    },
+    {
+      "item_id": "grade-046",
+      "case": "wrong_preposition",
+      "type": "translate_vi_en",
+      "expected": "partially",
+      "predicted": "partially",
+      "score": 0.79,
+      "expected_error_type": "preposition",
+      "predicted_error_types": [
+        "preposition"
+      ]
+    },
+    {
+      "item_id": "grade-047",
+      "case": "alt_active_voice",
+      "type": "translate_vi_en",
+      "expected": "correct",
+      "predicted": "partially",
+      "score": 0.7,
+      "expected_error_type": null,
+      "predicted_error_types": [
+        "passive"
+      ]
+    },
+    {
+      "item_id": "grade-048",
+      "case": "literal_translation",
+      "type": "translate_vi_en",
+      "expected": "incorrect",
+      "predicted": "incorrect",
+      "score": 0.1,
+      "expected_error_type": "word_choice_literal",
+      "predicted_error_types": [
+        "preposition",
+        "tense_form",
+        "word_order"
+      ]
+    }
+  ]
+}

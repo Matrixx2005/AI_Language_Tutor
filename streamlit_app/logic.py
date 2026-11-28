@@ -146,3 +146,24 @@ def parse_review_status(markdown: str) -> dict[str, str]:
         if len(cells) >= 7 and cells[1].startswith("`gram-"):
             status[cells[1].strip("`")] = cells[6].replace("**", "")
     return status
+
+
+# ---------- Bài tập (Tuần 5B) ----------
+
+RULE_GRADED_TYPES = ("mcq", "cloze", "reorder")
+ALL_EXERCISE_TYPES = ("mcq", "cloze", "error_correction", "reorder", "translate_vi_en")
+EXERCISE_TYPE_LABELS = {"mcq": "Trắc nghiệm", "cloze": "Điền từ", "error_correction": "Sửa lỗi",
+                        "reorder": "Sắp xếp câu", "translate_vi_en": "Dịch Việt → Anh"}
+
+
+def exercise_types_allowed(is_public: bool, llm_provider: str | None) -> tuple[str, ...]:
+    """Chế độ công khai + backend dùng Gemini: chỉ dạng chấm bằng quy tắc (không tốn lượt LLM).
+    Sửa lỗi/dịch có thể cần LLM chấm nên bị ẩn."""
+    if is_public and llm_provider != "fake":
+        return RULE_GRADED_TYPES
+    return ALL_EXERCISE_TYPES
+
+
+def admin_page_enabled(env=None) -> bool:
+    """Trang duyệt bài chỉ hiện khi đã đặt mã truy cập (không để lộ khi chia sẻ link không có mã)."""
+    return access_code_required(env)

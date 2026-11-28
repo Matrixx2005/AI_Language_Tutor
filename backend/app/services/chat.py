@@ -32,6 +32,9 @@ from app.llm.service import LLMService
 from app.llm.types import ChatMessage, LLMRequest, LLMResult
 from app.models import ChatMessageRow, ChatSession, User
 from app.retrieval.citations import check_citations, format_context
+from app.retrieval.confidence import dense_top_score
+from app.retrieval.hybrid import HybridRetriever
+from app.retrieval.rewrite import LLMRewriter, branch_queries
 from app.retrieval.types import RetrievalError, RetrievedDoc
 from app.services.chat_history import StoredMessage, build_history
 
@@ -138,6 +141,13 @@ def _system_prompt(language_code: str, level_code: str, docs: list[RetrievedDoc]
                          context=format_context(docs))
 
 
+def _low_confidence_prompt(language_code: str, level_code: str) -> str:
+    language = get_language_config(language_code)
+    level = next((lv for lv in language.levels if lv.code == level_code), None)
+    return render_prompt(language_code, "tutor_low_confidence", level_code=level_code,
+                         level_name=level.display_name_vi if level else level_code)
+
+
 _CITATION_MARK = re.compile(r"\s?\[\d{1,2}(?:\s*,\s*\d{1,2})*\](?!\()")
 
 
@@ -168,7 +178,7 @@ def send_message(
         raise AppError(
             422, "message_too_long", f"Tin nhắn dài tối đa {settings.chat_max_message_chars} ký tự."
         )
-    rag = _RagRequest(rag_mode or settings.rag_mode, retriever_for)
+    rag = _RagRequest(rag_mode or settings.rag_mode, retriever_for, llm)
     if limits is None:
         return _process_turn(db, llm, user, chat, content, settings, None, rag)
 
@@ -266,9 +276,11 @@ def _all_messages_today(db: Session, start, end) -> int:
 class _RagRequest:
     """Chế độ trả lời của một lượt + cách lấy retriever (route truyền vào; test thay bằng bản in-memory)."""
 
-    def __init__(self, mode: str, retriever_for):
+    def __init__(self, mode: str, retriever_for, llm=None):
         self.mode = mode
         self.retriever_for = retriever_for
+        self.llm = llm  # dùng cho viết lại truy vấn khi RAG_QUERY_REWRITE bật
+        self.rewrite_status = "off"
 
 
 def _retrieve(rag: _RagRequest, query: str, language_code: str, level_code: str, settings) -> list[RetrievedDoc]:
@@ -281,6 +293,14 @@ def _retrieve(rag: _RagRequest, query: str, language_code: str, level_code: str,
     except Exception as exc:  # không dựng được retriever (thiếu gói, cấu hình sai...)
         raise RetrievalError(f"Không dựng được retriever ({type(exc).__name__})") from exc
     level = level_code if settings.rag_filter_level else None
+    if settings.rag_query_rewrite and rag.llm is not None:
+        # B1: viết lại truy vấn (tắt mặc định). Lỗi LLM/định dạng → Rewrite(ok=False) → dùng câu gốc, không làm hỏng truy xuất.
+        rewrite = LLMRewriter(rag.llm, language_code).rewrite_batch([("q", query)])["q"]
+        rag.rewrite_status = "ok" if rewrite.ok else f"skipped:{rewrite.error}"
+        sparse_q, dense_q = branch_queries(query, rewrite, "both")
+        if isinstance(retriever, HybridRetriever):
+            return retriever.search(query, language_code, settings.rag_top_k, level, sparse_query=sparse_q, dense_query=dense_q)
+        return retriever.search(dense_q, language_code, settings.rag_top_k, level)
     return retriever.search(query, language_code, settings.rag_top_k, level)
 
 
@@ -312,7 +332,16 @@ def _process_turn(db: Session, llm: LLMService, user: User, chat: ChatSession, c
         except RetrievalError as exc:
             fallback = True
             logger.warning("chat rag_fallback session=%s mode=%s reason=%s", chat_id, rag.mode, exc)
-    system_prompt = _system_prompt(language_code, level_code, docs if effective_mode != "llm_only" else None)
+    # B1: ngưỡng tin cậy (tắt mặc định). Điểm dense hạng 1 dưới ngưỡng → trả lời "không thấy trong bài học", không trích dẫn.
+    low_confidence = False
+    if effective_mode != "llm_only" and settings.rag_min_confidence is not None:
+        top = dense_top_score(docs)
+        low_confidence = top is None or top < settings.rag_min_confidence
+    if low_confidence:
+        system_prompt = _low_confidence_prompt(language_code, level_code)
+        docs = []
+    else:
+        system_prompt = _system_prompt(language_code, level_code, docs if effective_mode != "llm_only" else None)
 
     # 2) Gọi LLM khi không có transaction nào mở. Nội dung người dùng chỉ nằm trong danh sách tin
     #    nhắn, không bao giờ được ghép vào system prompt.
@@ -345,7 +374,7 @@ def _process_turn(db: Session, llm: LLMService, user: User, chat: ChatSession, c
 
     # 3) Kiểm tra trích dẫn: chỉ [n] thuộc tập đã truy xuất được giữ; [n] khác bị xóa và ghi lại.
     answer, sources, citations = result.text, None, None
-    if effective_mode != "llm_only":
+    if effective_mode != "llm_only" and not low_confidence:
         check = check_citations(result.text, len(docs))
         answer = check.text
         citations = {"valid": list(check.valid), "invalid": list(check.invalid)}
@@ -363,6 +392,7 @@ def _process_turn(db: Session, llm: LLMService, user: User, chat: ChatSession, c
         content=answer,
         rag_mode=effective_mode,
         rag_fallback=fallback,
+        rag_low_confidence=low_confidence,
         sources=sources,
         citations=citations,
         model_id=f"{fake_prefix}{result.model}",  # `fake:` = câu trả lời giả lập, không tốn hạn mức
@@ -378,10 +408,10 @@ def _process_turn(db: Session, llm: LLMService, user: User, chat: ChatSession, c
     db.refresh(assistant_row)
     logger.info(
         "chat ok session=%s history_messages=%d message_chars=%d reply_chars=%d latency_ms=%d "
-        "in_tokens=%s out_tokens=%s truncated=%s rag_mode=%s rag_fallback=%s sources=%d "
+        "in_tokens=%s out_tokens=%s truncated=%s rag_mode=%s rag_fallback=%s low_confidence=%s rewrite=%s sources=%d "
         "citations_valid=%d citations_invalid=%d",
         chat_id, len(history), len(content), len(result.text), result.latency_ms,
-        result.input_tokens, result.output_tokens, result.truncated, effective_mode, fallback, len(docs),
+        result.input_tokens, result.output_tokens, result.truncated, effective_mode, fallback, low_confidence, rag.rewrite_status, len(docs),
         len(citations["valid"]) if citations else 0, len(citations["invalid"]) if citations else 0,
     )
     return user_row, assistant_row

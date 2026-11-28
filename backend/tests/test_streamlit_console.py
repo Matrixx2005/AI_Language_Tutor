@@ -108,3 +108,22 @@ def test_app_does_not_crash_when_backend_is_down(monkeypatch):
     at.switch_page("pages/7_he_thong.py").run()
     assert not at.exception
     assert any("Không kết nối được backend" in e.value for e in at.error)
+
+
+def test_exercise_types_in_public_mode_and_admin_page_gate():
+    assert logic.exercise_types_allowed(True, "gemini") == ("mcq", "cloze", "reorder")  # không tốn lượt LLM
+    assert logic.exercise_types_allowed(True, None) == ("mcq", "cloze", "reorder")
+    assert len(logic.exercise_types_allowed(True, "fake")) == 5 and len(logic.exercise_types_allowed(False, "gemini")) == 5
+    assert logic.admin_page_enabled({}) is False and logic.admin_page_enabled({"STREAMLIT_ACCESS_CODE": "x"}) is True
+
+
+def test_new_exercise_pages_do_not_crash_when_backend_down(monkeypatch):
+    monkeypatch.delenv("STREAMLIT_ACCESS_CODE", raising=False)
+    monkeypatch.setenv("STREAMLIT_API_BASE_URL", "http://127.0.0.1:9/api/v1")
+    at = AppTest.from_file(str(APP_DIR / "app.py"), default_timeout=30).run()
+    at.session_state["token"] = "khong-hop-le"
+    for page in ("pages/8_bai_tap.py", "pages/9_loi_cua_toi.py", "pages/10_duyet_bai_tap.py", "pages/11_chat_luong_bai_tap.py"):
+        at.switch_page(page).run()
+        assert not at.exception, page
+    at.switch_page("pages/10_duyet_bai_tap.py").run()
+    assert any("STREAMLIT_ACCESS_CODE" in i.value for i in at.info)  # trang duyệt bị ẩn khi chưa có mã

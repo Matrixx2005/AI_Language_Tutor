@@ -24,8 +24,10 @@ class AppError(Exception):
         code: str,
         message: str,
         headers: dict[str, str] | None = None,
+        details: list[dict[str, Any]] | None = None,
     ) -> None:
         super().__init__(code)
+        self.details = details
         self.status_code = status_code
         self.code = code
         self.message = message
@@ -47,7 +49,7 @@ def _log_rejected(request: Request, status_code: int, reason: str) -> None:
 async def _app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     _log_rejected(request, exc.status_code, exc.code)
     return JSONResponse(
-        error_body(exc.code, exc.message), status_code=exc.status_code, headers=exc.headers
+        error_body(exc.code, exc.message, exc.details), status_code=exc.status_code, headers=exc.headers
     )
 
 

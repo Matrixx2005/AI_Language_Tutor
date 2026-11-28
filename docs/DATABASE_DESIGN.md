@@ -204,3 +204,70 @@ Trạng thái duyệt: **ERD logic đã được người dùng (người quản
 
 
 **Đã chốt (Tuần 3, Buổi 5):** `placement_results.answer_summary` lưu **chi tiết từng câu** (`question_id`, `selected`, `is_correct`) kèm nhóm (trình độ × loại), chủ đề cần ôn, ngưỡng đã dùng và trạng thái ngưỡng. Lý do: cần để hiển thị lại kết quả/đáp án sau khi nộp, tính nhóm yếu, và hiệu chuẩn ngưỡng sau này; dữ liệu nhỏ (30 câu).
+
+## Cập nhật Tuần 4–5B (migration `a4c9e2f17b30`, `f5bf4a121058`)
+
+```mermaid
+erDiagram
+  users ||--o{ exercise_attempts : "làm"
+  users ||--o{ error_events : "mắc"
+  exercises ||--o{ exercise_attempts : "được làm"
+  exercises ||--o{ error_events : "liên quan"
+  exercise_attempts ||--o{ error_events : "sinh ra"
+  chat_sessions ||--o{ chat_messages : "gồm"
+```
+
+**`chat_messages`, thêm cột:**
+- Tuần 4: `rag_mode` (chế độ thực sự dùng), `sources` JSONB (tài liệu đã truy xuất), `rag_fallback` (đã hạ cấp về llm_only); `citations` JSONB `{valid, invalid}`.
+- Tuần 5B: `rag_low_confidence` (bật khi `RAG_MIN_CONFIDENCE` không đạt).
+
+**`exercises`** (mọi bảng mới đều có `language_code`):
+
+| Cột | Nội dung |
+|---|---|
+| `exercise_id` | PK |
+| `level_code`, `exercise_type` | mcq, cloze, error_correction, reorder, translate_vi_en |
+| `document_id`, `source_document_ids` JSONB, `topic`, `error_type` | `error_type` thuộc taxonomy |
+| `prompt_payload` JSONB | Đề, công khai |
+| `answer_key` JSONB | **Chỉ phía máy chủ, không bao giờ trả trước khi nộp** |
+| `explanation` | Giải thích |
+| `generation_meta` JSONB | model_id, prompt_version, rag_mode, thời gian, independent_check |
+| `content_hash` | Khử trùng lặp; **UNIQUE (`language_code`, `content_hash`)** |
+| `validation_status` | draft \| validated \| rejected |
+| `reject_reasons` JSONB | Lý do loại |
+| `review_status` | unreviewed \| approved \| rejected_by_human |
+| `reviewer`, `reviewed_at`, `created_at` | |
+
+Index `(language_code, validation_status, document_id, exercise_type)`. Bài bị loại vẫn được lưu kèm lý do: đây là dữ liệu đo chất lượng.
+
+**`exercise_attempts`:**
+
+| Cột | Nội dung |
+|---|---|
+| `attempt_id` | PK |
+| `user_id` FK, `exercise_id` FK, `language_code` | |
+| `answer` JSONB `{text}` | |
+| `is_correct`, `score` | |
+| `graded_by` | rule \| llm \| pending |
+| `grading_status` | graded \| pending |
+| `feedback` JSONB | verdict, errors, feedback_vi |
+| `error_types` JSONB | |
+| `latency_ms`, `created_at` | |
+
+- Index `(user_id, created_at)`.
+- Bài làm cần LLM chấm được lưu `pending` **trước** khi gọi LLM, nên không bị mất khi LLM lỗi; `POST …/regrade` chấm lại, idempotent.
+
+**`error_events`:**
+
+| Cột | Nội dung |
+|---|---|
+| `event_id` | PK |
+| `user_id` FK, `language_code` | |
+| `error_type` | Thuộc taxonomy |
+| `document_id`, `exercise_id` FK, `attempt_id` FK | |
+| `created_at` | |
+
+- Index `(user_id, created_at)`.
+- Dữ liệu đầu vào cho cá nhân hóa ở Tuần 6.
+
+Khóa ngoại dùng `RESTRICT`, giống các bảng cũ; chính sách xóa dữ liệu vẫn chưa chốt.

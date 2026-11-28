@@ -153,6 +153,48 @@ Mã nguồn: `backend/app/retrieval/`. Không có mã nào hardcode tiếng Anh 
 - **Log:** chỉ ghi metadata (`rag_mode`, `rag_fallback`, số nguồn, số trích dẫn hợp lệ/không hợp lệ); không ghi câu hỏi, câu trả lời hay ngữ cảnh.
 - **Số đo** (dev, `experiments/README.md`): hybrid R@3 = 1,00, MRR 0,883, p95 359 ms; dense R@3 = 0,95, MRR 0,863, p95 316 ms. BGE-M3 trên CPU: p95 nhúng truy vấn ≤ 110 ms, RAM 2,1 GB.
 
+## Bài tập, chấm bài, phân tích lỗi (Tuần 5B)
+
+**Sinh bài tập** (`scripts/generate_exercises.py` → `services/exercise_generation.py`, chạy ngoài app):
+1. Chọn bài học; ngữ cảnh là đúng nội dung bài đó (không cần truy xuất).
+2. Gọi LLM với prompt `prompts/<code>/exercise_generate.md` (structured output).
+3. Đưa qua **bộ kiểm tra thuần** (`app/exercises/validators.py`): schema và độ dài; luật riêng cho từng dạng; không lộ đáp án; độ khó theo cấp (`languages/<code>.yaml`); taxonomy; chủ đề khớp bài nguồn; khử trùng lặp bằng hash; lọc từ khóa không phù hợp.
+4. **Kiểm tra độc lập**: LLM giải bài *không kèm đáp án*, kết quả chấm lại bằng chính bộ chấm quy tắc.
+5. Ghi DB: `validated`, hoặc `rejected` kèm lý do. Script không giữ giao dịch DB trong lúc gọi LLM.
+
+**Ngân sách LLM** (`scripts/llm_budget.py`):
+- `--dry-run`, `--max-calls`;
+- cache theo hash (`data/cache/llm/`, nằm trong `.gitignore`), nên chạy lại là tiếp tục;
+- tối đa 8 lời gọi/phút; dừng khi gặp 429 hoặc hết hạn mức;
+- sổ ghi `ledger.jsonl`.
+
+**Chấm bài** (`app/exercises/grading.py`, `services/exercises.py`):
+- **mcq, cloze, reorder**: chấm bằng quy tắc sau khi chuẩn hóa theo ngôn ngữ (NFC, chữ thường, dấu nháy, khoảng trắng, dấu câu cuối câu).
+- **error_correction**: khớp danh sách câu sửa chấp nhận; câu "gần đúng" (độ giống ≥ 0,6) được chuyển cho LLM phán quyết.
+- **translate_vi_en**: LLM chấm theo rubric.
+- **Kết quả LLM**: schema chặt (`verdict`, điểm bị kẹp theo khoảng của verdict, `error_type` ngoài taxonomy → `other`).
+- **Chống prompt injection**: bài làm là dữ liệu nằm trong khối `<<<BAI_LAM>>>` … `<<<HET_BAI_LAM>>>`; dấu phân cách trong bài làm bị xóa; độ dài bị cắt còn 400 ký tự.
+- **Không giữ giao dịch DB khi gọi LLM**: bài làm được lưu `pending` và commit **trước**, rồi mới gọi LLM. Nếu LLM lỗi, API trả mã ổn định kèm `details.attempt_id`; `POST /exercises/attempts/{id}/regrade` chấm lại, idempotent.
+- **Giới hạn**: chấm bằng LLM dùng chung tạm khóa và ngưỡng phút toàn hệ thống với chat; thêm giới hạn riêng số lần nộp mỗi phút và mỗi ngày.
+
+**Không lộ đáp án**: `ExerciseRead` chỉ có `prompt`. Đáp án, giải thích và bài học nguồn (`solution`) chỉ có trong `AttemptRead` sau khi đã nộp. Có test quét đệ quy mọi khóa trong phản hồi.
+
+**Phân tích lỗi** (`app/exercises/analysis.py`, hàm thuần):
+- Mỗi lượt làm sai ghi `error_events`: bài chấm bằng quy tắc dùng `error_type` của bài; bài chấm bằng LLM dùng loại lỗi LLM trả về (đã chuẩn hóa).
+- `summarize`: loại lỗi hay gặp, độ chính xác theo chủ đề và theo dạng bài, xu hướng 7/30 ngày theo `USER_TIMEZONE`, chủ đề nên luyện.
+- `choose_next`: ưu tiên chủ đề có lỗi trong 7 ngày → chủ đề yếu từ placement → tránh bài vừa làm; có seed nên tất định.
+
+**Điểm nối Tuần 6:**
+- `error_events` và `exercise_attempts` là đầu vào cho mô hình thành thạo (`mastery`) và lịch ôn tập.
+- `choose_next` là chỗ thay bằng thuật toán cá nhân hóa; API `GET /exercises/next` giữ nguyên.
+
+**Duyệt bài:** API `/exercises/admin/*` chỉ mở khi `EXERCISE_ADMIN_ENABLED=true`, ngược lại trả 404. Trang Streamlit "Duyệt bài tập" chỉ hiện khi có `STREAMLIT_ACCESS_CODE` và không ở chế độ công khai. Hiện chưa có phân quyền theo vai trò (Tuần 8).
+
+**B1 — cải tiến truy xuất** (`app/retrieval/rewrite.py`, `confidence.py`):
+- **`RAG_QUERY_REWRITE`**: LLM viết lại câu hỏi thành truy vấn và từ khóa tiếng Anh; câu hỏi nằm trong khối phân cách; lỗi → dùng câu gốc.
+- **`RAG_MIN_CONFIDENCE`**: điểm dense hạng 1 dưới ngưỡng → dùng prompt `tutor_low_confidence.md`, không trích dẫn, gắn cờ `rag_low_confidence`.
+- Cả hai **mặc định tắt**, theo quy tắc quyết định ghi trước (`experiments/README.md` mục 4).
+
 ## Giới hạn tần suất và chống lạm dụng (Tuần 3, Buổi 4)
 
 - **Thuật toán:** cửa sổ trượt dạng nhật ký (`app/core/rate_limit.py`): đúng nghĩa "N lần trong X giây", Retry-After chính xác, bộ nhớ chặn trên (≤ `limit` mốc mỗi khóa, ≤ 10.000 khóa; dọn khóa hết hạn rồi bỏ khóa cũ nhất). An toàn đa luồng bằng `threading.Lock`. Ngưỡng cấu hình qua `.env` (`0` = tắt).
