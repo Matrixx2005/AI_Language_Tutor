@@ -95,6 +95,20 @@ Tách theo loại truy vấn và ngôn ngữ (index_text không có keywords_vi)
 - **Rủi ro rò rỉ:** từ khóa do Claude soạn, và Claude cũng là người viết 30 truy vấn đánh giá ở Tuần 1. Dù đã viết từ khóa theo chủ đề và không chép câu truy vấn, vẫn có thể vô tình khớp cách diễn đạt của dev split. Mức cải thiện vì vậy có thể bị thổi phồng.
 - **Quyết định:** giữ `RAG_INDEX_KEYWORDS_VI=false` (mặc định). File `data/processed/keywords_vi_v1.json` tách riêng và có trạng thái CHƯA DUYỆT; 15 bài gốc không bị sửa. Chỉ nên bật khi có người duyệt từ khóa và đánh giá lại.
 
+### Đo lại sau khi duyệt corpus (`retrieval_dev_20261128T142006Z.json`)
+
+Người dùng duyệt corpus; 4 bài đổi chính tả sang Anh–Mỹ. Không đổi tham số nào.
+
+- **Mọi chỉ số Recall@K và MRR giống hệt** bảng ở trên, ở cả 6 cấu hình.
+- **Độ trễ thấp hơn đáng kể** dù code và cấu hình không đổi:
+
+  | Phương pháp | p50 | p95 | p95 lần trước |
+  |---|---|---|---|
+  | Dense | 81,5 ms | 115,1 ms | 316 ms |
+  | Hybrid | 67,0 ms | 79,5 ms | 359 ms |
+
+  Kết luận: độ trễ trên máy phát triển **dao động giữa các lần chạy**, nhiều khả năng do tải máy (các ứng dụng khác, chế độ nguồn điện). Vì vậy độ trễ chỉ nên đọc như một khoảng, khoảng 70–360 ms cho mỗi truy vấn. Cả hai lần đều được giữ trong `retrieval_runs.jsonl`.
+
 ### Đề xuất cấu hình
 
 - **`RAG_MODE=hybrid`**, keywords_vi **tắt**. Với `RAG_TOP_K=3`, chỉ số quan trọng nhất là R@3, và hybrid đạt R@3 = 1,00 trên dev.

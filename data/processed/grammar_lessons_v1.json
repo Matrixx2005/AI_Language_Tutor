@@ -186,10 +186,10 @@
     "topic": "prepositions of time",
     "language": "English",
     "language_code": "en",
-    "content": "Use at for clock times and short points: at 7 o'clock, at noon, at night, at the weekend (British English). Use on for days and dates: on Monday, on 5 May, on my birthday, on Sunday morning. Use in for longer periods: in the morning, in July, in 2026, in summer. Do not use a preposition before this, next, last, every, today, tomorrow or yesterday: I will call you next Monday, not on next Monday. Common mistake for Vietnamese learners: I was born on 2005. Correct: I was born in 2005. Another mistake: in Monday. Correct: on Monday.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "content": "Use at for clock times and short points: at 7 o'clock, at noon, at night. Use on for days and dates: on Monday, on May 5, on my birthday, on Sunday morning, on the weekend. Use in for longer periods: in the morning, in July, in 2026, in summer. Do not use a preposition before this, next, last, every, today, tomorrow or yesterday: I will call you next Monday, not on next Monday. Common mistake for Vietnamese learners: I was born on 2005. Correct: I was born in 2005. Another mistake: in Monday. Correct: on Monday.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.1"
   },
   {
     "document_id": "gram-en-a1-prepositions-place-017",
@@ -199,9 +199,9 @@
     "language": "English",
     "language_code": "en",
     "content": "Use in for a space with limits: in the box, in the kitchen, in Hanoi, in Vietnam. Use on for a surface: on the table, on the wall, on the second floor. Use at for a point or a place where an activity happens: at the bus stop, at school, at home, at work. Use under for a lower position, next to for beside, and between for two things: The cat is under the bed. The bank is next to the café. The shop is between the bank and the school. Common mistake: The book is in the table. Correct: The book is on the table.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.0"
   },
   {
     "document_id": "gram-en-a1-possessives-018",
@@ -211,9 +211,9 @@
     "language": "English",
     "language_code": "en",
     "content": "Possessive adjectives come before a noun: my, your, his, her, its, our, their. This is my phone. Their house is big. Use 's after a person or animal to show who owns something: Lan's bag, my brother's car, the dog's bed. For a plural noun that ends in -s, add only an apostrophe: my parents' house. Its (no apostrophe) means belonging to it; it's means it is. Common mistake for Vietnamese learners: the bag of Lan. Natural English: Lan's bag. Another mistake: his for a woman. Correct: Mai loves her job.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.0"
   },
   {
     "document_id": "gram-en-a1-can-ability-019",
@@ -223,9 +223,9 @@
     "language": "English",
     "language_code": "en",
     "content": "Use can + base verb to talk about ability: I can swim. She can speak three languages. The form is the same for every subject; do not add -s: He can play the guitar, not He cans plays. Negative: cannot or can't: I can't drive. Questions put can before the subject: Can you cook? Short answers: Yes, I can. No, I can't. Do not use to after can: She can dance, not She can to dance. For ability in the past, use could: When I was five, I could read.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.0"
   },
   {
     "document_id": "gram-en-a1-demonstratives-020",
@@ -234,10 +234,10 @@
     "topic": "demonstratives",
     "language": "English",
     "language_code": "en",
-    "content": "Use this and these for things near you; use that and those for things far from you. This and that are singular: This pen is red. That building is a hospital. These and those are plural: These shoes are new. Those people are my neighbours. They can also stand alone as pronouns: What is this? Those are mine. On the phone, say: Hello, this is Nam. Common mistake: This shoes are expensive. Correct: These shoes are expensive.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "content": "Use this and these for things near you; use that and those for things far from you. This and that are singular: This pen is red. That building is a hospital. These and those are plural: These shoes are new. Those people are my neighbors. They can also stand alone as pronouns: What is this? Those are mine. On the phone, say: Hello, this is Nam. Common mistake: This shoes are expensive. Correct: These shoes are expensive.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.1"
   },
   {
     "document_id": "gram-en-a1-frequency-adverbs-021",
@@ -247,9 +247,9 @@
     "language": "English",
     "language_code": "en",
     "content": "Adverbs of frequency say how often something happens: always, usually, often, sometimes, rarely, never. Put them before the main verb: I usually walk to school. She never eats meat. Put them after the verb be: He is always late. We are often tired on Fridays. In questions, use How often: How often do you play football? Never already has a negative meaning, so do not add not: I never drink coffee, not I don't never drink coffee. Common mistake: I go always to the gym. Correct: I always go to the gym.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.0"
   },
   {
     "document_id": "gram-en-a2-superlatives-022",
@@ -259,9 +259,9 @@
     "language": "English",
     "language_code": "en",
     "content": "Use a superlative to compare one thing with a whole group. Short adjectives add -est: tall → the tallest, cheap → the cheapest. Adjectives ending in -y change to -iest: happy → the happiest. Long adjectives use the most: the most expensive, the most interesting. Irregular forms: good → the best, bad → the worst, far → the farthest. Use the before the superlative and often in or of after it: Mount Everest is the highest mountain in the world. She is the youngest of the three sisters. Common mistake: the most tallest. Correct: the tallest.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.0"
   },
   {
     "document_id": "gram-en-a2-past-continuous-023",
@@ -271,9 +271,9 @@
     "language": "English",
     "language_code": "en",
     "content": "Form the past continuous with was or were + verb-ing: I was reading. They were playing football. Use it for an action in progress at a time in the past: At 8 p.m. yesterday, we were having dinner. It often describes a longer background action interrupted by a short action in the past simple: I was walking home when it started to rain. Use while with two actions happening at the same time: While she was cooking, he was cleaning. Verbs of state such as know or like are not normally used in the continuous: I knew the answer, not I was knowing.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.0"
   },
   {
     "document_id": "gram-en-a2-will-future-024",
@@ -283,9 +283,9 @@
     "language": "English",
     "language_code": "en",
     "content": "Use will + base verb for predictions based on opinion: I think it will rain tomorrow. Use it for decisions made at the moment of speaking: The phone is ringing. I'll answer it. Use it for offers and promises: I'll help you with your bag. I will call you tonight. Negative: will not or won't: She won't be late. Questions: Will you come to the party? The form is the same for every subject; do not add to: He will go, not He will to go. For plans already made, English usually prefers going to or the present continuous.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.0"
   },
   {
     "document_id": "gram-en-a2-verb-patterns-025",
@@ -294,10 +294,10 @@
     "topic": "gerunds and infinitives",
     "language": "English",
     "language_code": "en",
-    "content": "Some verbs are followed by verb-ing: enjoy, finish, mind, avoid, practise. I enjoy swimming. She finished doing her homework. Other verbs are followed by to + base verb: want, need, decide, hope, plan, would like. I want to learn English. They decided to move. After prepositions, always use verb-ing: She is good at drawing. Thanks for helping me. Like, love and hate can take either form with little change in meaning: I like reading / I like to read. Common mistake for Vietnamese learners: I want learn English. Correct: I want to learn English.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "content": "Some verbs are followed by verb-ing: enjoy, finish, mind, avoid, practice. I enjoy swimming. She finished doing her homework. Other verbs are followed by to + base verb: want, need, decide, hope, plan, would like. I want to learn English. They decided to move. After prepositions, always use verb-ing: She is good at drawing. Thanks for helping me. Like, love and hate can take either form with little change in meaning: I like reading / I like to read. Common mistake for Vietnamese learners: I want learn English. Correct: I want to learn English.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.1"
   },
   {
     "document_id": "gram-en-a2-adverbs-manner-026",
@@ -307,9 +307,9 @@
     "language": "English",
     "language_code": "en",
     "content": "Adverbs of manner describe how someone does something. Most are formed by adding -ly to an adjective: slow → slowly, careful → carefully, happy → happily. Some are irregular: good → well, fast → fast, hard → hard, late → late. Adverbs of manner usually come after the verb or after the object: She speaks English well. He drives carefully. Use an adjective, not an adverb, after be, look, seem and feel: You look tired. Common mistake: He runs very quick. Correct: He runs very quickly. Hardly means almost not, so it is not the adverb of hard.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.0"
   },
   {
     "document_id": "gram-en-b1-second-conditional-027",
@@ -318,10 +318,10 @@
     "topic": "second conditional",
     "language": "English",
     "language_code": "en",
-    "content": "Use the second conditional for unreal or unlikely situations in the present or future. Form: if + past simple, would + base verb. If I had more money, I would travel around the world. If she lived nearer, we would see her more often. The past form does not mean past time here; it shows that the situation is not real. With be, were is often used for every subject, especially in advice: If I were you, I would apologise. Do not put would in the if-clause: If I would have time, I would help is wrong. Correct: If I had time, I would help. Compare: If it rains, we will stay home (first conditional: a real possibility).",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "content": "Use the second conditional for unreal or unlikely situations in the present or future. Form: if + past simple, would + base verb. If I had more money, I would travel around the world. If she lived nearer, we would see her more often. The past form does not mean past time here; it shows that the situation is not real. With be, were is often used for every subject, especially in advice: If I were you, I would apologize. Do not put would in the if-clause: If I would have time, I would help is wrong. Correct: If I had time, I would help. Compare: If it rains, we will stay home (first conditional: a real possibility).",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.1"
   },
   {
     "document_id": "gram-en-b1-passive-voice-028",
@@ -331,9 +331,9 @@
     "language": "English",
     "language_code": "en",
     "content": "Use the passive when the action is more important than the person who does it, or when the doer is unknown. Form: be + past participle. Present simple: English is spoken in many countries. Past simple: This bridge was built in 1990. The windows were cleaned yesterday. Add by + agent only when it gives useful information: The book was written by a Vietnamese author. Questions: Where was this phone made? Negative: The letters were not sent. Common mistake: The house was build last year. Correct: The house was built last year. Only verbs with an object can become passive.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.0"
   },
   {
     "document_id": "gram-en-b1-reported-speech-029",
@@ -343,9 +343,9 @@
     "language": "English",
     "language_code": "en",
     "content": "Reported speech tells what another person said without quoting the exact words. After a past reporting verb such as said or told, the tense usually moves back: present simple → past simple, present continuous → past continuous, will → would, can → could. \"I am tired,\" she said → She said (that) she was tired. \"We will call you,\" they said → They said they would call me. Pronouns and time words also change: tomorrow → the next day, here → there. Use tell with a person as object and say without one: He told me he was busy. He said he was busy. Common mistake: He said me that he was busy.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.0"
   },
   {
     "document_id": "gram-en-b1-used-to-030",
@@ -355,9 +355,9 @@
     "language": "English",
     "language_code": "en",
     "content": "Use used to + base verb for habits or states in the past that are not true now. I used to play football every day. She used to live in Da Nang, but now she lives in Hue. Negative: didn't use to (no -d after use): I didn't use to like coffee. Questions: Did you use to walk to school? Used to is only for the past. For present habits, use the present simple with usually: I usually get up at six. Do not confuse it with be used to + verb-ing, which means be familiar with: I am used to getting up early.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.0"
   },
   {
     "document_id": "gram-en-b1-past-perfect-031",
@@ -367,9 +367,9 @@
     "language": "English",
     "language_code": "en",
     "content": "Form the past perfect with had + past participle: I had finished. They had left. Use it to show that one past action happened before another past action or time. When we arrived at the station, the train had already left. She was nervous because she had never flown before. If the order is clear from before or after, the past simple is also possible: She left after she had finished work / after she finished work. The past perfect is common after by the time and in reported speech. Common mistake: overusing it for any past action. Use the past simple for a simple sequence: I got up, had breakfast and left.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.0"
   },
   {
     "document_id": "gram-en-b1-too-enough-032",
@@ -379,9 +379,9 @@
     "language": "English",
     "language_code": "en",
     "content": "Too comes before an adjective or adverb and means more than is needed or acceptable: This coffee is too hot to drink. You are driving too fast. Enough comes after an adjective or adverb but before a noun: She is old enough to vote. We don't have enough chairs. Add for + person or to + verb to show the result: The box is too heavy for me to lift. Too has a negative meaning; it is not the same as very: The film was very long, but I enjoyed it. Common mistake: He is enough tall to reach the shelf. Correct: He is tall enough.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.0"
   },
   {
     "document_id": "gram-en-b1-zero-conditional-033",
@@ -391,8 +391,8 @@
     "language": "English",
     "language_code": "en",
     "content": "Use the zero conditional for facts and things that are always true when a condition happens. Form: if or when + present simple, present simple. If you heat ice, it melts. When I drink coffee late, I can't sleep. If and when have almost the same meaning in this pattern because the result always follows. Use an imperative in the result for instructions: If the alarm rings, leave the building. Compare with the first conditional, which talks about one specific future situation: If it rains tomorrow, we will cancel the trip.",
-    "source": "Original content drafted for AI Language Tutor; pending human review.",
+    "source": "Original content drafted for AI Language Tutor; reviewed and approved by project maintainer 2026-11-28 (American English).",
     "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); approved by project maintainer 2026-11-18.",
-    "version": "v1.0-draft"
+    "version": "v1.0"
   }
 ]

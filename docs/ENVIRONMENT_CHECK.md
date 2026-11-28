@@ -704,3 +704,15 @@ Bảng nghiệm thu: `docs/WEEK4_ACCEPTANCE.md`. Số đo: `experiments/README.m
 - **Chưa kiểm chứng:**
   - Giao diện mới (chữ đậm, danh sách) trên trình duyệt.
   - Câu trả lời thật sau khi đổi chữ "ngoặc tròn" trong prompt.
+
+### Tuần 4 — duyệt corpus (2026-11-28)
+
+- **Người dùng tự báo:** duyệt đạt cả 18 bài mới; chọn chính tả **Anh–Mỹ** cho toàn bộ corpus.
+- **Claude đã chạy:**
+  - Quét 33 bài tìm chính tả Anh–Anh: chỉ có 4 chỗ, đều trong bài mới; đã sửa 016, 020, 025, 027. 15 bài cũ không đổi (thay đổi đầu tiên trong `git diff` ở dòng 189, nằm trong bài 016).
+  - `source` và `version` của 18 bài ghi người duyệt và ngày (`v1.0`, riêng 4 bài sửa là `v1.1`); `docs/CORPUS_REVIEW.md` ghi "Đã duyệt".
+  - `validate_dataset.py`: 33 bài, 0 lỗi.
+  - `index_corpus.py`: mỗi collection cập nhật 4 bài, 29 bài không đổi.
+  - Đo lại trên dev: R@K và MRR giống hệt; độ trễ thấp hơn (dense p95 115 ms, hybrid 80 ms) — dao động giữa các lần chạy, đã ghi trong `experiments/README.md`.
+  - `pytest` 400 passed, 5 skipped.
+- **Chưa duyệt:** `keywords_vi_v1.json` (hiện đang tắt, không dùng).

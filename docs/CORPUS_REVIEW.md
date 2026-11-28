@@ -9,6 +9,14 @@ Tất cả nội dung là bản nháp gốc (*Original content drafted for AI La
 
 **Claude không được và không tự ghi "đã duyệt".** Cột trạng thái chỉ đổi khi người duyệt xác nhận.
 
+**Kết quả duyệt (2026-11-28):** người quản lý dự án duyệt **đạt cả 18 bài mới** và chọn chính tả **Anh–Mỹ** cho toàn bộ corpus. Đã sửa 4 bài:
+- 016: `at the weekend (British English)` → `on the weekend`; `on 5 May` → `on May 5`;
+- 020: `neighbours` → `neighbors`;
+- 025: `practise` → `practice`;
+- 027: `apologise` → `apologize`.
+
+15 bài cũ không có chính tả Anh–Anh nên không đổi. Trường `source` của 18 bài ghi người duyệt và ngày; phiên bản `v1.0`, riêng 4 bài đã sửa là `v1.1`.
+
 ## Rà soát tự động (lớp phụ, KHÔNG thay thế duyệt người)
 
 `python scripts/validate_dataset.py` kiểm tra:
@@ -50,21 +58,21 @@ Sau khi kiểm, ghi tên người duyệt và ngày vào cột trạng thái.
 | 13 | `gram-en-b1-modals-013` | modal verbs | B1 | 102 | cũ | Có từ Tuần 1 (license CC BY 4.0 đã chốt 2026-11-18; nội dung do Claude rà soát, chưa có giáo viên duyệt) |
 | 14 | `gram-en-b1-first-conditional-014` | first conditional | B1 | 117 | cũ | Có từ Tuần 1 (license CC BY 4.0 đã chốt 2026-11-18; nội dung do Claude rà soát, chưa có giáo viên duyệt) |
 | 15 | `gram-en-b1-relative-clauses-015` | relative clauses | B1 | 128 | cũ | Có từ Tuần 1 (license CC BY 4.0 đã chốt 2026-11-18; nội dung do Claude rà soát, chưa có giáo viên duyệt) |
-| 16 | `gram-en-a1-prepositions-time-016` | prepositions of time | A1 | 98 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 17 | `gram-en-a1-prepositions-place-017` | prepositions of place | A1 | 106 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 18 | `gram-en-a1-possessives-018` | possessives | A1 | 91 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 19 | `gram-en-a1-can-ability-019` | can for ability | A1 | 90 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 20 | `gram-en-a1-demonstratives-020` | demonstratives | A1 | 77 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 21 | `gram-en-a1-frequency-adverbs-021` | adverbs of frequency | A1 | 92 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 22 | `gram-en-a2-superlatives-022` | superlative adjectives | A2 | 96 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 23 | `gram-en-a2-past-continuous-023` | past continuous | A2 | 103 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 24 | `gram-en-a2-will-future-024` | future with will | A2 | 99 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 25 | `gram-en-a2-verb-patterns-025` | gerunds and infinitives | A2 | 94 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 26 | `gram-en-a2-adverbs-manner-026` | adverbs of manner | A2 | 98 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 27 | `gram-en-b1-second-conditional-027` | second conditional | B1 | 118 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 28 | `gram-en-b1-passive-voice-028` | passive voice | B1 | 100 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 29 | `gram-en-b1-reported-speech-029` | reported speech | B1 | 113 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 30 | `gram-en-b1-used-to-030` | used to | B1 | 104 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 31 | `gram-en-b1-past-perfect-031` | past perfect | B1 | 113 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 32 | `gram-en-b1-too-enough-032` | too and enough | B1 | 106 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
-| 33 | `gram-en-b1-zero-conditional-033` | zero conditional | B1 | 91 | mới (Tuần 4) | **CHƯA DUYỆT — cần người kiểm ngữ pháp** |
+| 16 | `gram-en-a1-prepositions-time-016` | prepositions of time | A1 | 98 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28; đã sửa chính tả sang Anh–Mỹ (v1.1) |
+| 17 | `gram-en-a1-prepositions-place-017` | prepositions of place | A1 | 106 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28 (v1.0) |
+| 18 | `gram-en-a1-possessives-018` | possessives | A1 | 91 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28 (v1.0) |
+| 19 | `gram-en-a1-can-ability-019` | can for ability | A1 | 90 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28 (v1.0) |
+| 20 | `gram-en-a1-demonstratives-020` | demonstratives | A1 | 77 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28; đã sửa chính tả sang Anh–Mỹ (v1.1) |
+| 21 | `gram-en-a1-frequency-adverbs-021` | adverbs of frequency | A1 | 92 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28 (v1.0) |
+| 22 | `gram-en-a2-superlatives-022` | superlative adjectives | A2 | 96 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28 (v1.0) |
+| 23 | `gram-en-a2-past-continuous-023` | past continuous | A2 | 103 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28 (v1.0) |
+| 24 | `gram-en-a2-will-future-024` | future with will | A2 | 99 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28 (v1.0) |
+| 25 | `gram-en-a2-verb-patterns-025` | gerunds and infinitives | A2 | 94 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28; đã sửa chính tả sang Anh–Mỹ (v1.1) |
+| 26 | `gram-en-a2-adverbs-manner-026` | adverbs of manner | A2 | 98 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28 (v1.0) |
+| 27 | `gram-en-b1-second-conditional-027` | second conditional | B1 | 118 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28; đã sửa chính tả sang Anh–Mỹ (v1.1) |
+| 28 | `gram-en-b1-passive-voice-028` | passive voice | B1 | 100 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28 (v1.0) |
+| 29 | `gram-en-b1-reported-speech-029` | reported speech | B1 | 113 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28 (v1.0) |
+| 30 | `gram-en-b1-used-to-030` | used to | B1 | 104 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28 (v1.0) |
+| 31 | `gram-en-b1-past-perfect-031` | past perfect | B1 | 113 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28 (v1.0) |
+| 32 | `gram-en-b1-too-enough-032` | too and enough | B1 | 106 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28 (v1.0) |
+| 33 | `gram-en-b1-zero-conditional-033` | zero conditional | B1 | 91 | mới (Tuần 4) | Đã duyệt — người quản lý dự án — 2026-11-28 (v1.0) |
