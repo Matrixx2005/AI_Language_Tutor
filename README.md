@@ -173,7 +173,8 @@ Chạy được trên **CPU** (không cần CUDA). Đã đo trên Core Ultra 7 1
 6. **Đánh giá truy xuất** (chỉ dev split; test split bị từ chối nếu không có cờ riêng):
 
    ```powershell
-   python scripts/eval_retrieval.py --keywords both --note "lý do chạy"   # kết quả lưu vào experiments/
+   python scripts/eval_retrieval.py --keywords both --note "lý do chạy"   # bộ v1 (30 truy vấn); kết quả vào experiments/
+   python scripts/eval_retrieval.py --queries v2 --keywords both --note "…"  # bộ v2 (109 truy vấn) + bootstrap, nhóm expected=none
    python scripts/bench_bge_m3.py --runs 3                               # đo BGE-M3 trên CPU
    ```
 
@@ -211,6 +212,63 @@ npm test                           # = node --test tests/*.test.ts
 
 Các test nằm trong `frontend/tests/` và kiểm các hàm thuần ở `src/lib/` (đọc `Retry-After`, định dạng thời gian chờ, mã lỗi, gộp lượt chat đã thử lại, chọn phiên, lượt placement mới nhất…). Giao diện React (bấm, gõ, bố cục) **không** được test tự động — cần thử trên trình duyệt.
 
+## 6b. Streamlit test console (Tuần 5A)
+
+Bảng điều khiển để thử và trình bày, gồm 7 trang:
+- Tài khoản;
+- Chat (chọn chế độ, xem nguồn, trích dẫn, hạ cấp, độ trễ);
+- Kiểm tra đầu vào;
+- Retrieval Lab (BM25 | Dense | Hybrid song song, truy vấn mẫu **chỉ từ dev**);
+- Thí nghiệm (đọc `experiments/`);
+- Corpus;
+- Hệ thống.
+
+Đây là lớp mỏng: mọi nghiệp vụ đi qua REST API. Riêng Retrieval Lab import trực tiếp `backend/app/retrieval`. Câu trả lời của AI được hiển thị **nguyên văn**, không render HTML.
+
+### Chạy Streamlit
+
+```powershell
+pip install -r streamlit_app/requirements.txt          # streamlit 1.67.0, pandas 3.1.1 (đã cài ở Tuần 5A)
+# Backend phải đang chạy (mục 5); Retrieval Lab cần thêm Qdrant + index (mục RAG).
+streamlit run streamlit_app/app.py --server.address 127.0.0.1 --server.port 8501
+```
+
+Mở http://127.0.0.1:8501. Nếu backend tắt, các trang báo "Không kết nối được backend…" chứ không sập.
+
+Console đọc **biến môi trường của shell**, không đọc `.env`. Có 3 biến (tên đã có trong `.env.example`):
+
+| Biến | Mặc định | Ý nghĩa |
+| --- | --- | --- |
+| `STREAMLIT_API_BASE_URL` | `http://127.0.0.1:8000/api/v1` | Địa chỉ API mà console gọi |
+| `STREAMLIT_ACCESS_CODE` | (trống = tắt) | Bắt nhập mã trước **mọi** trang (so sánh hằng thời gian). Không đặt mã trong mã nguồn hay Git |
+| `STREAMLIT_PUBLIC_MODE` | `false` | `true`: chặn chat nếu backend đang dùng Gemini, ẩn cấu hình ở trang Hệ thống |
+
+```powershell
+$env:STREAMLIT_ACCESS_CODE = "<mã bạn tự đặt>"; $env:STREAMLIT_PUBLIC_MODE = "true"
+streamlit run streamlit_app/app.py --server.address 127.0.0.1 --server.port 8501
+```
+
+### Chia sẻ tạm thời (cloudflared, bản miễn phí)
+
+`cloudflared` đã được cài (2026.11.2). Quick tunnel không cần tài khoản.
+
+1. **Chỉ tunnel cổng 8501 (Streamlit). KHÔNG BAO GIỜ tunnel backend (cổng 8000), PostgreSQL hay Qdrant.**
+2. Trước khi chia sẻ:
+   - đặt `STREAMLIT_ACCESS_CODE`;
+   - đặt `STREAMLIT_PUBLIC_MODE=true`;
+   - chạy backend với `LLM_PROVIDER=fake`. Ở chế độ công khai, nếu backend dùng Gemini thì chat bị chặn, để người lạ không tiêu hết hạn mức Gemini miễn phí (500 lượt/ngày của cả app).
+3. Chạy `cloudflared tunnel --url http://127.0.0.1:8501`, rồi gửi link `https://….trycloudflare.com` kèm mã truy cập (gửi mã riêng, không gửi chung với link).
+4. Xong thì nhấn Ctrl+C để tắt tunnel; link hết hiệu lực ngay. Mỗi lần chạy lại sẽ có link mới.
+5. Mọi người dùng chung một backend: tài khoản và chat của họ được lưu vào DB chính của bạn. Không chia sẻ khi có dữ liệu thật cần giữ riêng.
+
+### Vì sao không dùng Streamlit Community Cloud cho toàn hệ thống
+
+- Giới hạn bộ nhớ khoảng 1 GB, trong khi BGE-M3 cần khoảng 2,1 GB RAM (đo ở Tuần 4).
+- Không chạy được PostgreSQL và Qdrant ở đó; ứng dụng còn cần backend FastAPI chạy liên tục.
+- Phải đưa key Gemini và secret lên dịch vụ bên ngoài.
+
+→ Chạy tại máy và chia sẻ tạm thời qua tunnel như trên. Triển khai thật để dành cho Tuần 8.
+
 ## 7. Kiểm thử
 
 ```powershell
@@ -246,7 +304,8 @@ cd frontend; npm test; npm run build; cd ..   # logic giao diện (Node ≥ 22.1
 | `backend/alembic/` | Migration cơ sở dữ liệu |
 | `backend/app/retrieval/` | RAG: tokenizer, BM25, dense (Qdrant), RRF, hybrid, chunker, kiểm tra trích dẫn |
 | `backend/tests/` | pytest (API, ràng buộc DB, dataset, luồng đầu-cuối, truy xuất) |
-| `experiments/` | Số đo thật: BGE-M3 trên CPU, Recall@K/MRR trên dev |
+| `experiments/` | Số đo thật: BGE-M3 trên CPU, Recall@K/MRR trên dev (v1, v2 kèm bootstrap) |
+| `streamlit_app/` | Streamlit test console (7 trang), client REST `api.py`, hàm thuần `logic.py` |
 | `frontend/tests/` | `npm test`: logic thuần của giao diện (`node:test`) |
 | `frontend/` | Vite + React + TypeScript + Tailwind |
 | `languages/` | Cấu hình ngôn ngữ và trình độ (`en.yaml`) |

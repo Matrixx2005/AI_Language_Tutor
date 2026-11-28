@@ -109,6 +109,72 @@ Người dùng duyệt corpus; 4 bài đổi chính tả sang Anh–Mỹ. Không
 
   Kết luận: độ trễ trên máy phát triển **dao động giữa các lần chạy**, nhiều khả năng do tải máy (các ứng dụng khác, chế độ nguồn điện). Vì vậy độ trễ chỉ nên đọc như một khoảng, khoảng 70–360 ms cho mỗi truy vấn. Cả hai lần đều được giữ trong `retrieval_runs.jsonl`.
 
+## 3. Bộ đánh giá v2 — DEV (Tuần 5A, `retrieval_dev_20261128T144004Z.json`)
+
+Bộ v2 (`data/evaluation/rag_queries_v2.json`) có 109 truy vấn; dev split gồm 78 truy vấn: **71 có đáp án** và 7 `expected=none`.
+- Split được gán bằng băm cố định **trước** khi đánh giá.
+- Cấu hình **giữ nguyên** như Tuần 4: không chỉnh tham số, không chọn lại cấu hình theo kết quả này.
+- Khoảng tin cậy: bootstrap 1000 lần, seed 20261128.
+- Test split không chạy.
+
+| Cấu hình | R@1 | R@3 [CI 95%] | R@5 | MRR@10 [CI 95%] | p50 / p95 (ms) |
+| --- | --- | --- | --- | --- | --- |
+| BM25 | 0,58 | 0,66 [0,55; 0,76] | 0,70 | 0,629 [0,528; 0,728] | 0,1 / 0,1 |
+| **Dense** | 0,75 | **0,92** [0,85; 0,97] | 0,99 | **0,843** [0,781; 0,905] | 64 / 96 |
+| **Hybrid** | 0,73 | 0,90 [0,82; 0,96] | 0,94 | 0,821 [0,751; 0,892] | 66 / 81 |
+| BM25 + keywords_vi | 0,65 | 0,80 [0,70; 0,89] | 0,86 | 0,736 [0,639; 0,819] | 0,1 / 0,1 |
+| Dense + keywords_vi | 0,79 | 0,93 [0,86; 0,99] | 0,99 | 0,868 [0,809; 0,925] | 61 / 74 |
+| Hybrid + keywords_vi | 0,82 | 0,90 [0,83; 0,96] | 0,93 | 0,868 [0,793; 0,934] | 64 / 85 |
+
+**So sánh cặp Hybrid − Dense** (cùng truy vấn, paired bootstrap):
+
+| index_text | Δ R@3 [CI 95%] | p | Δ MRR [CI 95%] | p |
+| --- | --- | --- | --- | --- |
+| gốc | −0,014 [−0,070; 0,042] | 0,79 | −0,022 [−0,089; 0,046] | 0,51 |
+| + keywords_vi | −0,028 [−0,085; 0,028] | 0,44 | −0,000 [−0,054; 0,051] | 0,95 |
+
+**Kết luận trung thực:**
+- Trên bộ dev lớn hơn, **Hybrid không hơn Dense**; về số điểm, Hybrid còn thấp hơn một chút.
+- Mọi khác biệt đều **không có ý nghĩa thống kê** (p ≥ 0,44, khoảng tin cậy chứa 0).
+- Đề xuất `RAG_MODE=hybrid` ở Tuần 4 dựa trên 20 truy vấn dev (R@3 1,00 so với 0,95). Đề xuất đó **không được bộ v2 xác nhận**: hai phương pháp tương đương trong phạm vi sai số.
+- Theo yêu cầu, cấu hình không bị chọn lại dựa trên kết quả này; quyết định để người dùng đưa ra.
+
+**Theo loại truy vấn (gốc, R@3 / MRR):**
+
+| Phương pháp | Thuật ngữ | Theo nghĩa | Tiếng Anh | Tiếng Việt |
+|---|---|---|---|---|
+| Dense | 0,94 / 0,90 | 0,89 / 0,78 | 0,97 / 0,87 | 0,86 / 0,81 |
+| Hybrid | 0,97 / 0,93 | 0,83 / 0,71 | 0,91 / 0,89 | 0,89 / 0,76 |
+
+Xu hướng giống Tuần 4: hybrid nhỉnh hơn ở truy vấn thuật ngữ, kém hơn ở truy vấn theo nghĩa.
+
+**Truy vấn trượt top-3 (gốc):**
+- Dense trượt 6 truy vấn:
+  - `rag-q-013` (have to; hạng 4);
+  - `rag-q2-021` ("ngày tệ nhất", superlatives; hạng 4);
+  - `rag-q2-037` (bị động hiện tại đơn; hạng 4);
+  - `rag-q2-047` ("phim đã bắt đầu", past perfect; hạng 4);
+  - `rag-q2-056` ("My father work…", present simple; hạng 7);
+  - `rag-q2-059` (there is; hạng 5).
+- Hybrid trượt 7 truy vấn, chủ yếu là câu **sửa lỗi** và câu tình huống mà BM25 kéo bài sai lên:
+  - `rag-q2-032` ("sings beautiful", hạng 8);
+  - `rag-q2-018` ("goes usually", hạng 5);
+  - `rag-q2-068` (câu điều kiện loại 1 viết bằng tiếng Việt, hạng 4);
+  - và các truy vấn 037, 047, 056, 059 giống dense.
+
+**Nhóm `expected=none`** (7 truy vấn dev; chỉ đo, chưa đặt ngưỡng từ chối):
+
+| Phương pháp | Trung vị điểm top-1 (none) | Trung vị điểm top-1 (có đáp án) | Tỷ lệ none ≥ trung vị nhóm có đáp án | Tỷ lệ none ≥ p25 |
+|---|---|---|---|---|
+| Dense | 0,513 | 0,578 | 0% | 43% |
+| Hybrid | 0,0325 | 0,0325 | **57%** | 71% |
+| BM25 (6/7 truy vấn có kết quả) | 4,25 | 7,17 | 0% | 100% |
+
+Nhận xét:
+- Điểm RRF của hybrid chỉ phản ánh thứ hạng, nên **không phân biệt được** truy vấn không có đáp án.
+- Điểm cosine của dense tách nhóm tốt hơn, nhưng vẫn chồng lấn.
+- Muốn có ngưỡng từ chối thì nên dựa vào điểm dense; đây là việc của tuần sau. Hiện việc từ chối dựa vào prompt (AI nói "bài học chưa có"), như smoke test đã cho thấy.
+
 ### Đề xuất cấu hình
 
 - **`RAG_MODE=hybrid`**, keywords_vi **tắt**. Với `RAG_TOP_K=3`, chỉ số quan trọng nhất là R@3, và hybrid đạt R@3 = 1,00 trên dev.

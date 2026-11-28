@@ -96,3 +96,43 @@ def test_rag_validation_rejects_manifest_label_mismatch():
         "manifest assigns 'dev-0' to dev but query label differs" in error
         for error in errors
     )
+
+
+# ---------- Bộ đánh giá v2 (Tuần 5A) ----------
+
+def _v2_real():
+    import json
+    from scripts.validate_evaluation import DATASET_PATH, RAG_QUERIES_PATH, RAG_QUERIES_V2_PATH, SPLIT_MANIFEST_V2_PATH
+
+    load = lambda p: json.loads(p.read_text(encoding="utf-8"))  # noqa: E731
+    return (load(RAG_QUERIES_V2_PATH), {r["document_id"] for r in load(DATASET_PATH)}, load(RAG_QUERIES_PATH),
+            load(SPLIT_MANIFEST_V2_PATH))
+
+
+def test_v2_real_file_is_valid_and_keeps_v1():
+    from scripts.validate_evaluation import validate_rag_queries_v2
+
+    payload, ids, v1, manifest = _v2_real()
+    assert validate_rag_queries_v2(payload, ids, v1, manifest) == []
+    assert len(payload["queries"]) >= 100 and sum(q["expected"] == "none" for q in payload["queries"]) >= 10
+
+
+def test_v2_rejects_changed_v1_query_wrong_split_duplicates_and_thin_coverage():
+    import copy
+
+    from scripts.validate_evaluation import validate_rag_queries_v2
+
+    payload, ids, v1, manifest = _v2_real()
+    bad = copy.deepcopy(payload)
+    q = bad["queries"]
+    q[0]["query"] = "đã bị sửa"  # truy vấn v1
+    new_dev = next(x for x in q if not x["from_v1"] and x["split"] == "dev")
+    new_dev["split"] = "test"  # trái quy tắc băm
+    q.append({**q[40], "query_id": "rag-q2-dup"})  # trùng nội dung
+    errors = " | ".join(validate_rag_queries_v2(bad, ids, v1, manifest))
+    assert "bị đổi" in errors and "quy tắc băm" in errors and "trùng nội dung" in errors and "không khớp dữ liệu" in errors
+
+    thin = copy.deepcopy(payload)
+    thin["queries"] = [x for x in thin["queries"] if x["document_id"] != "gram-en-b1-too-enough-032" and x["expected"] != "none"]
+    errors = " | ".join(validate_rag_queries_v2(thin, ids, v1, manifest))
+    assert "< 2 truy vấn" in errors and "expected=none" in errors

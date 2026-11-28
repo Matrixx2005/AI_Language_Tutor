@@ -277,6 +277,102 @@ def validate_rag_queries(
     return errors
 
 
+# ---------- Bộ đánh giá v2 (Tuần 5A) ----------
+
+RAG_QUERIES_V2_PATH = EVALUATION_DIR / "rag_queries_v2.json"
+SPLIT_MANIFEST_V2_PATH = EVALUATION_DIR / "split_manifest_v2.json"
+V2_MIN_TOTAL = 100
+V2_MIN_PER_DOCUMENT = 2
+V2_MIN_NONE = 10
+V2_AUTHORS = {"claude-week1", "claude-draft", "human"}
+V2_LANGUAGES = {"vi", "en"}
+V2_TYPES = {"terminology", "semantic"}
+
+
+def _norm(text: str) -> str:
+    return " ".join(text.casefold().split())
+
+
+def expected_v2_splits(queries: list[dict], seed: str, test_fraction: float) -> dict[str, str]:
+    """Tính lại split của truy vấn MỚI theo quy tắc trong manifest (băm cố định, phân tầng theo đáp án)."""
+    import hashlib
+    from collections import defaultdict
+
+    groups: dict[str, list[dict]] = defaultdict(list)
+    for q in queries:
+        if not q.get("from_v1"):
+            groups[q.get("document_id") or "none"].append(q)
+    out = {}
+    for items in groups.values():
+        items = sorted(items, key=lambda q: hashlib.sha256(f"{seed}:{q['query_id']}".encode()).hexdigest())
+        n_test = round(test_fraction * len(items))
+        for i, q in enumerate(items):
+            out[q["query_id"]] = "test" if i < n_test else "dev"
+    return out
+
+
+def validate_rag_queries_v2(payload: object, document_ids: set[str], v1_queries: object, manifest: object) -> list[str]:
+    if not isinstance(payload, dict) or not isinstance(payload.get("queries"), list):
+        return ["v2: cần object có danh sách 'queries'"]
+    queries = payload["queries"]
+    errors: list[str] = []
+    ids, texts = set(), {}
+    for q in queries:
+        qid = q.get("query_id")
+        if qid in ids:
+            errors.append(f"v2: query_id trùng {qid}")
+        ids.add(qid)
+        key = _norm(str(q.get("query", "")))
+        if not key:
+            errors.append(f"v2: {qid} thiếu câu truy vấn")
+        elif key in texts:
+            errors.append(f"v2: {qid} trùng nội dung với {texts[key]}")
+        texts.setdefault(key, qid)
+        if q.get("expected") not in {"document", "none"}:
+            errors.append(f"v2: {qid} expected phải là 'document' hoặc 'none'")
+        elif (q["expected"] == "none") != (q.get("document_id") is None):
+            errors.append(f"v2: {qid} expected và document_id không khớp")
+        if q.get("document_id") is not None and q["document_id"] not in document_ids:
+            errors.append(f"v2: {qid} trỏ tới bài không tồn tại {q['document_id']}")
+        if q.get("language") not in V2_LANGUAGES or q.get("query_type") not in V2_TYPES:
+            errors.append(f"v2: {qid} language/query_type không hợp lệ")
+        if q.get("split") not in {"dev", "test"}:
+            errors.append(f"v2: {qid} split không hợp lệ")
+        if q.get("author") not in V2_AUTHORS:
+            errors.append(f"v2: {qid} author không hợp lệ")
+    # 30 truy vấn v1 giữ nguyên.
+    if isinstance(v1_queries, list):
+        by_id = {q.get("query_id"): q for q in queries}
+        for old in v1_queries:
+            new = by_id.get(old["query_id"])
+            if not new or any(new.get(k) != old.get(k) for k in ("query", "document_id", "split", "language", "query_type")):
+                errors.append(f"v2: truy vấn v1 {old['query_id']} bị đổi hoặc thiếu")
+    # Quy mô và độ phủ.
+    if len(queries) < V2_MIN_TOTAL:
+        errors.append(f"v2: chỉ có {len(queries)} truy vấn (< {V2_MIN_TOTAL})")
+    per_doc = {d: 0 for d in document_ids}
+    for q in queries:
+        if q.get("document_id") in per_doc:
+            per_doc[q["document_id"]] += 1
+    thin = sorted(d for d, n in per_doc.items() if n < V2_MIN_PER_DOCUMENT)
+    if thin:
+        errors.append(f"v2: {len(thin)} bài có < {V2_MIN_PER_DOCUMENT} truy vấn: {', '.join(thin[:5])}")
+    if sum(1 for q in queries if q.get("expected") == "none") < V2_MIN_NONE:
+        errors.append(f"v2: cần ≥ {V2_MIN_NONE} truy vấn expected=none")
+    # Split của truy vấn mới phải đúng quy tắc băm trong manifest.
+    if isinstance(manifest, dict) and "seed" in manifest:
+        expected = expected_v2_splits(queries, manifest["seed"], manifest["test_fraction"])
+        wrong = sorted(qid for qid, split in expected.items() if next(q["split"] for q in queries if q["query_id"] == qid) != split)
+        if wrong:
+            errors.append(f"v2: {len(wrong)} truy vấn mới có split khác quy tắc băm: {', '.join(wrong[:5])}")
+        counts = {s: sum(1 for q in queries if q.get("split") == s) for s in ("dev", "test")}
+        if manifest.get("counts") != counts or manifest.get("total") != len(queries):
+            errors.append("v2: số lượng trong split_manifest_v2.json không khớp dữ liệu")
+    else:
+        errors.append("v2: split_manifest_v2.json thiếu seed/quy tắc")
+    return errors
+
+
 def validate_files() -> list[str]:
     errors: list[str] = []
     placement, placement_error = _read_json(PLACEMENT_PATH)
@@ -304,6 +400,12 @@ def validate_files() -> list[str]:
                     if isinstance(document_id, str):
                         document_ids.add(document_id)
         errors.extend(validate_rag_queries(queries, document_ids, manifest))
+        if RAG_QUERIES_V2_PATH.exists():
+            v2, v2_error = _read_json(RAG_QUERIES_V2_PATH)
+            manifest_v2, manifest_v2_error = _read_json(SPLIT_MANIFEST_V2_PATH)
+            errors.extend(e for e in (v2_error, manifest_v2_error) if e)
+            if v2_error is None and manifest_v2_error is None:
+                errors.extend(validate_rag_queries_v2(v2, document_ids, queries, manifest_v2))
 
     return errors
 
@@ -317,6 +419,11 @@ def main() -> int:
         return 1
 
     print("Evaluation validation passed: 30 placement questions, 30 RAG queries, 20 dev / 10 test.")
+    if RAG_QUERIES_V2_PATH.exists():
+        v2 = json.loads(RAG_QUERIES_V2_PATH.read_text(encoding="utf-8"))["queries"]
+        dev = sum(1 for q in v2 if q["split"] == "dev")
+        none = sum(1 for q in v2 if q["expected"] == "none")
+        print(f"Evaluation v2 passed: {len(v2)} RAG queries, {dev} dev / {len(v2) - dev} test, {none} expected=none.")
     return 0
 
 

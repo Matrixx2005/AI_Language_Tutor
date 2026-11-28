@@ -50,7 +50,12 @@ def test_real_rag_chat_end_to_end(client, register_and_login, monkeypatch, mode,
     print(f"\n[rag-smoke chat {mode}] rag_mode={a['rag_mode']} fallback={a['rag_fallback']} "
           f"sources={[(s['n'], s['document_id'], s['cited']) for s in a['sources'] or []]} has_citations={body['has_citations']}")
     labels = [lb for lb in ("Quy tắc:", "Cấu trúc:", "Ví dụ:", "Lỗi thường gặp:", "Tự kiểm tra:") if lb in a["content"]]
-    print(f"[rag-smoke chat {mode}] chars={len(a['content'])} asterisks={a['content'].count('*')} labels={labels}")
+    import re
+
+    square_non_citation = re.findall(r"\[(?!\d{1,2}(?:\s*,\s*\d{1,2})*\])[^\]]*\]", a["content"])
+    paren_translations = re.findall(r"\([^)]*[ăâđêôơưáàảãạéèẻẽẹíìỉĩịóòỏõọúùủũụýỳỷỹỵ][^)]*\)", a["content"], re.IGNORECASE)
+    print(f"[rag-smoke chat {mode}] chars={len(a['content'])} asterisks={a['content'].count('*')} labels={labels} "
+          f"square_non_citation={square_non_citation} paren_vi={len(paren_translations)} invalid_citations={a['invalid_citations']}")
     print(f"[rag-smoke chat {mode}] answer={a['content'][:900]!r}")
     assert a["rag_mode"] == mode and a["rag_fallback"] is False
     assert gold in [s["document_id"] for s in a["sources"]]

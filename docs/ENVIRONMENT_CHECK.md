@@ -716,3 +716,47 @@ Bảng nghiệm thu: `docs/WEEK4_ACCEPTANCE.md`. Số đo: `experiments/README.m
   - Đo lại trên dev: R@K và MRR giống hệt; độ trễ thấp hơn (dense p95 115 ms, hybrid 80 ms) — dao động giữa các lần chạy, đã ghi trong `experiments/README.md`.
   - `pytest` 400 passed, 5 skipped.
 - **Chưa duyệt:** `keywords_vi_v1.json` (hiện đang tắt, không dùng).
+
+## Tuần 5 — Phần A: Streamlit console + bộ đánh giá v2 (2026-11-28)
+
+Người dùng cho phép: cài streamlit và pandas; cài cloudflared (bản miễn phí, không tự chạy tunnel); tối đa 3 lời gọi Gemini; commit và push. Không sửa `.env`.
+
+Bảng nghiệm thu: `docs/WEEK5A_ACCEPTANCE.md`.
+
+### Claude đã chạy
+
+- **Cài đặt:**
+  - `pip install --dry-run`: 15 gói, tải khoảng 71 MB.
+  - Đã cài `streamlit 1.67.0`, `pandas 3.1.1`; `pip check` sạch. Phiên bản ghim trong `streamlit_app/requirements.txt` (backend không phụ thuộc file này).
+  - `winget install Cloudflare.cloudflared` → 2026.11.2. **Chưa chạy tunnel.**
+- **Backend:**
+  - Thêm `GET /api/v1/system/status` (nhà cung cấp LLM, RAG_MODE, các giới hạn, PostgreSQL/Qdrant; không có secret; có test).
+  - `ChatMessageRead` trả thêm `invalid_citations`.
+- **Streamlit:** `streamlit_app/` gồm `app.py` (cổng mã, điều hướng 7 trang), `api.py` (client httpx duy nhất), `logic.py` (hàm thuần), `ui.py`, `lab.py`, và 7 trang.
+- **Kiểm chứng thật:**
+  - Headless: `/_stcore/health` → `ok`, `/` → 200.
+  - `AppTest` với uvicorn trên **DB test** (fake, hybrid, Qdrant và model thật): đăng ký → chat có 3 nguồn → Hệ thống → Retrieval Lab → Placement, Thí nghiệm, Corpus: 0 exception.
+  - Lỗi thật đã sửa: trang Thí nghiệm lỗi `TypeError` (pandas 3 không cho nhân chuỗi với cột); đã thay `use_container_width` (lỗi thời) bằng `width="stretch"`.
+  - Đã dọn DB test (0 user, 0 tin nhắn, 0 lượt placement); đã dừng các tiến trình 8012 và 8501.
+- **Bộ đánh giá v2:**
+  - `scripts/build_eval_v2.py` tạo `rag_queries_v2.json` (109 truy vấn: 30 v1 giữ nguyên + 79 mới) và `split_manifest_v2.json`. Split băm cố định, seed `rag-v2-2026-11-28`, gán trước khi đánh giá.
+  - Validator v2 cùng 2 test mới.
+  - Kết quả eval dev v2: xem `experiments/README.md` mục 3. Hybrid không hơn Dense, khác biệt không có ý nghĩa thống kê.
+  - `--split test` bị từ chối (đã thử).
+- **Gemini (2/3 lời gọi):** 0 dấu `*`, bản dịch trong ngoặc tròn, 0 ngoặc vuông ngoài trích dẫn, 0 trích dẫn sai.
+- **Làm hỏng có chủ đích (5 chỗ, khôi phục xong đều `cmp` khớp):** bỏ cổng mã, cho đọc test split, bỏ escape, bật `unsafe_allow_html`, public mode không chặn Gemini → mỗi chỗ 1 failed.
+  - Lần đầu, chỗ "bỏ escape" không áp dụng được do lỗi trích dẫn ký tự trong shell; đã chạy lại và test đỏ.
+- **Kiểm tra cuối:**
+  - `pytest` 412 passed, 5 skipped; `npm test` 21/21; build đạt.
+  - Validator v1 và v2 đạt; `alembic check` không lệch trên cả hai DB.
+  - Quét secret sạch (gồm `streamlit_app/`).
+
+### Người dùng tự báo
+
+- Chưa có báo cáo cho Tuần 5A.
+
+### Chưa kiểm chứng
+
+- Thao tác Streamlit trên trình duyệt thật: hiển thị, đếm ngược, cổng mã khi chia sẻ qua cloudflared.
+- 79 truy vấn mới và nhóm none: **CHƯA DUYỆT BỞI NGƯỜI**; chưa có 30 truy vấn do người viết.
+- Ngưỡng từ chối cho nhóm none: mới đo, chưa đặt.

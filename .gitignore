@@ -30,3 +30,7 @@ pgdata/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Streamlit: secrets cục bộ (không dùng, chặn phòng khi tạo nhầm)
+.streamlit/secrets.toml
+streamlit_app/.streamlit/secrets.toml

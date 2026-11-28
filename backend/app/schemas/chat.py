@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, computed_field, field_validator
 
 MAX_MESSAGE_LINES = 100
 
@@ -82,8 +82,10 @@ class ChatMessageRead(BaseModel):
     sources: list[SourceRead] | None = None
     citations: dict[str, Any] | None = Field(default=None, exclude=True)
 
+    @computed_field
     @property
     def invalid_citations(self) -> list[int]:
+        """Số [n] mà AI viết nhưng không thuộc tập đã truy xuất (đã bị xóa khỏi `content`)."""
         return list((self.citations or {}).get("invalid", []))
 
 

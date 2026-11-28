@@ -81,6 +81,7 @@ def test_rag_answer_returns_sources_and_only_valid_citations(client, register_an
     assert "vowel sound?" not in request.system_prompt
     row = db_session.scalars(select(ChatMessageRow).where(ChatMessageRow.role == "assistant")).one()
     assert row.citations == {"valid": [1, 2], "invalid": [7, 9]} and row.rag_mode == mode
+    assert assistant["invalid_citations"] == [7, 9]
     # Lịch sử trả nguồn y như lúc gửi.
     history = client.get(f"{SESSIONS}/{sid}/messages", headers=headers).json()
     assert history[1]["sources"] == assistant["sources"]

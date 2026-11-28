@@ -1,0 +1,14 @@
+{
+  "version": "rag-queries-v2",
+  "locked_at": "2026-11-28",
+  "v1_queries": "Giữ nguyên query_id, câu, đáp án và split của rag_queries_v1.json (20 dev / 10 test).",
+  "new_query_rule": "Trong mỗi nhóm đáp án (document_id hoặc 'none'), sắp theo sha256('rag-v2-2026-11-28:' + query_id); round(0.3 × k) truy vấn đầu → test, còn lại → dev.",
+  "seed": "rag-v2-2026-11-28",
+  "test_fraction": 0.3,
+  "counts": {
+    "dev": 78,
+    "test": 31
+  },
+  "total": 109,
+  "assigned_before_any_evaluation": true
+}

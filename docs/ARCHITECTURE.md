@@ -77,6 +77,33 @@ Không có API nghiệp vụ, migration, tích hợp Gemini, tải model/dataset
 | Đăng ký trùng email trả 409 → có thể dò email đã đăng ký | Trải nghiệm người dùng rõ ràng; chống dò triệt để cần email xác nhận | Tuần 8 |
 | ~~Chưa giới hạn số lần đăng nhập sai (brute force)~~ | **Đã xử lý ở Tuần 3, Buổi 4** (theo email và IP, trong bộ nhớ) — xem mục bên dưới | Tuần 8: chuyển sang Redis nếu chạy nhiều tiến trình |
 
+## Sơ đồ triển khai cục bộ (Tuần 5A)
+
+```mermaid
+flowchart LR
+  B["Trình duyệt"] -->|"HTTP + CORS (5173)"| R["React (Vite) — người học"]
+  B -->|"HTTP (8501), tunnel tùy chọn"| S["Streamlit console — thử/trình bày"]
+  R -->|"REST /api/v1"| F["FastAPI (8000)"]
+  S -->|"REST /api/v1 (phía máy chủ, httpx)"| F
+  S -.->|"Retrieval Lab: import backend/app/retrieval"| RET["app.retrieval (BM25, BGE-M3, RRF)"]
+  F --> RET
+  F --> P[("PostgreSQL 18 (5432)")]
+  RET --> Q[("Qdrant v1.20.2 (6333)")]
+  F -->|"LLM_PROVIDER=gemini"| G["Gemini API"]
+```
+
+- Mọi cổng dịch vụ chỉ mở trên `127.0.0.1`.
+- Khi chia sẻ, **chỉ** tunnel cổng 8501 của Streamlit. Backend, PostgreSQL và Qdrant không bao giờ được tunnel.
+- **Streamlit là lớp mỏng:**
+  - Mọi nghiệp vụ (xác thực, giới hạn tần suất, chat/RAG, chấm placement) đi qua REST API, qua một client duy nhất `streamlit_app/api.py` (httpx, có timeout). Lỗi được ánh xạ theo `error.code` giống frontend.
+  - Token chỉ nằm trong `st.session_state`, không ghi ra đĩa.
+  - Ngoại lệ: Retrieval Lab import trực tiếp `app.retrieval` (cùng code với API, cache bằng `st.cache_resource`). Lỗi import hoặc Qdrant chỉ hiện hướng dẫn trên trang đó, không làm sập trang khác.
+- **Chia sẻ an toàn:**
+  - `STREAMLIT_ACCESS_CODE` bật cổng mã cho toàn app (so sánh `hmac.compare_digest`).
+  - `STREAMLIT_PUBLIC_MODE=true` chặn chat khi backend dùng Gemini (đọc từ `GET /api/v1/system/status`) và ẩn cấu hình.
+  - Nội dung do AI tạo được escape trước khi hiển thị; không dùng `unsafe_allow_html`.
+- **`GET /api/v1/system/status`** (thêm ở Tuần 5A): trả nhà cung cấp LLM (fake/gemini), `RAG_MODE`, các giới hạn, trạng thái PostgreSQL và Qdrant. Không trả secret, URL hay chuỗi kết nối (có test kiểm).
+
 ## Luồng chat với gia sư AI (Tuần 3–4)
 
 Ba chế độ trả lời: `llm_only` (Tuần 3), `dense`, `hybrid` (Tuần 4). Chế độ chọn theo từng tin (`rag_mode` trong body, đã kiểm tra hợp lệ) hoặc lấy `RAG_MODE` của máy chủ; áp dụng cùng giới hạn tần suất.

@@ -1,0 +1,6549 @@
+{
+  "run_at": "2026-11-28T14:40:04+00:00",
+  "split": "dev",
+  "n_queries": 78,
+  "queries_file": "rag_queries_v2.json",
+  "bootstrap": {
+    "rounds": 1000,
+    "seed": 20261128,
+    "per_config": {
+      "bm25": {
+        "recall@3": {
+          "mean": 0.662,
+          "ci95": [
+            0.5493,
+            0.7606
+          ]
+        },
+        "mrr@10": {
+          "mean": 0.6289,
+          "ci95": [
+            0.5281,
+            0.7277
+          ]
+        }
+      },
+      "dense": {
+        "recall@3": {
+          "mean": 0.9155,
+          "ci95": [
+            0.8451,
+            0.9718
+          ]
+        },
+        "mrr@10": {
+          "mean": 0.8429,
+          "ci95": [
+            0.7809,
+            0.9051
+          ]
+        }
+      },
+      "hybrid": {
+        "recall@3": {
+          "mean": 0.9014,
+          "ci95": [
+            0.8169,
+            0.9577
+          ]
+        },
+        "mrr@10": {
+          "mean": 0.8211,
+          "ci95": [
+            0.7506,
+            0.8922
+          ]
+        }
+      },
+      "bm25+kw": {
+        "recall@3": {
+          "mean": 0.8028,
+          "ci95": [
+            0.7042,
+            0.8873
+          ]
+        },
+        "mrr@10": {
+          "mean": 0.7364,
+          "ci95": [
+            0.6389,
+            0.8189
+          ]
+        }
+      },
+      "dense+kw": {
+        "recall@3": {
+          "mean": 0.9296,
+          "ci95": [
+            0.8592,
+            0.9859
+          ]
+        },
+        "mrr@10": {
+          "mean": 0.8678,
+          "ci95": [
+            0.8092,
+            0.9254
+          ]
+        }
+      },
+      "hybrid+kw": {
+        "recall@3": {
+          "mean": 0.9014,
+          "ci95": [
+            0.831,
+            0.9577
+          ]
+        },
+        "mrr@10": {
+          "mean": 0.8678,
+          "ci95": [
+            0.7933,
+            0.9336
+          ]
+        }
+      }
+    },
+    "hybrid_vs_dense": {
+      "keywords_vi=False": {
+        "recall@3": {
+          "diff": -0.0141,
+          "ci95": [
+            -0.0704,
+            0.0423
+          ],
+          "p_two_sided": 0.792,
+          "significant_at_0.05": false
+        },
+        "mrr@10": {
+          "diff": -0.0217,
+          "ci95": [
+            -0.0892,
+            0.0459
+          ],
+          "p_two_sided": 0.512,
+          "significant_at_0.05": false
+        }
+      },
+      "keywords_vi=True": {
+        "recall@3": {
+          "diff": -0.0282,
+          "ci95": [
+            -0.0845,
+            0.0282
+          ],
+          "p_two_sided": 0.436,
+          "significant_at_0.05": false
+        },
+        "mrr@10": {
+          "diff": -0.0001,
+          "ci95": [
+            -0.0537,
+            0.0505
+          ],
+          "p_two_sided": 0.948,
+          "significant_at_0.05": false
+        }
+      }
+    }
+  },
+  "git_commit": "b4c637947845924471d6a2ab6272039e10f06de2+dirty",
+  "note": "Lần đầu chạy bộ v2 (DEV, 78 truy vấn gồm 7 expected=none). Cấu hình giữ nguyên như Tuần 4, không chỉnh tham số, không chọn lại cấu hình.",
+  "config": {
+    "embedding_model": "BAAI/bge-m3",
+    "embedding_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+    "rrf_k": 60,
+    "candidates_per_branch": 20,
+    "bm25": {
+      "k1": 1.5,
+      "b": 0.75
+    },
+    "level_filter": false,
+    "mrr_depth": 10,
+    "chunking": "1 bài = 1 chunk"
+  },
+  "results": [
+    {
+      "method": "bm25",
+      "index_keywords_vi": false,
+      "overall": {
+        "n": 71,
+        "recall@1": 0.5775,
+        "recall@3": 0.662,
+        "recall@5": 0.7042,
+        "mrr@10": 0.6289
+      },
+      "by_query_type": {
+        "semantic": {
+          "n": 35,
+          "recall@1": 0.4286,
+          "recall@3": 0.4857,
+          "recall@5": 0.5714,
+          "mrr@10": 0.4806
+        },
+        "terminology": {
+          "n": 36,
+          "recall@1": 0.7222,
+          "recall@3": 0.8333,
+          "recall@5": 0.8333,
+          "mrr@10": 0.7731
+        }
+      },
+      "by_language": {
+        "en": {
+          "n": 34,
+          "recall@1": 0.7353,
+          "recall@3": 0.8235,
+          "recall@5": 0.8824,
+          "mrr@10": 0.7907
+        },
+        "vi": {
+          "n": 37,
+          "recall@1": 0.4324,
+          "recall@3": 0.5135,
+          "recall@5": 0.5405,
+          "mrr@10": 0.4803
+        }
+      },
+      "none_group": {
+        "n_none": 6,
+        "none_top1_median": 4.2494,
+        "answerable_top1_median": 7.1697,
+        "answerable_top1_p25": 3.4648,
+        "share_none_ge_answerable_median": 0.0,
+        "share_none_ge_answerable_p25": 1.0
+      },
+      "latency_ms": {
+        "p50": 0.1,
+        "p95": 0.1
+      },
+      "per_query": [
+        {
+          "query_id": "rag-q-001",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-be-001",
+          "gold_rank": 1,
+          "top1_score": 3.464755,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q-002",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 2,
+          "top1_score": 7.605933,
+          "top3": [
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q-004",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 2,
+          "top1_score": 9.411873,
+          "top3": [
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a1-plurals-004",
+            "gram-en-b1-modals-013"
+          ]
+        },
+        {
+          "query_id": "rag-q-005",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 1,
+          "top1_score": 11.966337,
+          "top3": [
+            "gram-en-a1-there-be-005",
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q-007",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": null,
+          "top1_score": 3.718181,
+          "top3": [
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q-008",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 5,
+          "top1_score": 5.64108,
+          "top3": [
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-b1-present-perfect-past-012",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q-010",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 1,
+          "top1_score": 10.920406,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q-011",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-present-perfect-011",
+          "gold_rank": null,
+          "top1_score": 2.652399,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-a1-prepositions-time-016"
+          ]
+        },
+        {
+          "query_id": "rag-q-013",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 2,
+          "top1_score": 3.152966,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-b1-modals-013",
+            "gram-en-a2-present-perfect-011"
+          ]
+        },
+        {
+          "query_id": "rag-q-014",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 1,
+          "top1_score": 8.989035,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-b1-used-to-030",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q-016",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-relative-clauses-015",
+          "gold_rank": 1,
+          "top1_score": 31.281394,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q-017",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 2,
+          "top1_score": 7.779382,
+          "top3": [
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a1-present-simple-002",
+            "gram-en-b1-modals-013"
+          ]
+        },
+        {
+          "query_id": "rag-q-019",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-articles-003",
+          "gold_rank": 9,
+          "top1_score": 4.449198,
+          "top3": [
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-b1-used-to-030"
+          ]
+        },
+        {
+          "query_id": "rag-q-020",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 1,
+          "top1_score": 20.812276,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a2-verb-patterns-025"
+          ]
+        },
+        {
+          "query_id": "rag-q-022",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 1,
+          "top1_score": 11.966337,
+          "top3": [
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q-023",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-past-simple-006",
+          "gold_rank": 1,
+          "top1_score": 5.360912,
+          "top3": [
+            "gram-en-a2-past-simple-006",
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-modals-013"
+          ]
+        },
+        {
+          "query_id": "rag-q-025",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 1,
+          "top1_score": 6.808235,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a2-past-continuous-023"
+          ]
+        },
+        {
+          "query_id": "rag-q-026",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 1,
+          "top1_score": 17.147705,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a2-past-simple-006",
+            "gram-en-a2-count-noncount-008"
+          ]
+        },
+        {
+          "query_id": "rag-q-028",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-first-conditional-014",
+          "gold_rank": 1,
+          "top1_score": 22.634688,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q-029",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": null,
+          "top1_score": 2.621563,
+          "top3": [
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a1-frequency-adverbs-021"
+          ]
+        },
+        {
+          "query_id": "rag-q2-001",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-prepositions-time-016",
+          "gold_rank": 1,
+          "top1_score": 3.293059,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-003",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-prepositions-time-016",
+          "gold_rank": 1,
+          "top1_score": 11.36264,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q2-004",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-prepositions-place-017",
+          "gold_rank": 1,
+          "top1_score": 12.071065,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-006",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-prepositions-place-017",
+          "gold_rank": null,
+          "top1_score": null,
+          "top3": []
+        },
+        {
+          "query_id": "rag-q2-007",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-possessives-018",
+          "gold_rank": 3,
+          "top1_score": 5.243127,
+          "top3": [
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q2-009",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-possessives-018",
+          "gold_rank": 1,
+          "top1_score": 3.740385,
+          "top3": [
+            "gram-en-a1-possessives-018",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q2-011",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-can-ability-019",
+          "gold_rank": 1,
+          "top1_score": 3.116523,
+          "top3": [
+            "gram-en-a1-can-ability-019"
+          ]
+        },
+        {
+          "query_id": "rag-q2-012",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-can-ability-019",
+          "gold_rank": 1,
+          "top1_score": 6.150186,
+          "top3": [
+            "gram-en-a1-can-ability-019",
+            "gram-en-b1-used-to-030",
+            "gram-en-a1-frequency-adverbs-021"
+          ]
+        },
+        {
+          "query_id": "rag-q2-013",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-demonstratives-020",
+          "gold_rank": 1,
+          "top1_score": 11.746858,
+          "top3": [
+            "gram-en-a1-demonstratives-020",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q2-014",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-demonstratives-020",
+          "gold_rank": 3,
+          "top1_score": 6.80769,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-016",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-frequency-adverbs-021",
+          "gold_rank": 1,
+          "top1_score": 13.559052,
+          "top3": [
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q2-018",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-frequency-adverbs-021",
+          "gold_rank": null,
+          "top1_score": 7.310473,
+          "top3": [
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-plurals-004",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q2-019",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-superlatives-022",
+          "gold_rank": null,
+          "top1_score": 2.621563,
+          "top3": [
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a1-frequency-adverbs-021"
+          ]
+        },
+        {
+          "query_id": "rag-q2-021",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-superlatives-022",
+          "gold_rank": 1,
+          "top1_score": 2.871972,
+          "top3": [
+            "gram-en-a2-superlatives-022",
+            "gram-en-a2-comparatives-009"
+          ]
+        },
+        {
+          "query_id": "rag-q2-022",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-past-continuous-023",
+          "gold_rank": 1,
+          "top1_score": 5.962419,
+          "top3": [
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q2-024",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-past-continuous-023",
+          "gold_rank": null,
+          "top1_score": null,
+          "top3": []
+        },
+        {
+          "query_id": "rag-q2-025",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-will-future-024",
+          "gold_rank": 1,
+          "top1_score": 3.255694,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-modals-013"
+          ]
+        },
+        {
+          "query_id": "rag-q2-027",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-will-future-024",
+          "gold_rank": 1,
+          "top1_score": 7.185037,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a1-prepositions-time-016"
+          ]
+        },
+        {
+          "query_id": "rag-q2-028",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-verb-patterns-025",
+          "gold_rank": 1,
+          "top1_score": 12.839195,
+          "top3": [
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-a1-articles-003",
+            "gram-en-b1-relative-clauses-015"
+          ]
+        },
+        {
+          "query_id": "rag-q2-029",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-verb-patterns-025",
+          "gold_rank": 1,
+          "top1_score": 16.446419,
+          "top3": [
+            "gram-en-a2-verb-patterns-025"
+          ]
+        },
+        {
+          "query_id": "rag-q2-031",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-adverbs-manner-026",
+          "gold_rank": null,
+          "top1_score": null,
+          "top3": []
+        },
+        {
+          "query_id": "rag-q2-032",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-adverbs-manner-026",
+          "gold_rank": null,
+          "top1_score": 2.883247,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-be-001",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-034",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-second-conditional-027",
+          "gold_rank": 1,
+          "top1_score": 9.470848,
+          "top3": [
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-036",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-second-conditional-027",
+          "gold_rank": null,
+          "top1_score": 3.152966,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a1-frequency-adverbs-021"
+          ]
+        },
+        {
+          "query_id": "rag-q2-037",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-passive-voice-028",
+          "gold_rank": null,
+          "top1_score": 3.152966,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-b1-modals-013",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q2-039",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-passive-voice-028",
+          "gold_rank": 1,
+          "top1_score": 11.819701,
+          "top3": [
+            "gram-en-b1-passive-voice-028",
+            "gram-en-b1-modals-013",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q2-040",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-reported-speech-029",
+          "gold_rank": 1,
+          "top1_score": 9.440723,
+          "top3": [
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-041",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-reported-speech-029",
+          "gold_rank": 5,
+          "top1_score": 3.464755,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q2-043",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-used-to-030",
+          "gold_rank": 1,
+          "top1_score": 3.851147,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q2-045",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-used-to-030",
+          "gold_rank": 1,
+          "top1_score": 8.640945,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-b1-second-conditional-027",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q2-046",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-past-perfect-031",
+          "gold_rank": 1,
+          "top1_score": 8.459816,
+          "top3": [
+            "gram-en-b1-past-perfect-031",
+            "gram-en-b1-present-perfect-past-012",
+            "gram-en-a2-present-perfect-011"
+          ]
+        },
+        {
+          "query_id": "rag-q2-047",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-past-perfect-031",
+          "gold_rank": null,
+          "top1_score": 7.154428,
+          "top3": [
+            "gram-en-a2-present-perfect-011",
+            "gram-en-b1-used-to-030"
+          ]
+        },
+        {
+          "query_id": "rag-q2-049",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-too-enough-032",
+          "gold_rank": 1,
+          "top1_score": 12.933466,
+          "top3": [
+            "gram-en-b1-too-enough-032"
+          ]
+        },
+        {
+          "query_id": "rag-q2-051",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-too-enough-032",
+          "gold_rank": 1,
+          "top1_score": 11.363788,
+          "top3": [
+            "gram-en-b1-too-enough-032",
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-can-ability-019"
+          ]
+        },
+        {
+          "query_id": "rag-q2-053",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-zero-conditional-033",
+          "gold_rank": null,
+          "top1_score": null,
+          "top3": []
+        },
+        {
+          "query_id": "rag-q2-054",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-zero-conditional-033",
+          "gold_rank": null,
+          "top1_score": null,
+          "top3": []
+        },
+        {
+          "query_id": "rag-q2-055",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-be-001",
+          "gold_rank": 4,
+          "top1_score": 3.867006,
+          "top3": [
+            "gram-en-a1-demonstratives-020",
+            "gram-en-a1-possessives-018",
+            "gram-en-b1-relative-clauses-015"
+          ]
+        },
+        {
+          "query_id": "rag-q2-056",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 8,
+          "top1_score": 6.213675,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-possessives-018",
+            "gram-en-b1-relative-clauses-015"
+          ]
+        },
+        {
+          "query_id": "rag-q2-057",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-articles-003",
+          "gold_rank": 1,
+          "top1_score": 3.192407,
+          "top3": [
+            "gram-en-a1-articles-003",
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-can-ability-019"
+          ]
+        },
+        {
+          "query_id": "rag-q2-058",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 1,
+          "top1_score": 3.193439,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a2-comparatives-009",
+            "gram-en-a2-past-simple-006"
+          ]
+        },
+        {
+          "query_id": "rag-q2-059",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 10,
+          "top1_score": 7.216653,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-possessives-018",
+            "gram-en-a1-frequency-adverbs-021"
+          ]
+        },
+        {
+          "query_id": "rag-q2-060",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-past-simple-006",
+          "gold_rank": null,
+          "top1_score": 3.152966,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-b1-modals-013",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q2-061",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 1,
+          "top1_score": 7.203059,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-b1-used-to-030",
+            "gram-en-b1-modals-013"
+          ]
+        },
+        {
+          "query_id": "rag-q2-062",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 1,
+          "top1_score": 14.101655,
+          "top3": [
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q2-063",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-comparatives-009",
+          "gold_rank": 1,
+          "top1_score": 10.426685,
+          "top3": [
+            "gram-en-a2-comparatives-009",
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-superlatives-022"
+          ]
+        },
+        {
+          "query_id": "rag-q2-064",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": null,
+          "top1_score": 7.154428,
+          "top3": [
+            "gram-en-a2-present-perfect-011",
+            "gram-en-b1-used-to-030"
+          ]
+        },
+        {
+          "query_id": "rag-q2-065",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-present-perfect-011",
+          "gold_rank": 1,
+          "top1_score": 12.627132,
+          "top3": [
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a1-can-ability-019",
+            "gram-en-b1-relative-clauses-015"
+          ]
+        },
+        {
+          "query_id": "rag-q2-066",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-present-perfect-past-012",
+          "gold_rank": null,
+          "top1_score": 2.898051,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-a1-present-simple-002",
+            "gram-en-b1-too-enough-032"
+          ]
+        },
+        {
+          "query_id": "rag-q2-067",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 1,
+          "top1_score": 7.551811,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-b1-first-conditional-014"
+          ]
+        },
+        {
+          "query_id": "rag-q2-068",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-first-conditional-014",
+          "gold_rank": null,
+          "top1_score": 3.152966,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-possessives-018",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q2-069",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-relative-clauses-015",
+          "gold_rank": 1,
+          "top1_score": 11.13011,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-articles-003",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-070",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 3.521354,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q2-071",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": null,
+          "top3": []
+        },
+        {
+          "query_id": "rag-q2-072",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 3.657204,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a1-there-be-005",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q2-073",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 6.46862,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a1-be-001",
+            "gram-en-a2-past-simple-006"
+          ]
+        },
+        {
+          "query_id": "rag-q2-074",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 4.510283,
+          "top3": [
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-077",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 5.214193,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-a1-be-001",
+            "gram-en-a1-frequency-adverbs-021"
+          ]
+        },
+        {
+          "query_id": "rag-q2-079",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 3.98847,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-demonstratives-020",
+            "gram-en-b1-first-conditional-014"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "dense",
+      "index_keywords_vi": false,
+      "overall": {
+        "n": 71,
+        "recall@1": 0.7465,
+        "recall@3": 0.9155,
+        "recall@5": 0.9859,
+        "mrr@10": 0.8429
+      },
+      "by_query_type": {
+        "semantic": {
+          "n": 35,
+          "recall@1": 0.6571,
+          "recall@3": 0.8857,
+          "recall@5": 0.9714,
+          "mrr@10": 0.7812
+        },
+        "terminology": {
+          "n": 36,
+          "recall@1": 0.8333,
+          "recall@3": 0.9444,
+          "recall@5": 1.0,
+          "mrr@10": 0.9028
+        }
+      },
+      "by_language": {
+        "en": {
+          "n": 34,
+          "recall@1": 0.7941,
+          "recall@3": 0.9706,
+          "recall@5": 1.0,
+          "mrr@10": 0.8735
+        },
+        "vi": {
+          "n": 37,
+          "recall@1": 0.7027,
+          "recall@3": 0.8649,
+          "recall@5": 0.973,
+          "mrr@10": 0.8147
+        }
+      },
+      "none_group": {
+        "n_none": 7,
+        "none_top1_median": 0.5129,
+        "answerable_top1_median": 0.5784,
+        "answerable_top1_p25": 0.5138,
+        "share_none_ge_answerable_median": 0.0,
+        "share_none_ge_answerable_p25": 0.4286
+      },
+      "latency_ms": {
+        "p50": 64.1,
+        "p95": 96.4
+      },
+      "per_query": [
+        {
+          "query_id": "rag-q-001",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-be-001",
+          "gold_rank": 1,
+          "top1_score": 0.714843,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a1-there-be-005",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q-002",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 1,
+          "top1_score": 0.616616,
+          "top3": [
+            "gram-en-a1-present-simple-002",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q-004",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 1,
+          "top1_score": 0.602546,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q-005",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 1,
+          "top1_score": 0.619567,
+          "top3": [
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-possessives-018",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q-007",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 1,
+          "top1_score": 0.467457,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a2-past-continuous-023"
+          ]
+        },
+        {
+          "query_id": "rag-q-008",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 1,
+          "top1_score": 0.520879,
+          "top3": [
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q-010",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 1,
+          "top1_score": 0.669391,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-will-future-024",
+            "gram-en-a1-prepositions-time-016"
+          ]
+        },
+        {
+          "query_id": "rag-q-011",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-present-perfect-011",
+          "gold_rank": 1,
+          "top1_score": 0.578562,
+          "top3": [
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-b1-used-to-030"
+          ]
+        },
+        {
+          "query_id": "rag-q-013",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 4,
+          "top1_score": 0.585956,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-b1-past-perfect-031",
+            "gram-en-a2-past-simple-006"
+          ]
+        },
+        {
+          "query_id": "rag-q-014",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 2,
+          "top1_score": 0.520784,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-modals-013",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q-016",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-relative-clauses-015",
+          "gold_rank": 1,
+          "top1_score": 0.685479,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q-017",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 2,
+          "top1_score": 0.578441,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q-019",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-articles-003",
+          "gold_rank": 2,
+          "top1_score": 0.495233,
+          "top3": [
+            "gram-en-a1-possessives-018",
+            "gram-en-a1-articles-003",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q-020",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 1,
+          "top1_score": 0.644282,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q-022",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 1,
+          "top1_score": 0.685615,
+          "top3": [
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-be-001",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q-023",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-past-simple-006",
+          "gold_rank": 2,
+          "top1_score": 0.525793,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-past-simple-006",
+            "gram-en-b1-used-to-030"
+          ]
+        },
+        {
+          "query_id": "rag-q-025",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 1,
+          "top1_score": 0.632358,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q-026",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 1,
+          "top1_score": 0.683879,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a2-past-simple-006",
+            "gram-en-a2-comparatives-009"
+          ]
+        },
+        {
+          "query_id": "rag-q-028",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-first-conditional-014",
+          "gold_rank": 1,
+          "top1_score": 0.624694,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q-029",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 1,
+          "top1_score": 0.608351,
+          "top3": [
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q2-001",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-prepositions-time-016",
+          "gold_rank": 1,
+          "top1_score": 0.636139,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q2-003",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-prepositions-time-016",
+          "gold_rank": 1,
+          "top1_score": 0.50873,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-b1-present-perfect-past-012",
+            "gram-en-a1-prepositions-place-017"
+          ]
+        },
+        {
+          "query_id": "rag-q2-004",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-prepositions-place-017",
+          "gold_rank": 1,
+          "top1_score": 0.72207,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q2-006",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-prepositions-place-017",
+          "gold_rank": 1,
+          "top1_score": 0.497563,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q2-007",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-possessives-018",
+          "gold_rank": 1,
+          "top1_score": 0.570844,
+          "top3": [
+            "gram-en-a1-possessives-018",
+            "gram-en-a1-there-be-005",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q2-009",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-possessives-018",
+          "gold_rank": 1,
+          "top1_score": 0.405576,
+          "top3": [
+            "gram-en-a1-possessives-018",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-011",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-can-ability-019",
+          "gold_rank": 1,
+          "top1_score": 0.476967,
+          "top3": [
+            "gram-en-a1-can-ability-019",
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q2-012",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-can-ability-019",
+          "gold_rank": 1,
+          "top1_score": 0.514441,
+          "top3": [
+            "gram-en-a1-can-ability-019",
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q2-013",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-demonstratives-020",
+          "gold_rank": 1,
+          "top1_score": 0.690586,
+          "top3": [
+            "gram-en-a1-demonstratives-020",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q2-014",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-demonstratives-020",
+          "gold_rank": 3,
+          "top1_score": 0.528245,
+          "top3": [
+            "gram-en-a1-articles-003",
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-016",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-frequency-adverbs-021",
+          "gold_rank": 1,
+          "top1_score": 0.677508,
+          "top3": [
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a2-superlatives-022"
+          ]
+        },
+        {
+          "query_id": "rag-q2-018",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-frequency-adverbs-021",
+          "gold_rank": 3,
+          "top1_score": 0.464526,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-frequency-adverbs-021"
+          ]
+        },
+        {
+          "query_id": "rag-q2-019",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-superlatives-022",
+          "gold_rank": 1,
+          "top1_score": 0.51954,
+          "top3": [
+            "gram-en-a2-superlatives-022",
+            "gram-en-a2-comparatives-009",
+            "gram-en-b1-relative-clauses-015"
+          ]
+        },
+        {
+          "query_id": "rag-q2-021",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-superlatives-022",
+          "gold_rank": 4,
+          "top1_score": 0.4865,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q2-022",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-past-continuous-023",
+          "gold_rank": 1,
+          "top1_score": 0.57643,
+          "top3": [
+            "gram-en-a2-past-continuous-023",
+            "gram-en-b1-past-perfect-031",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q2-024",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-past-continuous-023",
+          "gold_rank": 1,
+          "top1_score": 0.540194,
+          "top3": [
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-b1-present-perfect-past-012"
+          ]
+        },
+        {
+          "query_id": "rag-q2-025",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-will-future-024",
+          "gold_rank": 1,
+          "top1_score": 0.641461,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q2-027",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-will-future-024",
+          "gold_rank": 1,
+          "top1_score": 0.586923,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a1-prepositions-time-016"
+          ]
+        },
+        {
+          "query_id": "rag-q2-028",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-verb-patterns-025",
+          "gold_rank": 1,
+          "top1_score": 0.576368,
+          "top3": [
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-a2-going-to-010",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q2-029",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-verb-patterns-025",
+          "gold_rank": 1,
+          "top1_score": 0.664472,
+          "top3": [
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-a2-will-future-024",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q2-031",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-adverbs-manner-026",
+          "gold_rank": 1,
+          "top1_score": 0.47498,
+          "top3": [
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-b1-past-perfect-031",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q2-032",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-adverbs-manner-026",
+          "gold_rank": 3,
+          "top1_score": 0.459826,
+          "top3": [
+            "gram-en-a2-superlatives-022",
+            "gram-en-a1-be-001",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q2-034",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-second-conditional-027",
+          "gold_rank": 1,
+          "top1_score": 0.671611,
+          "top3": [
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-036",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-second-conditional-027",
+          "gold_rank": 1,
+          "top1_score": 0.490122,
+          "top3": [
+            "gram-en-b1-second-conditional-027",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q2-037",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-passive-voice-028",
+          "gold_rank": 4,
+          "top1_score": 0.568727,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q2-039",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-passive-voice-028",
+          "gold_rank": 1,
+          "top1_score": 0.603591,
+          "top3": [
+            "gram-en-b1-passive-voice-028",
+            "gram-en-a1-possessives-018",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q2-040",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-reported-speech-029",
+          "gold_rank": 1,
+          "top1_score": 0.676679,
+          "top3": [
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q2-041",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-reported-speech-029",
+          "gold_rank": 2,
+          "top1_score": 0.513067,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a2-past-continuous-023"
+          ]
+        },
+        {
+          "query_id": "rag-q2-043",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-used-to-030",
+          "gold_rank": 1,
+          "top1_score": 0.487202,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-045",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-used-to-030",
+          "gold_rank": 1,
+          "top1_score": 0.665586,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-past-simple-006"
+          ]
+        },
+        {
+          "query_id": "rag-q2-046",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-past-perfect-031",
+          "gold_rank": 2,
+          "top1_score": 0.688422,
+          "top3": [
+            "gram-en-a2-present-perfect-011",
+            "gram-en-b1-past-perfect-031",
+            "gram-en-b1-present-perfect-past-012"
+          ]
+        },
+        {
+          "query_id": "rag-q2-047",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-past-perfect-031",
+          "gold_rank": 4,
+          "top1_score": 0.526328,
+          "top3": [
+            "gram-en-b1-present-perfect-past-012",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q2-049",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-too-enough-032",
+          "gold_rank": 1,
+          "top1_score": 0.694931,
+          "top3": [
+            "gram-en-b1-too-enough-032",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-prepositions-place-017"
+          ]
+        },
+        {
+          "query_id": "rag-q2-051",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-too-enough-032",
+          "gold_rank": 1,
+          "top1_score": 0.47078,
+          "top3": [
+            "gram-en-b1-too-enough-032",
+            "gram-en-b1-used-to-030",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q2-053",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-zero-conditional-033",
+          "gold_rank": 1,
+          "top1_score": 0.534588,
+          "top3": [
+            "gram-en-b1-zero-conditional-033",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-b1-first-conditional-014"
+          ]
+        },
+        {
+          "query_id": "rag-q2-054",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-zero-conditional-033",
+          "gold_rank": 1,
+          "top1_score": 0.612755,
+          "top3": [
+            "gram-en-b1-zero-conditional-033",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q2-055",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-be-001",
+          "gold_rank": 1,
+          "top1_score": 0.477163,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a1-demonstratives-020",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q2-056",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 7,
+          "top1_score": 0.466032,
+          "top3": [
+            "gram-en-b1-passive-voice-028",
+            "gram-en-b1-second-conditional-027",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q2-057",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-articles-003",
+          "gold_rank": 1,
+          "top1_score": 0.595781,
+          "top3": [
+            "gram-en-a1-articles-003",
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q2-058",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 2,
+          "top1_score": 0.520569,
+          "top3": [
+            "gram-en-a2-superlatives-022",
+            "gram-en-a1-plurals-004",
+            "gram-en-a2-comparatives-009"
+          ]
+        },
+        {
+          "query_id": "rag-q2-059",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 5,
+          "top1_score": 0.450664,
+          "top3": [
+            "gram-en-b1-reported-speech-029",
+            "gram-en-b1-passive-voice-028",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-060",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-past-simple-006",
+          "gold_rank": 1,
+          "top1_score": 0.498139,
+          "top3": [
+            "gram-en-a2-past-simple-006",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q2-061",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 1,
+          "top1_score": 0.649448,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q2-062",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 2,
+          "top1_score": 0.529221,
+          "top3": [
+            "gram-en-a1-there-be-005",
+            "gram-en-a2-count-noncount-008",
+            "gram-en-b1-too-enough-032"
+          ]
+        },
+        {
+          "query_id": "rag-q2-063",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-comparatives-009",
+          "gold_rank": 1,
+          "top1_score": 0.709704,
+          "top3": [
+            "gram-en-a2-comparatives-009",
+            "gram-en-a2-superlatives-022",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q2-064",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 1,
+          "top1_score": 0.523277,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-will-future-024",
+            "gram-en-a2-present-perfect-011"
+          ]
+        },
+        {
+          "query_id": "rag-q2-065",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-present-perfect-011",
+          "gold_rank": 2,
+          "top1_score": 0.606575,
+          "top3": [
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a2-past-continuous-023"
+          ]
+        },
+        {
+          "query_id": "rag-q2-066",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-present-perfect-past-012",
+          "gold_rank": 1,
+          "top1_score": 0.649589,
+          "top3": [
+            "gram-en-b1-present-perfect-past-012",
+            "gram-en-b1-past-perfect-031",
+            "gram-en-a2-present-perfect-011"
+          ]
+        },
+        {
+          "query_id": "rag-q2-067",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 1,
+          "top1_score": 0.72505,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-b1-too-enough-032"
+          ]
+        },
+        {
+          "query_id": "rag-q2-068",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-first-conditional-014",
+          "gold_rank": 1,
+          "top1_score": 0.543549,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q2-069",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-relative-clauses-015",
+          "gold_rank": 1,
+          "top1_score": 0.584541,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-070",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.554316,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q2-071",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.512937,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-072",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.578362,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-a1-be-001",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q2-073",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.470116,
+          "top3": [
+            "gram-en-a2-past-simple-006",
+            "gram-en-a1-plurals-004",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q2-074",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.551236,
+          "top3": [
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q2-077",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.470682,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-a2-past-simple-006"
+          ]
+        },
+        {
+          "query_id": "rag-q2-079",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.425737,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-a2-comparatives-009",
+            "gram-en-b1-first-conditional-014"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "hybrid",
+      "index_keywords_vi": false,
+      "overall": {
+        "n": 71,
+        "recall@1": 0.7324,
+        "recall@3": 0.9014,
+        "recall@5": 0.9437,
+        "mrr@10": 0.8211
+      },
+      "by_query_type": {
+        "semantic": {
+          "n": 35,
+          "recall@1": 0.5714,
+          "recall@3": 0.8286,
+          "recall@5": 0.9143,
+          "mrr@10": 0.714
+        },
+        "terminology": {
+          "n": 36,
+          "recall@1": 0.8889,
+          "recall@3": 0.9722,
+          "recall@5": 0.9722,
+          "mrr@10": 0.9253
+        }
+      },
+      "by_language": {
+        "en": {
+          "n": 34,
+          "recall@1": 0.8529,
+          "recall@3": 0.9118,
+          "recall@5": 0.9412,
+          "mrr@10": 0.8919
+        },
+        "vi": {
+          "n": 37,
+          "recall@1": 0.6216,
+          "recall@3": 0.8919,
+          "recall@5": 0.9459,
+          "mrr@10": 0.7561
+        }
+      },
+      "none_group": {
+        "n_none": 7,
+        "none_top1_median": 0.0325,
+        "answerable_top1_median": 0.0325,
+        "answerable_top1_p25": 0.0319,
+        "share_none_ge_answerable_median": 0.5714,
+        "share_none_ge_answerable_p25": 0.7143
+      },
+      "latency_ms": {
+        "p50": 65.6,
+        "p95": 80.9
+      },
+      "per_query": [
+        {
+          "query_id": "rag-q-001",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-be-001",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q-002",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-present-simple-002",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q-004",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a2-count-noncount-008",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q-005",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-there-be-005",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q-007",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 2,
+          "top1_score": 0.029727,
+          "top3": [
+            "gram-en-a1-demonstratives-020",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q-008",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 1,
+          "top1_score": 0.031778,
+          "top3": [
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a1-be-001",
+            "gram-en-b1-present-perfect-past-012"
+          ]
+        },
+        {
+          "query_id": "rag-q-010",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-will-future-024",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q-011",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-present-perfect-011",
+          "gold_rank": 3,
+          "top1_score": 0.032258,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-present-perfect-011"
+          ]
+        },
+        {
+          "query_id": "rag-q-013",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 1,
+          "top1_score": 0.031754,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a2-past-simple-006"
+          ]
+        },
+        {
+          "query_id": "rag-q-014",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-first-conditional-014"
+          ]
+        },
+        {
+          "query_id": "rag-q-016",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-relative-clauses-015",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q-017",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 1,
+          "top1_score": 0.032258,
+          "top3": [
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-be-001",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q-019",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-articles-003",
+          "gold_rank": 2,
+          "top1_score": 0.032018,
+          "top3": [
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a1-articles-003",
+            "gram-en-a2-comparatives-009"
+          ]
+        },
+        {
+          "query_id": "rag-q-020",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-relative-clauses-015"
+          ]
+        },
+        {
+          "query_id": "rag-q-022",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-be-001",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q-023",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-past-simple-006",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a2-past-simple-006",
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q-025",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a1-prepositions-time-016"
+          ]
+        },
+        {
+          "query_id": "rag-q-026",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a2-past-simple-006",
+            "gram-en-a2-comparatives-009"
+          ]
+        },
+        {
+          "query_id": "rag-q-028",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-first-conditional-014",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q-029",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 3,
+          "top1_score": 0.030282,
+          "top3": [
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-count-noncount-008"
+          ]
+        },
+        {
+          "query_id": "rag-q2-001",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-prepositions-time-016",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-003",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-prepositions-time-016",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q2-004",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-prepositions-place-017",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-006",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-prepositions-place-017",
+          "gold_rank": 1,
+          "top1_score": 0.016393,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q2-007",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-possessives-018",
+          "gold_rank": 1,
+          "top1_score": 0.032266,
+          "top3": [
+            "gram-en-a1-possessives-018",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-b1-modals-013"
+          ]
+        },
+        {
+          "query_id": "rag-q2-009",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-possessives-018",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-possessives-018",
+            "gram-en-b1-passive-voice-028",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q2-011",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-can-ability-019",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-can-ability-019",
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q2-012",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-can-ability-019",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-can-ability-019",
+            "gram-en-a1-be-001",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q2-013",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-demonstratives-020",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-demonstratives-020",
+            "gram-en-a1-there-be-005",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q2-014",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-demonstratives-020",
+          "gold_rank": 3,
+          "top1_score": 0.032258,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-articles-003",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-016",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-frequency-adverbs-021",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a2-past-simple-006"
+          ]
+        },
+        {
+          "query_id": "rag-q2-018",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-frequency-adverbs-021",
+          "gold_rank": 5,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-plurals-004",
+            "gram-en-b1-modals-013"
+          ]
+        },
+        {
+          "query_id": "rag-q2-019",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-superlatives-022",
+          "gold_rank": 2,
+          "top1_score": 0.031099,
+          "top3": [
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a2-superlatives-022",
+            "gram-en-a1-frequency-adverbs-021"
+          ]
+        },
+        {
+          "query_id": "rag-q2-021",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-superlatives-022",
+          "gold_rank": 1,
+          "top1_score": 0.032018,
+          "top3": [
+            "gram-en-a2-superlatives-022",
+            "gram-en-a2-comparatives-009",
+            "gram-en-b1-used-to-030"
+          ]
+        },
+        {
+          "query_id": "rag-q2-022",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-past-continuous-023",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-024",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-past-continuous-023",
+          "gold_rank": 1,
+          "top1_score": 0.016393,
+          "top3": [
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-b1-present-perfect-past-012"
+          ]
+        },
+        {
+          "query_id": "rag-q2-025",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-will-future-024",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q2-027",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-will-future-024",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a1-prepositions-time-016"
+          ]
+        },
+        {
+          "query_id": "rag-q2-028",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-verb-patterns-025",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-past-simple-006"
+          ]
+        },
+        {
+          "query_id": "rag-q2-029",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-verb-patterns-025",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-a2-will-future-024",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q2-031",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-adverbs-manner-026",
+          "gold_rank": 1,
+          "top1_score": 0.016393,
+          "top3": [
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-b1-past-perfect-031",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q2-032",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-adverbs-manner-026",
+          "gold_rank": 8,
+          "top1_score": 0.032258,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q2-034",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-second-conditional-027",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-036",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-second-conditional-027",
+          "gold_rank": 2,
+          "top1_score": 0.030679,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-b1-second-conditional-027",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q2-037",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-passive-voice-028",
+          "gold_rank": 7,
+          "top1_score": 0.030798,
+          "top3": [
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q2-039",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-passive-voice-028",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-passive-voice-028",
+            "gram-en-a1-articles-003",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q2-040",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-reported-speech-029",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a2-count-noncount-008"
+          ]
+        },
+        {
+          "query_id": "rag-q2-041",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-reported-speech-029",
+          "gold_rank": 2,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q2-043",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-used-to-030",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q2-045",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-used-to-030",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a1-present-simple-002",
+            "gram-en-a2-past-continuous-023"
+          ]
+        },
+        {
+          "query_id": "rag-q2-046",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-past-perfect-031",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-b1-past-perfect-031",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-b1-present-perfect-past-012"
+          ]
+        },
+        {
+          "query_id": "rag-q2-047",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-past-perfect-031",
+          "gold_rank": 6,
+          "top1_score": 0.030092,
+          "top3": [
+            "gram-en-a2-present-perfect-011",
+            "gram-en-b1-present-perfect-past-012",
+            "gram-en-a2-past-continuous-023"
+          ]
+        },
+        {
+          "query_id": "rag-q2-049",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-too-enough-032",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-too-enough-032",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-prepositions-place-017"
+          ]
+        },
+        {
+          "query_id": "rag-q2-051",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-too-enough-032",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-too-enough-032",
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-can-ability-019"
+          ]
+        },
+        {
+          "query_id": "rag-q2-053",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-zero-conditional-033",
+          "gold_rank": 1,
+          "top1_score": 0.016393,
+          "top3": [
+            "gram-en-b1-zero-conditional-033",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-b1-first-conditional-014"
+          ]
+        },
+        {
+          "query_id": "rag-q2-054",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-zero-conditional-033",
+          "gold_rank": 1,
+          "top1_score": 0.016393,
+          "top3": [
+            "gram-en-b1-zero-conditional-033",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q2-055",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-be-001",
+          "gold_rank": 2,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-demonstratives-020",
+            "gram-en-a1-be-001",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q2-056",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 4,
+          "top1_score": 0.031545,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q2-057",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-articles-003",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-articles-003",
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q2-058",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a2-comparatives-009",
+            "gram-en-a2-superlatives-022"
+          ]
+        },
+        {
+          "query_id": "rag-q2-059",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 6,
+          "top1_score": 0.031545,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-demonstratives-020",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q2-060",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-past-simple-006",
+          "gold_rank": 3,
+          "top1_score": 0.031319,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-present-simple-002",
+            "gram-en-a2-past-simple-006"
+          ]
+        },
+        {
+          "query_id": "rag-q2-061",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q2-062",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-plurals-004"
+          ]
+        },
+        {
+          "query_id": "rag-q2-063",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-comparatives-009",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-comparatives-009",
+            "gram-en-a2-superlatives-022",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q2-064",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 3,
+          "top1_score": 0.032266,
+          "top3": [
+            "gram-en-a2-present-perfect-011",
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q2-065",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-present-perfect-011",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a2-present-perfect-011",
+            "gram-en-b1-reported-speech-029",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-066",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-present-perfect-past-012",
+          "gold_rank": 3,
+          "top1_score": 0.030018,
+          "top3": [
+            "gram-en-a1-present-simple-002",
+            "gram-en-b1-modals-013",
+            "gram-en-b1-present-perfect-past-012"
+          ]
+        },
+        {
+          "query_id": "rag-q2-067",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-too-enough-032"
+          ]
+        },
+        {
+          "query_id": "rag-q2-068",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-first-conditional-014",
+          "gold_rank": 4,
+          "top1_score": 0.031025,
+          "top3": [
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q2-069",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-relative-clauses-015",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-articles-003",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q2-070",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q2-071",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.016393,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-072",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q2-073",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.032266,
+          "top3": [
+            "gram-en-a2-past-simple-006",
+            "gram-en-a1-be-001",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q2-074",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q2-077",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a1-possessives-018",
+            "gram-en-b1-modals-013"
+          ]
+        },
+        {
+          "query_id": "rag-q2-079",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.031746,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-b1-reported-speech-029"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "bm25",
+      "index_keywords_vi": true,
+      "overall": {
+        "n": 71,
+        "recall@1": 0.6479,
+        "recall@3": 0.8028,
+        "recall@5": 0.8592,
+        "mrr@10": 0.7364
+      },
+      "by_query_type": {
+        "semantic": {
+          "n": 35,
+          "recall@1": 0.4857,
+          "recall@3": 0.6571,
+          "recall@5": 0.7714,
+          "mrr@10": 0.5907
+        },
+        "terminology": {
+          "n": 36,
+          "recall@1": 0.8056,
+          "recall@3": 0.9444,
+          "recall@5": 0.9444,
+          "mrr@10": 0.8781
+        }
+      },
+      "by_language": {
+        "en": {
+          "n": 34,
+          "recall@1": 0.7353,
+          "recall@3": 0.7941,
+          "recall@5": 0.8824,
+          "mrr@10": 0.7853
+        },
+        "vi": {
+          "n": 37,
+          "recall@1": 0.5676,
+          "recall@3": 0.8108,
+          "recall@5": 0.8378,
+          "mrr@10": 0.6915
+        }
+      },
+      "none_group": {
+        "n_none": 7,
+        "none_top1_median": 5.6873,
+        "answerable_top1_median": 9.9381,
+        "answerable_top1_p25": 7.3539,
+        "share_none_ge_answerable_median": 0.0,
+        "share_none_ge_answerable_p25": 0.1429
+      },
+      "latency_ms": {
+        "p50": 0.1,
+        "p95": 0.1
+      },
+      "per_query": [
+        {
+          "query_id": "rag-q-001",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-be-001",
+          "gold_rank": 1,
+          "top1_score": 16.108416,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q-002",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 2,
+          "top1_score": 7.375301,
+          "top3": [
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q-004",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 2,
+          "top1_score": 9.51415,
+          "top3": [
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a1-plurals-004",
+            "gram-en-b1-modals-013"
+          ]
+        },
+        {
+          "query_id": "rag-q-005",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 2,
+          "top1_score": 13.8989,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q-007",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 3,
+          "top1_score": 15.974408,
+          "top3": [
+            "gram-en-a2-past-continuous-023",
+            "gram-en-b1-past-perfect-031",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q-008",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 5,
+          "top1_score": 5.610599,
+          "top3": [
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-b1-present-perfect-past-012",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q-010",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 1,
+          "top1_score": 11.112351,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q-011",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-present-perfect-011",
+          "gold_rank": null,
+          "top1_score": 8.409879,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-b1-too-enough-032",
+            "gram-en-a1-prepositions-place-017"
+          ]
+        },
+        {
+          "query_id": "rag-q-013",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 9,
+          "top1_score": 12.501263,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a2-past-simple-006",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q-014",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 1,
+          "top1_score": 8.994598,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-b1-used-to-030",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q-016",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-relative-clauses-015",
+          "gold_rank": 1,
+          "top1_score": 32.117378,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q-017",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 2,
+          "top1_score": 11.936482,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a1-present-simple-002",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q-019",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-articles-003",
+          "gold_rank": 1,
+          "top1_score": 7.435446,
+          "top3": [
+            "gram-en-a1-articles-003",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-b1-too-enough-032"
+          ]
+        },
+        {
+          "query_id": "rag-q-020",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 1,
+          "top1_score": 21.176855,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a2-verb-patterns-025"
+          ]
+        },
+        {
+          "query_id": "rag-q-022",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 1,
+          "top1_score": 12.090242,
+          "top3": [
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q-023",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-past-simple-006",
+          "gold_rank": 1,
+          "top1_score": 8.047275,
+          "top3": [
+            "gram-en-a2-past-simple-006",
+            "gram-en-b1-modals-013",
+            "gram-en-a2-past-continuous-023"
+          ]
+        },
+        {
+          "query_id": "rag-q-025",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 1,
+          "top1_score": 14.529159,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q-026",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 1,
+          "top1_score": 17.195999,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a2-past-simple-006",
+            "gram-en-a2-count-noncount-008"
+          ]
+        },
+        {
+          "query_id": "rag-q-028",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-first-conditional-014",
+          "gold_rank": 1,
+          "top1_score": 22.830991,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q-029",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 1,
+          "top1_score": 4.458422,
+          "top3": [
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-past-continuous-023"
+          ]
+        },
+        {
+          "query_id": "rag-q2-001",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-prepositions-time-016",
+          "gold_rank": 1,
+          "top1_score": 14.577658,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-003",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-prepositions-time-016",
+          "gold_rank": 1,
+          "top1_score": 10.290607,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-prepositions-place-017"
+          ]
+        },
+        {
+          "query_id": "rag-q2-004",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-prepositions-place-017",
+          "gold_rank": 1,
+          "top1_score": 12.075075,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-006",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-prepositions-place-017",
+          "gold_rank": null,
+          "top1_score": null,
+          "top3": []
+        },
+        {
+          "query_id": "rag-q2-007",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-possessives-018",
+          "gold_rank": 1,
+          "top1_score": 22.537076,
+          "top3": [
+            "gram-en-a1-possessives-018",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a1-plurals-004"
+          ]
+        },
+        {
+          "query_id": "rag-q2-009",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-possessives-018",
+          "gold_rank": 1,
+          "top1_score": 4.350002,
+          "top3": [
+            "gram-en-a1-possessives-018",
+            "gram-en-b1-passive-voice-028",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-011",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-can-ability-019",
+          "gold_rank": 2,
+          "top1_score": 4.928035,
+          "top3": [
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-can-ability-019",
+            "gram-en-b1-present-perfect-past-012"
+          ]
+        },
+        {
+          "query_id": "rag-q2-012",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-can-ability-019",
+          "gold_rank": 1,
+          "top1_score": 6.277013,
+          "top3": [
+            "gram-en-a1-can-ability-019",
+            "gram-en-b1-used-to-030",
+            "gram-en-a1-frequency-adverbs-021"
+          ]
+        },
+        {
+          "query_id": "rag-q2-013",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-demonstratives-020",
+          "gold_rank": 1,
+          "top1_score": 12.04406,
+          "top3": [
+            "gram-en-a1-demonstratives-020",
+            "gram-en-b1-present-perfect-past-012",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q2-014",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-demonstratives-020",
+          "gold_rank": 4,
+          "top1_score": 7.281744,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q2-016",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-frequency-adverbs-021",
+          "gold_rank": 1,
+          "top1_score": 13.37569,
+          "top3": [
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q2-018",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-frequency-adverbs-021",
+          "gold_rank": null,
+          "top1_score": 7.086049,
+          "top3": [
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-plurals-004",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q2-019",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-superlatives-022",
+          "gold_rank": 2,
+          "top1_score": 8.47013,
+          "top3": [
+            "gram-en-a2-comparatives-009",
+            "gram-en-a2-superlatives-022",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q2-021",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-superlatives-022",
+          "gold_rank": 1,
+          "top1_score": 6.475667,
+          "top3": [
+            "gram-en-a2-superlatives-022",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q2-022",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-past-continuous-023",
+          "gold_rank": 1,
+          "top1_score": 5.873632,
+          "top3": [
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q2-024",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-past-continuous-023",
+          "gold_rank": 1,
+          "top1_score": 14.082948,
+          "top3": [
+            "gram-en-a2-past-continuous-023",
+            "gram-en-b1-passive-voice-028",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-025",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-will-future-024",
+          "gold_rank": 1,
+          "top1_score": 8.882642,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q2-027",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-will-future-024",
+          "gold_rank": 1,
+          "top1_score": 7.222468,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a1-prepositions-time-016"
+          ]
+        },
+        {
+          "query_id": "rag-q2-028",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-verb-patterns-025",
+          "gold_rank": 1,
+          "top1_score": 12.720728,
+          "top3": [
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q2-029",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-verb-patterns-025",
+          "gold_rank": 1,
+          "top1_score": 19.396212,
+          "top3": [
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-b1-too-enough-032"
+          ]
+        },
+        {
+          "query_id": "rag-q2-031",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-adverbs-manner-026",
+          "gold_rank": 1,
+          "top1_score": 12.147374,
+          "top3": [
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q2-032",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-adverbs-manner-026",
+          "gold_rank": null,
+          "top1_score": 2.944241,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-be-001",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-034",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-second-conditional-027",
+          "gold_rank": 1,
+          "top1_score": 9.460516,
+          "top3": [
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-036",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-second-conditional-027",
+          "gold_rank": 3,
+          "top1_score": 10.920227,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a1-present-simple-002",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q2-037",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-passive-voice-028",
+          "gold_rank": 1,
+          "top1_score": 13.357562,
+          "top3": [
+            "gram-en-b1-passive-voice-028",
+            "gram-en-a1-there-be-005",
+            "gram-en-b1-first-conditional-014"
+          ]
+        },
+        {
+          "query_id": "rag-q2-039",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-passive-voice-028",
+          "gold_rank": 1,
+          "top1_score": 11.709295,
+          "top3": [
+            "gram-en-b1-passive-voice-028",
+            "gram-en-b1-modals-013",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q2-040",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-reported-speech-029",
+          "gold_rank": 1,
+          "top1_score": 9.585605,
+          "top3": [
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-041",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-reported-speech-029",
+          "gold_rank": 2,
+          "top1_score": 7.477829,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q2-043",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-used-to-030",
+          "gold_rank": 6,
+          "top1_score": 6.258923,
+          "top3": [
+            "gram-en-b1-second-conditional-027",
+            "gram-en-a1-there-be-005",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q2-045",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-used-to-030",
+          "gold_rank": 1,
+          "top1_score": 8.755636,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q2-046",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-past-perfect-031",
+          "gold_rank": 1,
+          "top1_score": 8.355698,
+          "top3": [
+            "gram-en-b1-past-perfect-031",
+            "gram-en-b1-present-perfect-past-012",
+            "gram-en-a2-present-perfect-011"
+          ]
+        },
+        {
+          "query_id": "rag-q2-047",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-past-perfect-031",
+          "gold_rank": null,
+          "top1_score": 7.648556,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q2-049",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-too-enough-032",
+          "gold_rank": 1,
+          "top1_score": 13.31582,
+          "top3": [
+            "gram-en-b1-too-enough-032",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-frequency-adverbs-021"
+          ]
+        },
+        {
+          "query_id": "rag-q2-051",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-too-enough-032",
+          "gold_rank": 1,
+          "top1_score": 11.573797,
+          "top3": [
+            "gram-en-b1-too-enough-032",
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-can-ability-019"
+          ]
+        },
+        {
+          "query_id": "rag-q2-053",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-zero-conditional-033",
+          "gold_rank": 3,
+          "top1_score": 7.346756,
+          "top3": [
+            "gram-en-a1-there-be-005",
+            "gram-en-b1-too-enough-032",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-054",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-zero-conditional-033",
+          "gold_rank": 3,
+          "top1_score": 22.724524,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-055",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-be-001",
+          "gold_rank": 4,
+          "top1_score": 3.796273,
+          "top3": [
+            "gram-en-a1-demonstratives-020",
+            "gram-en-a1-possessives-018",
+            "gram-en-b1-relative-clauses-015"
+          ]
+        },
+        {
+          "query_id": "rag-q2-056",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 8,
+          "top1_score": 6.152785,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q2-057",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-articles-003",
+          "gold_rank": 1,
+          "top1_score": 3.106349,
+          "top3": [
+            "gram-en-a1-articles-003",
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-can-ability-019"
+          ]
+        },
+        {
+          "query_id": "rag-q2-058",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 1,
+          "top1_score": 12.333153,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-059",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": null,
+          "top1_score": 7.220015,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-possessives-018",
+            "gram-en-a1-frequency-adverbs-021"
+          ]
+        },
+        {
+          "query_id": "rag-q2-060",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-past-simple-006",
+          "gold_rank": 1,
+          "top1_score": 14.878395,
+          "top3": [
+            "gram-en-a2-past-simple-006",
+            "gram-en-b1-passive-voice-028",
+            "gram-en-a1-plurals-004"
+          ]
+        },
+        {
+          "query_id": "rag-q2-061",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 1,
+          "top1_score": 7.272122,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-b1-used-to-030",
+            "gram-en-b1-modals-013"
+          ]
+        },
+        {
+          "query_id": "rag-q2-062",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 1,
+          "top1_score": 14.918453,
+          "top3": [
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q2-063",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-comparatives-009",
+          "gold_rank": 1,
+          "top1_score": 10.37208,
+          "top3": [
+            "gram-en-a2-comparatives-009",
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-superlatives-022"
+          ]
+        },
+        {
+          "query_id": "rag-q2-064",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 10,
+          "top1_score": 7.648556,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q2-065",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-present-perfect-011",
+          "gold_rank": 1,
+          "top1_score": 12.496225,
+          "top3": [
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a1-can-ability-019",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q2-066",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-present-perfect-past-012",
+          "gold_rank": 1,
+          "top1_score": 17.263822,
+          "top3": [
+            "gram-en-b1-present-perfect-past-012",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-067",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 1,
+          "top1_score": 7.737203,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-b1-first-conditional-014"
+          ]
+        },
+        {
+          "query_id": "rag-q2-068",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-first-conditional-014",
+          "gold_rank": 4,
+          "top1_score": 8.687334,
+          "top3": [
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q2-069",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-relative-clauses-015",
+          "gold_rank": 1,
+          "top1_score": 11.506165,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-articles-003",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-070",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 7.044156,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-b1-passive-voice-028",
+            "gram-en-a2-present-perfect-011"
+          ]
+        },
+        {
+          "query_id": "rag-q2-071",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 9.799841,
+          "top3": [
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-072",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 5.017735,
+          "top3": [
+            "gram-en-b1-present-perfect-past-012",
+            "gram-en-a1-be-001",
+            "gram-en-a2-present-perfect-011"
+          ]
+        },
+        {
+          "query_id": "rag-q2-073",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 6.587897,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-past-simple-006",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q2-074",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 5.007949,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-present-perfect-011"
+          ]
+        },
+        {
+          "query_id": "rag-q2-077",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 5.687281,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-a1-be-001",
+            "gram-en-a1-frequency-adverbs-021"
+          ]
+        },
+        {
+          "query_id": "rag-q2-079",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 3.954651,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-demonstratives-020",
+            "gram-en-b1-reported-speech-029"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "dense",
+      "index_keywords_vi": true,
+      "overall": {
+        "n": 71,
+        "recall@1": 0.7887,
+        "recall@3": 0.9296,
+        "recall@5": 0.9859,
+        "mrr@10": 0.8678
+      },
+      "by_query_type": {
+        "semantic": {
+          "n": 35,
+          "recall@1": 0.6857,
+          "recall@3": 0.8857,
+          "recall@5": 0.9714,
+          "mrr@10": 0.7962
+        },
+        "terminology": {
+          "n": 36,
+          "recall@1": 0.8889,
+          "recall@3": 0.9722,
+          "recall@5": 1.0,
+          "mrr@10": 0.9375
+        }
+      },
+      "by_language": {
+        "en": {
+          "n": 34,
+          "recall@1": 0.8235,
+          "recall@3": 0.9706,
+          "recall@5": 1.0,
+          "mrr@10": 0.8897
+        },
+        "vi": {
+          "n": 37,
+          "recall@1": 0.7568,
+          "recall@3": 0.8919,
+          "recall@5": 0.973,
+          "mrr@10": 0.8477
+        }
+      },
+      "none_group": {
+        "n_none": 7,
+        "none_top1_median": 0.5418,
+        "answerable_top1_median": 0.5814,
+        "answerable_top1_p25": 0.5226,
+        "share_none_ge_answerable_median": 0.1429,
+        "share_none_ge_answerable_p25": 0.5714
+      },
+      "latency_ms": {
+        "p50": 61.3,
+        "p95": 73.7
+      },
+      "per_query": [
+        {
+          "query_id": "rag-q-001",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-be-001",
+          "gold_rank": 1,
+          "top1_score": 0.724193,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q-002",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 1,
+          "top1_score": 0.619947,
+          "top3": [
+            "gram-en-a1-present-simple-002",
+            "gram-en-b1-passive-voice-028",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q-004",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 1,
+          "top1_score": 0.602652,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q-005",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 1,
+          "top1_score": 0.625332,
+          "top3": [
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-possessives-018",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q-007",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 1,
+          "top1_score": 0.47174,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a2-past-continuous-023"
+          ]
+        },
+        {
+          "query_id": "rag-q-008",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 1,
+          "top1_score": 0.52696,
+          "top3": [
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q-010",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 1,
+          "top1_score": 0.658257,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-will-future-024",
+            "gram-en-a1-prepositions-time-016"
+          ]
+        },
+        {
+          "query_id": "rag-q-011",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-present-perfect-011",
+          "gold_rank": 1,
+          "top1_score": 0.581441,
+          "top3": [
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-b1-used-to-030"
+          ]
+        },
+        {
+          "query_id": "rag-q-013",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 4,
+          "top1_score": 0.588147,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-b1-past-perfect-031",
+            "gram-en-a2-past-simple-006"
+          ]
+        },
+        {
+          "query_id": "rag-q-014",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 1,
+          "top1_score": 0.531331,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q-016",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-relative-clauses-015",
+          "gold_rank": 1,
+          "top1_score": 0.681431,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-articles-003",
+            "gram-en-b1-first-conditional-014"
+          ]
+        },
+        {
+          "query_id": "rag-q-017",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 1,
+          "top1_score": 0.580939,
+          "top3": [
+            "gram-en-a1-present-simple-002",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q-019",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-articles-003",
+          "gold_rank": 1,
+          "top1_score": 0.523758,
+          "top3": [
+            "gram-en-a1-articles-003",
+            "gram-en-a1-possessives-018",
+            "gram-en-a2-comparatives-009"
+          ]
+        },
+        {
+          "query_id": "rag-q-020",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 1,
+          "top1_score": 0.65145,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q-022",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 1,
+          "top1_score": 0.678281,
+          "top3": [
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-be-001",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q-023",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-past-simple-006",
+          "gold_rank": 2,
+          "top1_score": 0.527642,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-past-simple-006",
+            "gram-en-b1-used-to-030"
+          ]
+        },
+        {
+          "query_id": "rag-q-025",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 1,
+          "top1_score": 0.639777,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q-026",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 1,
+          "top1_score": 0.678474,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a2-past-simple-006",
+            "gram-en-a2-comparatives-009"
+          ]
+        },
+        {
+          "query_id": "rag-q-028",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-first-conditional-014",
+          "gold_rank": 1,
+          "top1_score": 0.609329,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q-029",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 1,
+          "top1_score": 0.616525,
+          "top3": [
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q2-001",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-prepositions-time-016",
+          "gold_rank": 1,
+          "top1_score": 0.643256,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q2-003",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-prepositions-time-016",
+          "gold_rank": 1,
+          "top1_score": 0.501357,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-b1-present-perfect-past-012",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q2-004",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-prepositions-place-017",
+          "gold_rank": 1,
+          "top1_score": 0.720116,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q2-006",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-prepositions-place-017",
+          "gold_rank": 1,
+          "top1_score": 0.487713,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q2-007",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-possessives-018",
+          "gold_rank": 1,
+          "top1_score": 0.581723,
+          "top3": [
+            "gram-en-a1-possessives-018",
+            "gram-en-a1-there-be-005",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q2-009",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-possessives-018",
+          "gold_rank": 1,
+          "top1_score": 0.41348,
+          "top3": [
+            "gram-en-a1-possessives-018",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q2-011",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-can-ability-019",
+          "gold_rank": 1,
+          "top1_score": 0.474158,
+          "top3": [
+            "gram-en-a1-can-ability-019",
+            "gram-en-a1-present-simple-002",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q2-012",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-can-ability-019",
+          "gold_rank": 1,
+          "top1_score": 0.501178,
+          "top3": [
+            "gram-en-a1-can-ability-019",
+            "gram-en-a1-present-simple-002",
+            "gram-en-a2-present-perfect-011"
+          ]
+        },
+        {
+          "query_id": "rag-q2-013",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-demonstratives-020",
+          "gold_rank": 1,
+          "top1_score": 0.68495,
+          "top3": [
+            "gram-en-a1-demonstratives-020",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q2-014",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-demonstratives-020",
+          "gold_rank": 3,
+          "top1_score": 0.531836,
+          "top3": [
+            "gram-en-a1-articles-003",
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-016",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-frequency-adverbs-021",
+          "gold_rank": 1,
+          "top1_score": 0.683341,
+          "top3": [
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a2-past-simple-006"
+          ]
+        },
+        {
+          "query_id": "rag-q2-018",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-frequency-adverbs-021",
+          "gold_rank": 3,
+          "top1_score": 0.457385,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-frequency-adverbs-021"
+          ]
+        },
+        {
+          "query_id": "rag-q2-019",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-superlatives-022",
+          "gold_rank": 2,
+          "top1_score": 0.538515,
+          "top3": [
+            "gram-en-a2-comparatives-009",
+            "gram-en-a2-superlatives-022",
+            "gram-en-a2-count-noncount-008"
+          ]
+        },
+        {
+          "query_id": "rag-q2-021",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-superlatives-022",
+          "gold_rank": 6,
+          "top1_score": 0.488798,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q2-022",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-past-continuous-023",
+          "gold_rank": 1,
+          "top1_score": 0.569779,
+          "top3": [
+            "gram-en-a2-past-continuous-023",
+            "gram-en-b1-past-perfect-031",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q2-024",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-past-continuous-023",
+          "gold_rank": 1,
+          "top1_score": 0.557656,
+          "top3": [
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-025",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-will-future-024",
+          "gold_rank": 1,
+          "top1_score": 0.67176,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q2-027",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-will-future-024",
+          "gold_rank": 1,
+          "top1_score": 0.594376,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a1-prepositions-time-016"
+          ]
+        },
+        {
+          "query_id": "rag-q2-028",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-verb-patterns-025",
+          "gold_rank": 1,
+          "top1_score": 0.568667,
+          "top3": [
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-a2-past-simple-006",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q2-029",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-verb-patterns-025",
+          "gold_rank": 1,
+          "top1_score": 0.656642,
+          "top3": [
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-a2-will-future-024",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q2-031",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-adverbs-manner-026",
+          "gold_rank": 1,
+          "top1_score": 0.502561,
+          "top3": [
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-b1-passive-voice-028",
+            "gram-en-a2-past-simple-006"
+          ]
+        },
+        {
+          "query_id": "rag-q2-032",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-adverbs-manner-026",
+          "gold_rank": 3,
+          "top1_score": 0.450842,
+          "top3": [
+            "gram-en-a2-superlatives-022",
+            "gram-en-a1-be-001",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q2-034",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-second-conditional-027",
+          "gold_rank": 1,
+          "top1_score": 0.675599,
+          "top3": [
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-036",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-second-conditional-027",
+          "gold_rank": 1,
+          "top1_score": 0.500177,
+          "top3": [
+            "gram-en-b1-second-conditional-027",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-037",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-passive-voice-028",
+          "gold_rank": 2,
+          "top1_score": 0.578624,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-passive-voice-028",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q2-039",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-passive-voice-028",
+          "gold_rank": 1,
+          "top1_score": 0.612227,
+          "top3": [
+            "gram-en-b1-passive-voice-028",
+            "gram-en-a1-possessives-018",
+            "gram-en-a2-comparatives-009"
+          ]
+        },
+        {
+          "query_id": "rag-q2-040",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-reported-speech-029",
+          "gold_rank": 1,
+          "top1_score": 0.671184,
+          "top3": [
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q2-041",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-reported-speech-029",
+          "gold_rank": 2,
+          "top1_score": 0.5033,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a2-count-noncount-008"
+          ]
+        },
+        {
+          "query_id": "rag-q2-043",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-used-to-030",
+          "gold_rank": 1,
+          "top1_score": 0.48926,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-045",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-used-to-030",
+          "gold_rank": 1,
+          "top1_score": 0.654593,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-past-simple-006",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q2-046",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-past-perfect-031",
+          "gold_rank": 2,
+          "top1_score": 0.685138,
+          "top3": [
+            "gram-en-a2-present-perfect-011",
+            "gram-en-b1-past-perfect-031",
+            "gram-en-b1-present-perfect-past-012"
+          ]
+        },
+        {
+          "query_id": "rag-q2-047",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-past-perfect-031",
+          "gold_rank": 4,
+          "top1_score": 0.529346,
+          "top3": [
+            "gram-en-b1-present-perfect-past-012",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q2-049",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-too-enough-032",
+          "gold_rank": 1,
+          "top1_score": 0.696217,
+          "top3": [
+            "gram-en-b1-too-enough-032",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-prepositions-place-017"
+          ]
+        },
+        {
+          "query_id": "rag-q2-051",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-too-enough-032",
+          "gold_rank": 1,
+          "top1_score": 0.4722,
+          "top3": [
+            "gram-en-b1-too-enough-032",
+            "gram-en-b1-passive-voice-028",
+            "gram-en-b1-used-to-030"
+          ]
+        },
+        {
+          "query_id": "rag-q2-053",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-zero-conditional-033",
+          "gold_rank": 1,
+          "top1_score": 0.540498,
+          "top3": [
+            "gram-en-b1-zero-conditional-033",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q2-054",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-zero-conditional-033",
+          "gold_rank": 1,
+          "top1_score": 0.639533,
+          "top3": [
+            "gram-en-b1-zero-conditional-033",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q2-055",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-be-001",
+          "gold_rank": 1,
+          "top1_score": 0.464445,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a1-demonstratives-020",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q2-056",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 5,
+          "top1_score": 0.46578,
+          "top3": [
+            "gram-en-b1-passive-voice-028",
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-used-to-030"
+          ]
+        },
+        {
+          "query_id": "rag-q2-057",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-articles-003",
+          "gold_rank": 1,
+          "top1_score": 0.587931,
+          "top3": [
+            "gram-en-a1-articles-003",
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q2-058",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 1,
+          "top1_score": 0.524674,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a2-superlatives-022",
+            "gram-en-a2-comparatives-009"
+          ]
+        },
+        {
+          "query_id": "rag-q2-059",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 4,
+          "top1_score": 0.449176,
+          "top3": [
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a2-going-to-010",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q2-060",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-past-simple-006",
+          "gold_rank": 1,
+          "top1_score": 0.521444,
+          "top3": [
+            "gram-en-a2-past-simple-006",
+            "gram-en-b1-passive-voice-028",
+            "gram-en-a2-past-continuous-023"
+          ]
+        },
+        {
+          "query_id": "rag-q2-061",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 1,
+          "top1_score": 0.650621,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q2-062",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 1,
+          "top1_score": 0.525253,
+          "top3": [
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a1-there-be-005",
+            "gram-en-b1-too-enough-032"
+          ]
+        },
+        {
+          "query_id": "rag-q2-063",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-comparatives-009",
+          "gold_rank": 1,
+          "top1_score": 0.711762,
+          "top3": [
+            "gram-en-a2-comparatives-009",
+            "gram-en-a2-superlatives-022",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q2-064",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 2,
+          "top1_score": 0.525884,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-present-perfect-011"
+          ]
+        },
+        {
+          "query_id": "rag-q2-065",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-present-perfect-011",
+          "gold_rank": 2,
+          "top1_score": 0.595481,
+          "top3": [
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a2-past-continuous-023"
+          ]
+        },
+        {
+          "query_id": "rag-q2-066",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-present-perfect-past-012",
+          "gold_rank": 1,
+          "top1_score": 0.700728,
+          "top3": [
+            "gram-en-b1-present-perfect-past-012",
+            "gram-en-b1-past-perfect-031",
+            "gram-en-a2-present-perfect-011"
+          ]
+        },
+        {
+          "query_id": "rag-q2-067",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 1,
+          "top1_score": 0.719632,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-b1-too-enough-032"
+          ]
+        },
+        {
+          "query_id": "rag-q2-068",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-first-conditional-014",
+          "gold_rank": 1,
+          "top1_score": 0.538844,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q2-069",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-relative-clauses-015",
+          "gold_rank": 1,
+          "top1_score": 0.582047,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-demonstratives-020",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q2-070",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.561106,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q2-071",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.541786,
+          "top3": [
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-072",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.585757,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-a1-be-001",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q2-073",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.472742,
+          "top3": [
+            "gram-en-a2-past-simple-006",
+            "gram-en-a1-plurals-004",
+            "gram-en-a2-comparatives-009"
+          ]
+        },
+        {
+          "query_id": "rag-q2-074",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.55783,
+          "top3": [
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q2-077",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.460442,
+          "top3": [
+            "gram-en-a2-past-simple-006",
+            "gram-en-a1-be-001",
+            "gram-en-a2-verb-patterns-025"
+          ]
+        },
+        {
+          "query_id": "rag-q2-079",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.419232,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-a2-comparatives-009",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "hybrid",
+      "index_keywords_vi": true,
+      "overall": {
+        "n": 71,
+        "recall@1": 0.8169,
+        "recall@3": 0.9014,
+        "recall@5": 0.9296,
+        "mrr@10": 0.8678
+      },
+      "by_query_type": {
+        "semantic": {
+          "n": 35,
+          "recall@1": 0.7143,
+          "recall@3": 0.8286,
+          "recall@5": 0.8857,
+          "mrr@10": 0.7848
+        },
+        "terminology": {
+          "n": 36,
+          "recall@1": 0.9167,
+          "recall@3": 0.9722,
+          "recall@5": 0.9722,
+          "mrr@10": 0.9484
+        }
+      },
+      "by_language": {
+        "en": {
+          "n": 34,
+          "recall@1": 0.8529,
+          "recall@3": 0.9118,
+          "recall@5": 0.9412,
+          "mrr@10": 0.8915
+        },
+        "vi": {
+          "n": 37,
+          "recall@1": 0.7838,
+          "recall@3": 0.8919,
+          "recall@5": 0.9189,
+          "mrr@10": 0.846
+        }
+      },
+      "none_group": {
+        "n_none": 7,
+        "none_top1_median": 0.0325,
+        "answerable_top1_median": 0.0328,
+        "answerable_top1_p25": 0.0325,
+        "share_none_ge_answerable_median": 0.2857,
+        "share_none_ge_answerable_p25": 0.5714
+      },
+      "latency_ms": {
+        "p50": 63.8,
+        "p95": 84.8
+      },
+      "per_query": [
+        {
+          "query_id": "rag-q-001",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-be-001",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-verb-patterns-025"
+          ]
+        },
+        {
+          "query_id": "rag-q-002",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-be-001",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q-004",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q-005",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-plurals-004",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q-007",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 2,
+          "top1_score": 0.032266,
+          "top3": [
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q-008",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 1,
+          "top1_score": 0.031778,
+          "top3": [
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a1-be-001",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q-010",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-will-future-024",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q-011",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-present-perfect-011",
+          "gold_rank": 8,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-b1-used-to-030",
+            "gram-en-b1-present-perfect-past-012"
+          ]
+        },
+        {
+          "query_id": "rag-q-013",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 7,
+          "top1_score": 0.032002,
+          "top3": [
+            "gram-en-a2-past-simple-006",
+            "gram-en-b1-past-perfect-031",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q-014",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q-016",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-relative-clauses-015",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-articles-003",
+            "gram-en-b1-first-conditional-014"
+          ]
+        },
+        {
+          "query_id": "rag-q-017",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-be-001",
+            "gram-en-a2-past-simple-006"
+          ]
+        },
+        {
+          "query_id": "rag-q-019",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-articles-003",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-articles-003",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q-020",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-relative-clauses-015"
+          ]
+        },
+        {
+          "query_id": "rag-q-022",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-be-001",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q-023",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-past-simple-006",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a2-past-simple-006",
+            "gram-en-a2-going-to-010",
+            "gram-en-b1-modals-013"
+          ]
+        },
+        {
+          "query_id": "rag-q-025",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q-026",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a2-past-simple-006",
+            "gram-en-a2-comparatives-009"
+          ]
+        },
+        {
+          "query_id": "rag-q-028",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-first-conditional-014",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q-029",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q2-001",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-prepositions-time-016",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-003",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-prepositions-time-016",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-b1-first-conditional-014"
+          ]
+        },
+        {
+          "query_id": "rag-q2-004",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-prepositions-place-017",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-006",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-prepositions-place-017",
+          "gold_rank": 1,
+          "top1_score": 0.016393,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q2-007",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-possessives-018",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-possessives-018",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a1-plurals-004"
+          ]
+        },
+        {
+          "query_id": "rag-q2-009",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-possessives-018",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-possessives-018",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q2-011",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-can-ability-019",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-can-ability-019",
+            "gram-en-b1-passive-voice-028",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q2-012",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-can-ability-019",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-can-ability-019",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q2-013",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-demonstratives-020",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-demonstratives-020",
+            "gram-en-b1-passive-voice-028",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q2-014",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-demonstratives-020",
+          "gold_rank": 3,
+          "top1_score": 0.032266,
+          "top3": [
+            "gram-en-a1-articles-003",
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-demonstratives-020"
+          ]
+        },
+        {
+          "query_id": "rag-q2-016",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-frequency-adverbs-021",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a2-past-simple-006"
+          ]
+        },
+        {
+          "query_id": "rag-q2-018",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-frequency-adverbs-021",
+          "gold_rank": 5,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-plurals-004",
+            "gram-en-a2-present-continuous-007"
+          ]
+        },
+        {
+          "query_id": "rag-q2-019",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-superlatives-022",
+          "gold_rank": 2,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-comparatives-009",
+            "gram-en-a2-superlatives-022",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q2-021",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-superlatives-022",
+          "gold_rank": 1,
+          "top1_score": 0.031545,
+          "top3": [
+            "gram-en-a2-superlatives-022",
+            "gram-en-a1-prepositions-time-016",
+            "gram-en-a2-comparatives-009"
+          ]
+        },
+        {
+          "query_id": "rag-q2-022",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-past-continuous-023",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a2-present-continuous-007",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-024",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-past-continuous-023",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-past-continuous-023",
+            "gram-en-b1-past-perfect-031",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q2-025",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-will-future-024",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q2-027",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-will-future-024",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a1-prepositions-time-016"
+          ]
+        },
+        {
+          "query_id": "rag-q2-028",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-verb-patterns-025",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-a2-going-to-010",
+            "gram-en-a2-past-simple-006"
+          ]
+        },
+        {
+          "query_id": "rag-q2-029",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-verb-patterns-025",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-b1-too-enough-032",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q2-031",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-adverbs-manner-026",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a2-past-simple-006",
+            "gram-en-a1-frequency-adverbs-021"
+          ]
+        },
+        {
+          "query_id": "rag-q2-032",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-adverbs-manner-026",
+          "gold_rank": 9,
+          "top1_score": 0.032258,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-b1-relative-clauses-015"
+          ]
+        },
+        {
+          "query_id": "rag-q2-034",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-second-conditional-027",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-036",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-second-conditional-027",
+          "gold_rank": 1,
+          "top1_score": 0.032266,
+          "top3": [
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-zero-conditional-033",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q2-037",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-passive-voice-028",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-b1-passive-voice-028",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q2-039",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-passive-voice-028",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-passive-voice-028",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-a1-articles-003"
+          ]
+        },
+        {
+          "query_id": "rag-q2-040",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-reported-speech-029",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a2-adverbs-manner-026",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q2-041",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-reported-speech-029",
+          "gold_rank": 1,
+          "top1_score": 0.032258,
+          "top3": [
+            "gram-en-b1-reported-speech-029",
+            "gram-en-a1-be-001",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q2-043",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-used-to-030",
+          "gold_rank": 1,
+          "top1_score": 0.031545,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q2-045",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-used-to-030",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-used-to-030",
+            "gram-en-a1-present-simple-002",
+            "gram-en-a2-past-continuous-023"
+          ]
+        },
+        {
+          "query_id": "rag-q2-046",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-past-perfect-031",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-b1-past-perfect-031",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-b1-present-perfect-past-012"
+          ]
+        },
+        {
+          "query_id": "rag-q2-047",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-past-perfect-031",
+          "gold_rank": null,
+          "top1_score": 0.030214,
+          "top3": [
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q2-049",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-too-enough-032",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-too-enough-032",
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-there-be-005"
+          ]
+        },
+        {
+          "query_id": "rag-q2-051",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-b1-too-enough-032",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-too-enough-032",
+            "gram-en-a1-present-simple-002",
+            "gram-en-a1-can-ability-019"
+          ]
+        },
+        {
+          "query_id": "rag-q2-053",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-zero-conditional-033",
+          "gold_rank": 1,
+          "top1_score": 0.032266,
+          "top3": [
+            "gram-en-b1-zero-conditional-033",
+            "gram-en-a1-there-be-005",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q2-054",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-zero-conditional-033",
+          "gold_rank": 2,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-zero-conditional-033",
+            "gram-en-b1-second-conditional-027"
+          ]
+        },
+        {
+          "query_id": "rag-q2-055",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-be-001",
+          "gold_rank": 2,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-demonstratives-020",
+            "gram-en-a1-be-001",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q2-056",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a1-present-simple-002",
+          "gold_rank": 5,
+          "top1_score": 0.031545,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q2-057",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a1-articles-003",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-articles-003",
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-b1-first-conditional-014"
+          ]
+        },
+        {
+          "query_id": "rag-q2-058",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a1-plurals-004",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a1-plurals-004",
+            "gram-en-a2-comparatives-009",
+            "gram-en-a2-superlatives-022"
+          ]
+        },
+        {
+          "query_id": "rag-q2-059",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a1-there-be-005",
+          "gold_rank": 6,
+          "top1_score": 0.031778,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-b1-reported-speech-029",
+            "gram-en-b1-passive-voice-028"
+          ]
+        },
+        {
+          "query_id": "rag-q2-060",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-a2-past-simple-006",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-past-simple-006",
+            "gram-en-b1-passive-voice-028",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-061",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-present-continuous-007",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-present-continuous-007",
+            "gram-en-a2-past-continuous-023",
+            "gram-en-b1-reported-speech-029"
+          ]
+        },
+        {
+          "query_id": "rag-q2-062",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-count-noncount-008",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-count-noncount-008",
+            "gram-en-a1-there-be-005",
+            "gram-en-a2-will-future-024"
+          ]
+        },
+        {
+          "query_id": "rag-q2-063",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-a2-comparatives-009",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-a2-comparatives-009",
+            "gram-en-a2-superlatives-022",
+            "gram-en-a2-adverbs-manner-026"
+          ]
+        },
+        {
+          "query_id": "rag-q2-064",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-a2-going-to-010",
+          "gold_rank": 3,
+          "top1_score": 0.032266,
+          "top3": [
+            "gram-en-a2-will-future-024",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a2-going-to-010"
+          ]
+        },
+        {
+          "query_id": "rag-q2-065",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": "gram-en-a2-present-perfect-011",
+          "gold_rank": 1,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a2-present-perfect-011",
+            "gram-en-b1-reported-speech-029",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-066",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": "gram-en-b1-present-perfect-past-012",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-present-perfect-past-012",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-b1-past-perfect-031"
+          ]
+        },
+        {
+          "query_id": "rag-q2-067",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-modals-013",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-modals-013",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-too-enough-032"
+          ]
+        },
+        {
+          "query_id": "rag-q2-068",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": "gram-en-b1-first-conditional-014",
+          "gold_rank": 1,
+          "top1_score": 0.032018,
+          "top3": [
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-second-conditional-027",
+            "gram-en-a1-prepositions-time-016"
+          ]
+        },
+        {
+          "query_id": "rag-q2-069",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": "gram-en-b1-relative-clauses-015",
+          "gold_rank": 1,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-a1-articles-003",
+            "gram-en-a2-past-continuous-023"
+          ]
+        },
+        {
+          "query_id": "rag-q2-070",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-relative-clauses-015",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-a1-possessives-018"
+          ]
+        },
+        {
+          "query_id": "rag-q2-071",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.032787,
+          "top3": [
+            "gram-en-b1-second-conditional-027",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-zero-conditional-033"
+          ]
+        },
+        {
+          "query_id": "rag-q2-072",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.032258,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a1-there-be-005",
+            "gram-en-a1-present-simple-002"
+          ]
+        },
+        {
+          "query_id": "rag-q2-073",
+          "query_type": "semantic",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a2-past-simple-006",
+            "gram-en-a2-verb-patterns-025",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q2-074",
+          "query_type": "terminology",
+          "language": "vi",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.032522,
+          "top3": [
+            "gram-en-a1-frequency-adverbs-021",
+            "gram-en-a2-present-perfect-011",
+            "gram-en-a1-be-001"
+          ]
+        },
+        {
+          "query_id": "rag-q2-077",
+          "query_type": "semantic",
+          "language": "en",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.032258,
+          "top3": [
+            "gram-en-a1-be-001",
+            "gram-en-a1-possessives-018",
+            "gram-en-b1-modals-013"
+          ]
+        },
+        {
+          "query_id": "rag-q2-079",
+          "query_type": "terminology",
+          "language": "en",
+          "gold": null,
+          "gold_rank": null,
+          "top1_score": 0.031099,
+          "top3": [
+            "gram-en-a1-prepositions-place-017",
+            "gram-en-b1-first-conditional-014",
+            "gram-en-b1-reported-speech-029"
+          ]
+        }
+      ]
+    }
+  ]
+}
