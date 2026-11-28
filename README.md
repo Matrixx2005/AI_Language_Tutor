@@ -6,6 +6,28 @@ Hệ thống hỗ trợ học tiếng Anh A1–B1 cho người Việt, dùng Ret
 
 Hướng dẫn dưới đây viết cho **Windows + PowerShell**, chạy từ thư mục gốc dự án trừ khi ghi khác. Làm lần lượt từ bước 1 đến bước 7.
 
+## Chạy nhanh (sau khi đã cài đặt xong bước 1–4)
+
+Bấm đúp **`start.bat`** ở thư mục gốc, hoặc gõ `.\start.bat` trong terminal.
+
+Script làm lần lượt:
+1. Bật Docker Desktop nếu chưa chạy.
+2. Khởi động PostgreSQL và Qdrant.
+3. Mở backend (8000) và frontend React (5173), **mỗi dịch vụ một cửa sổ**. Streamlit (8501) chỉ mở khi thêm `-Streamlit`.
+4. Chờ các dịch vụ sẵn sàng rồi mở trình duyệt.
+
+Dịch vụ nào đang chạy thì được bỏ qua.
+
+| Lệnh | Tác dụng |
+| --- | --- |
+| `.\start.bat -Streamlit` | Mở thêm Streamlit console (Retrieval Lab, Thí nghiệm…) |
+| `.\start.bat -Fake` | Backend dùng `LLM_PROVIDER=fake` (không tốn lượt Gemini), không sửa `.env` |
+| `.\start.bat -NoFrontend -NoBrowser` | Không mở frontend, không tự mở trình duyệt |
+| `.\stop.bat` | Tắt backend, Streamlit, frontend (PostgreSQL và Qdrant vẫn chạy) |
+| `.\stop.bat -Docker` | Tắt thêm PostgreSQL và Qdrant (`docker compose stop`, **không** xóa dữ liệu) |
+
+Script nằm trong `scripts/start.ps1` và `scripts/stop.ps1`. Script không đọc hay in `.env`, và không chạy tunnel.
+
 ## Yêu cầu
 
 | Công cụ | Phiên bản đã kiểm chứng | Kiểm tra |
